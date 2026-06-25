@@ -36,7 +36,7 @@ final class DashboardController extends BaseController
             'projects' => $projects,
             'projects_visible_limit' => ProjectSorter::visibleLimit(),
             'projects_show_increment' => ProjectSorter::showIncrement(),
-            'recent_entries' => $timeEntries->recent(),
+            'recent_entries' => $timeEntries->recentToday(),
             'total_today' => TimeFormatter::secondsToHuman($totalTodaySeconds),
             'total_today_seconds' => $totalTodaySeconds,
             'timer' => $timerStatus,

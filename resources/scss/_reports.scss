@@ -1,145 +1,151 @@
 @use 'variables' as *;
 
-.reports-filters {
-    margin-bottom: 1.5rem;
+.reports-page {
+    .reports-filters {
+        margin-bottom: 1.5rem;
 
-    &__form {
-        margin: 0;
-    }
+        &__form {
+            margin: 0;
+        }
 
-    &__row {
-        display: grid;
-        gap: 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        align-items: end;
-    }
+        &__row {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            align-items: end;
+        }
 
-    &__actions {
-        display: flex;
-        flex-direction: column;
-    }
-}
-
-.reports-hint {
-    margin-top: 1rem;
-    text-align: center;
-}
-
-.calendar-card {
-    overflow: hidden;
-}
-
-.calendar-header {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-
-    &__nav {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-    }
-
-    &__title {
-        margin: 0;
-        font-size: 1.25rem;
-        min-width: 10rem;
-        text-align: center;
-    }
-
-    &__total {
-        margin: 0;
-    }
-}
-
-.calendar-grid {
-    &__weekdays {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.35rem;
-        margin-bottom: 0.35rem;
-
-        span {
-            text-align: center;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: $color-text-muted;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
+        &__actions {
+            display: flex;
+            flex-direction: column;
         }
     }
 
-    &__days {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.35rem;
-    }
-}
-
-.calendar-day {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 4.5rem;
-    padding: 0.45rem 0.25rem;
-    border: 1px solid $color-border;
-    border-radius: $radius;
-    background: rgba($color-surface-alt, 0.35);
-    color: $color-text;
-    text-decoration: none;
-    transition: border-color 0.15s, background 0.15s;
-
-    &:hover {
-        border-color: $color-primary;
-        background: rgba($color-primary, 0.08);
-    }
-
-    &--outside {
-        opacity: 0.45;
-    }
-
-    &--today {
-        border-color: $color-primary;
-    }
-
-    &--selected {
-        background: rgba($color-primary, 0.15);
-        border-color: $color-primary;
-        box-shadow: inset 0 0 0 1px rgba($color-primary, 0.35);
-    }
-
-    &--has-time .calendar-day__time {
-        color: $color-primary;
-        font-weight: 600;
-    }
-
-    &__number {
-        font-size: 0.9rem;
-        font-weight: 600;
-        line-height: 1.2;
-    }
-
-    &__time {
-        margin-top: 0.35rem;
-        font-size: 0.7rem;
-        line-height: 1.2;
+    .reports-hint {
+        margin-top: 1rem;
         text-align: center;
-        color: $color-text-muted;
-        word-break: break-word;
     }
-}
 
-@media (max-width: $bp-mobile) {
-    .calendar-day {
-        min-height: 3.5rem;
-        padding: 0.3rem 0.15rem;
+    &__day-detail {
+        margin-top: 1.5rem;
+    }
 
-        &__time {
-            font-size: 0.62rem;
+    .calendar-card {
+        overflow: hidden;
+
+        .calendar-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+
+            &__nav {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            &__title {
+                margin: 0;
+                font-size: 1.25rem;
+                min-width: 10rem;
+                text-align: center;
+            }
+
+            &__total {
+                margin: 0;
+            }
+        }
+
+        .calendar-grid {
+            &__weekdays {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 0.35rem;
+                margin-bottom: 0.35rem;
+
+                span {
+                    text-align: center;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: $color-text-muted;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                }
+            }
+
+            &__days {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 0.35rem;
+            }
+
+            .calendar-day {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                min-height: 4.5rem;
+                padding: 0.45rem 0.25rem;
+                border: 1px solid $color-border;
+                border-radius: $radius;
+                background: rgba($color-surface-alt, 0.35);
+                color: $color-text;
+                text-decoration: none;
+                transition: border-color 0.15s, background 0.15s;
+
+                &:hover {
+                    border-color: $color-primary;
+                    background: rgba($color-primary, 0.08);
+                }
+
+                &--outside {
+                    opacity: 0.45;
+                }
+
+                &--today {
+                    border-color: $color-primary;
+                }
+
+                &--selected {
+                    background: rgba($color-primary, 0.15);
+                    border-color: $color-primary;
+                    box-shadow: inset 0 0 0 1px rgba($color-primary, 0.35);
+                }
+
+                &--has-time {
+                    .calendar-day__time {
+                        color: $color-primary;
+                        font-weight: 600;
+                    }
+                }
+
+                &__number {
+                    font-size: 0.9rem;
+                    font-weight: 600;
+                    line-height: 1.2;
+                }
+
+                &__time {
+                    margin-top: 0.35rem;
+                    font-size: 0.7rem;
+                    line-height: 1.2;
+                    text-align: center;
+                    color: $color-text-muted;
+                    word-break: break-word;
+                }
+
+                @media (max-width: $bp-mobile) {
+                    min-height: 3.5rem;
+                    padding: 0.3rem 0.15rem;
+
+                    &__time {
+                        font-size: 0.62rem;
+                    }
+                }
+            }
         }
     }
 }

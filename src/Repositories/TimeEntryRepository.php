@@ -129,6 +129,28 @@ final class TimeEntryRepository
     }
 
     /** @return list<TimeEntry> */
+    public function recentToday(int $limit = 50): array
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
+            FROM time_entries te
+            JOIN projects p ON p.id = te.project_id
+            LEFT JOIN tasks t ON t.id = te.task_id
+            WHERE te.ended_at IS NOT NULL
+              AND DATE(te.started_at) = CURDATE()
+            ORDER BY te.ended_at DESC
+            LIMIT ?',
+        );
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return array_map(
+            TimeEntry::fromRow(...),
+            $stmt->fetchAll(),
+        );
+    }
+
+    /** @return list<TimeEntry> */
     public function recent(int $limit = 20): array
     {
         $stmt = $this->pdo->prepare(

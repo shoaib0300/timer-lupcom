@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Timer\Core\Application;
 use Timer\Database\Migrator;
+use Timer\Database\Seeder;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -14,5 +15,6 @@ $migrator = new Migrator($app->db(), dirname(__DIR__) . '/database/migrations');
 match ($command) {
     'migrate' => $migrator->migrate(),
     'migrate:rollback' => $migrator->rollback((int) ($argv[2] ?? 1)),
+    'seed' => (new Seeder($app->db()))->run(),
     default => throw new InvalidArgumentException("Unknown command: {$command}"),
 };

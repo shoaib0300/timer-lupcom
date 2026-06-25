@@ -4,6 +4,7 @@
 {% set active_nav = 'reports' %}
 
 {% block content %}
+<div class="reports-page">
 <h1 class="page-title">Time log</h1>
 
 <div class="card reports-filters">
@@ -89,7 +90,7 @@
 </section>
 
 {% if selected_day %}
-    <section class="card" style="margin-top: 1.5rem;">
+    <section class="card reports-page__day-detail">
         <div class="section-header">
             <h2>{{ selected_day_label }}</h2>
             <span class="muted">Total: <strong>{{ day_total }}</strong></span>
@@ -126,6 +127,7 @@
 {% else %}
     <p class="muted reports-hint">Click a day on the calendar to see session details.</p>
 {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
