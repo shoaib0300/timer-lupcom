@@ -4,7 +4,7 @@
 {% set active_nav = 'projects' %}
 
 {% block content %}
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+<div class="page-header page-header--center">
     <h1 class="page-title" style="margin:0;">Projects</h1>
     <a href="/projects/create" class="btn btn--primary">New project</a>
 </div>
@@ -35,6 +35,9 @@
                         <td>{{ format_time(project.totalSeconds) }}</td>
                         <td class="actions">
                             <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
+                            <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? All tasks and time entries will be removed.');">
+                                <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}

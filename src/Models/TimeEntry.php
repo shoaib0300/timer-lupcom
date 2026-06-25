@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Timer\Models;
 
+use DateTimeImmutable;
+
 final readonly class TimeEntry
 {
     public function __construct(
@@ -13,6 +15,8 @@ final readonly class TimeEntry
         public string $startedAt,
         public ?string $endedAt,
         public ?int $durationSeconds,
+        public int $elapsedOffset,
+        public ?string $pausedAt,
         public ?string $notes,
         public string $createdAt,
         public string $updatedAt,
@@ -27,6 +31,29 @@ final readonly class TimeEntry
         return $this->endedAt === null;
     }
 
+    public function isPaused(): bool
+    {
+        return $this->pausedAt !== null;
+    }
+
+    public function elapsedSeconds(): int
+    {
+        if ($this->endedAt !== null && $this->durationSeconds !== null) {
+            return $this->durationSeconds;
+        }
+
+        if ($this->isPaused()) {
+            return $this->elapsedOffset;
+        }
+
+        $startedAt = new DateTimeImmutable($this->startedAt);
+
+        return $this->elapsedOffset + max(
+            0,
+            (new DateTimeImmutable())->getTimestamp() - $startedAt->getTimestamp(),
+        );
+    }
+
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
@@ -37,6 +64,8 @@ final readonly class TimeEntry
             $row['started_at'],
             $row['ended_at'] ?? null,
             isset($row['duration_seconds']) ? (int) $row['duration_seconds'] : null,
+            (int) ($row['elapsed_offset'] ?? 0),
+            $row['paused_at'] ?? null,
             $row['notes'] ?? null,
             $row['created_at'],
             $row['updated_at'],

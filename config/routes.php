@@ -24,7 +24,11 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->post('/tasks/{id:\d+}', [TaskController::class, 'update']);
     $r->post('/tasks/{id:\d+}/delete', [TaskController::class, 'destroy']);
 
+    $r->get('/api/projects/{id:\d+}/tasks', [ProjectController::class, 'tasksApi']);
+
     $r->post('/api/timer/start', [TimerController::class, 'start']);
+    $r->post('/api/timer/pause', [TimerController::class, 'pause']);
+    $r->post('/api/timer/resume', [TimerController::class, 'resume']);
     $r->post('/api/timer/stop', [TimerController::class, 'stop']);
     $r->get('/api/timer/status', [TimerController::class, 'status']);
 };

@@ -3,10 +3,9 @@
 declare(strict_types=1);
 
 use Timer\Database\Migration;
-use PDO;
 
 return new class implements Migration {
-    public function up(PDO $pdo): void
+    public function up(\PDO $pdo): void
     {
         $pdo->exec(
             'CREATE TABLE tasks (
@@ -26,7 +25,7 @@ return new class implements Migration {
         );
     }
 
-    public function down(PDO $pdo): void
+    public function down(\PDO $pdo): void
     {
         $pdo->exec('DROP TABLE IF EXISTS tasks');
     }

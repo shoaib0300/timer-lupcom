@@ -1,0 +1,39 @@
+@use 'sass:color';
+@use 'variables' as *;
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: $font-sans;
+    background: linear-gradient(160deg, $color-bg 0%, #111827 100%);
+    color: $color-text;
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+a {
+    color: $color-primary;
+    text-decoration: none;
+
+    &:hover {
+        color: color.adjust($color-primary, $lightness: 10%);
+    }
+}
+
+.muted {
+    color: $color-text-muted;
+}
+
+.page-title {
+    margin: 0 0 1.5rem;
+    font-size: 2rem;
+}
+
+.inline-form {
+    display: inline;
+}

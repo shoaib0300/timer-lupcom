@@ -51,6 +51,21 @@ final class TaskRepository
         return $row ? Task::fromRow($row) : null;
     }
 
+    public function findOrCreateByName(int $projectId, string $name): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT id FROM tasks WHERE project_id = ? AND name = ? LIMIT 1',
+        );
+        $stmt->execute([$projectId, $name]);
+        $id = $stmt->fetchColumn();
+
+        if ($id !== false) {
+            return (int) $id;
+        }
+
+        return $this->create($projectId, $name, null, 'in_progress');
+    }
+
     public function create(int $projectId, string $name, ?string $description, string $status): int
     {
         $stmt = $this->pdo->prepare(

@@ -15,7 +15,8 @@ final class TimeEntryRepository
     ) {
     }
 
-    public function findRunning(): ?TimeEntry
+    /** @return list<TimeEntry> */
+    public function findAllRunning(): array
     {
         $stmt = $this->pdo->query(
             'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
@@ -23,12 +24,20 @@ final class TimeEntryRepository
             JOIN projects p ON p.id = te.project_id
             LEFT JOIN tasks t ON t.id = te.task_id
             WHERE te.ended_at IS NULL
-            ORDER BY te.started_at DESC
-            LIMIT 1',
+            ORDER BY te.started_at ASC',
         );
-        $row = $stmt ? $stmt->fetch() : false;
 
-        return $row ? TimeEntry::fromRow($row) : null;
+        return array_map(
+            TimeEntry::fromRow(...),
+            $stmt ? $stmt->fetchAll() : [],
+        );
+    }
+
+    public function findRunning(): ?TimeEntry
+    {
+        $all = $this->findAllRunning();
+
+        return $all[0] ?? null;
     }
 
     public function start(int $projectId, ?int $taskId): int
@@ -51,13 +60,48 @@ final class TimeEntryRepository
         }
 
         $endedAt = new DateTimeImmutable();
-        $startedAt = new DateTimeImmutable($entry->startedAt);
-        $duration = max(0, $endedAt->getTimestamp() - $startedAt->getTimestamp());
+        $duration = $entry->elapsedSeconds();
 
         $stmt = $this->pdo->prepare(
-            'UPDATE time_entries SET ended_at = ?, duration_seconds = ? WHERE id = ?',
+            'UPDATE time_entries SET ended_at = ?, duration_seconds = ?, paused_at = NULL WHERE id = ?',
         );
         $stmt->execute([$endedAt->format('Y-m-d H:i:s'), $duration, $entryId]);
+
+        return $this->findById($entryId);
+    }
+
+    public function pause(int $entryId): ?TimeEntry
+    {
+        $entry = $this->findById($entryId);
+
+        if ($entry === null || !$entry->isRunning() || $entry->isPaused()) {
+            return null;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'UPDATE time_entries SET elapsed_offset = ?, paused_at = ? WHERE id = ?',
+        );
+        $stmt->execute([
+            $entry->elapsedSeconds(),
+            (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+            $entryId,
+        ]);
+
+        return $this->findById($entryId);
+    }
+
+    public function resume(int $entryId): ?TimeEntry
+    {
+        $entry = $this->findById($entryId);
+
+        if ($entry === null || !$entry->isRunning() || !$entry->isPaused()) {
+            return null;
+        }
+
+        $stmt = $this->pdo->prepare(
+            'UPDATE time_entries SET started_at = ?, paused_at = NULL WHERE id = ?',
+        );
+        $stmt->execute([(new DateTimeImmutable())->format('Y-m-d H:i:s'), $entryId]);
 
         return $this->findById($entryId);
     }

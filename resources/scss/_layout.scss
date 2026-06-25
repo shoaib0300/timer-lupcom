@@ -1,0 +1,91 @@
+@use 'variables' as *;
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+
+    @media (max-width: $bp-mobile) {
+        flex-direction: column;
+    }
+}
+
+.app-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.container {
+    width: min(1100px, 92vw);
+    margin: 0 auto;
+    padding: 2rem 0 4rem;
+}
+
+.site-header {
+    background: rgba($color-surface, 0.9);
+    border-bottom: 1px solid $color-border;
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    &__inner {
+        width: min(1100px, 92vw);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0;
+    }
+}
+
+.brand {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $color-text;
+}
+
+.nav {
+    display: flex;
+    gap: 1rem;
+
+    a {
+        color: $color-text-muted;
+        font-weight: 500;
+
+        &.is-active,
+        &:hover {
+            color: $color-text;
+        }
+    }
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h2 {
+        margin: 0;
+    }
+}
+
+.grid {
+    display: grid;
+    gap: 1rem;
+
+    &--2 {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+}
+
+.stat {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}

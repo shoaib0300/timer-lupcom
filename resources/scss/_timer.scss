@@ -1,0 +1,261 @@
+@use 'sass:color';
+@use 'variables' as *;
+
+.timer-sidebar {
+    width: $sidebar-width;
+    flex-shrink: 0;
+    background: rgba($color-surface, 0.98);
+    border-right: 1px solid $color-border;
+    padding: 0.75rem 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+
+    @media (max-width: $bp-tablet) {
+        width: $sidebar-width-tablet;
+        padding: 0.65rem 0.55rem;
+    }
+
+    @media (max-width: $bp-mobile) {
+        width: 100%;
+        height: auto;
+        max-height: none;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid $color-border;
+        padding: 0.65rem 0.75rem;
+    }
+
+    &__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0 0.15rem;
+    }
+
+    &__title {
+        margin: 0;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: $color-text-muted;
+    }
+
+    &__count {
+        background: $color-primary;
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.15rem 0.45rem;
+        border-radius: 999px;
+        min-width: 1.25rem;
+        text-align: center;
+    }
+
+    &__list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+
+        @media (max-width: $bp-mobile) {
+            flex-direction: row;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+            gap: 0.5rem;
+            padding-bottom: 0.35rem;
+            margin: 0 -0.25rem;
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+    }
+
+    &__empty {
+        margin: 0;
+        font-size: 0.8rem;
+        padding: 0 0.15rem;
+    }
+}
+
+.timer-item {
+    background: $color-surface-alt;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    padding: 0.5rem 0.55rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+
+    @media (max-width: $bp-mobile) {
+        min-width: 220px;
+        max-width: 280px;
+        flex-shrink: 0;
+        scroll-snap-align: start;
+        padding: 0.55rem 0.6rem;
+    }
+
+    @media (max-width: $bp-mobile-sm) {
+        min-width: 200px;
+    }
+
+    &.is-paused {
+        opacity: 0.8;
+
+        .timer-item__clock {
+            color: $color-text-muted;
+        }
+    }
+
+    &__dot {
+        width: 9px;
+        height: 9px;
+        margin-top: 0.4rem;
+        flex-shrink: 0;
+    }
+
+    &__content {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.35rem;
+    }
+
+    &__project {
+        font-weight: 600;
+        font-size: 0.78rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+    }
+
+    &__task {
+        font-size: 0.7rem;
+        color: $color-text-muted;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1;
+    }
+
+    &__clock {
+        font-size: 0.8rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+        color: $color-text;
+    }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-shrink: 0;
+        margin-left: 0.25rem;
+    }
+}
+
+.timer-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    background: rgba($color-bg, 0.5);
+    color: $color-text;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    svg {
+        display: block;
+        fill: currentColor;
+        pointer-events: none;
+    }
+
+    &:hover {
+        background: $color-surface;
+        border-color: color.adjust($color-border, $lightness: 8%);
+    }
+
+    // Pause / resume — larger primary control (harder to miss, easier to tap)
+    &--pause,
+    &--play {
+        width: 36px;
+        height: 36px;
+        border-color: color.adjust($color-primary, $lightness: -5%);
+        background: rgba($color-primary, 0.15);
+
+        svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        @media (max-width: $bp-mobile) {
+            width: 44px;
+            height: 44px;
+
+            svg {
+                width: 17px;
+                height: 17px;
+            }
+        }
+    }
+
+    &--pause:hover {
+        color: $color-warning;
+        background: rgba($color-warning, 0.12);
+    }
+
+    &--play:hover {
+        color: $color-success;
+        background: rgba($color-success, 0.12);
+    }
+
+    // Stop — smaller, separated, so it's harder to hit by accident
+    &--stop {
+        width: 26px;
+        height: 26px;
+        margin-left: 0.15rem;
+        opacity: 0.75;
+        border-color: rgba($color-border, 0.8);
+
+        svg {
+            width: 10px;
+            height: 10px;
+        }
+
+        @media (max-width: $bp-mobile) {
+            width: 32px;
+            height: 32px;
+
+            svg {
+                width: 11px;
+                height: 11px;
+            }
+        }
+
+        &:hover {
+            opacity: 1;
+            color: $color-danger;
+            border-color: rgba($color-danger, 0.45);
+            background: rgba($color-danger, 0.1);
+        }
+    }
+}

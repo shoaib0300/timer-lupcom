@@ -36,7 +36,7 @@ final class Router
                 [$class, $method] = $handler;
 
                 $controller = new $class($app);
-                $result = $controller->$method($request, ...array_values($vars));
+                $result = $controller->$method($request, ...$this->coerceRouteArgs($vars));
 
                 if ($result instanceof Response) {
                     return $result;
@@ -51,8 +51,18 @@ final class Router
 
     private function createDispatcher(): Dispatcher
     {
-        return new GroupCountBasedDispatcher(
-            (new RouteCollector(new Std(), new GroupCountBased()))->addGroup('', $this->routeDefinition)->getData(),
+        $collector = new RouteCollector(new Std(), new GroupCountBased());
+        ($this->routeDefinition)($collector);
+
+        return new GroupCountBasedDispatcher($collector->getData());
+    }
+
+    /** @param array<string, string> $vars */
+    private function coerceRouteArgs(array $vars): array
+    {
+        return array_map(
+            static fn (string $value): int|string => preg_match('/^\d+$/', $value) ? (int) $value : $value,
+            array_values($vars),
         );
     }
 }

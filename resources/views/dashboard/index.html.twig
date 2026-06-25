@@ -10,7 +10,7 @@
 <div class="grid grid--2">
     <div class="card">
         <div class="muted">Tracked today</div>
-        <div class="stat">{{ total_today }}</div>
+        <div class="stat js-total-today" data-total-seconds="{{ total_today_seconds }}">{{ total_today }}</div>
     </div>
     <div class="card">
         <div class="muted">Projects</div>
@@ -18,59 +18,53 @@
     </div>
 </div>
 
-<section class="card" style="margin-top: 1.5rem;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-        <h2 style="margin:0;">Start timer</h2>
+<section class="card projects-section">
+    <div class="section-header">
+        <h2>Projects</h2>
         <a href="/projects/create" class="btn btn--ghost btn--sm">New project</a>
     </div>
 
     {% if projects is empty %}
         <p class="muted">No projects yet. <a href="/projects/create">Create your first project</a>.</p>
     {% else %}
-        <div class="grid">
+        <div class="grid grid--projects" id="projects-grid">
             {% for project in projects %}
-                <div class="card" style="background: var(--surface-alt, #334155);">
-                    <h3 style="margin-top:0;">
+                <article
+                    class="project-card{% if loop.index > projects_visible_limit %} project-card--collapsed{% endif %}"
+                    data-project-id="{{ project.id }}"
+                >
+                    <h3 class="project-card__title">
                         <span class="project-dot" style="background: {{ project.color }};"></span>
-                        {{ project.name }}
+                        <a href="/projects/{{ project.id }}">{{ project.name }}</a>
                     </h3>
-                    <p class="muted">{{ format_time(project.totalSeconds) }} tracked</p>
-
-                    <div class="actions">
+                    <div class="project-card__meta">
+                        <p class="project-card__time muted js-project-total" data-total-seconds="{{ project.totalSeconds }}">{{ format_time(project.totalSeconds) }}</p>
+                        <span class="project-card__badge js-project-running-badge" hidden>Running</span>
+                    </div>
+                    <div class="project-card__actions">
                         <button
                             type="button"
-                            class="btn btn--success btn--sm js-start-timer"
+                            class="card-icon-btn card-icon-btn--start js-start-timer"
                             data-project-id="{{ project.id }}"
                             data-project-name="{{ project.name }}"
-                        >
-                            Start project
-                        </button>
+                            title="Start timer"
+                            aria-label="Start timer for {{ project.name }}"
+                        ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></button>
+                        <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;?');">
+                            <button type="submit" class="card-icon-btn card-icon-btn--delete" title="Delete project" aria-label="Delete {{ project.name }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg></button>
+                        </form>
                     </div>
-
-                    {% set project_tasks = tasks_by_project[project.id] ?? [] %}
-                    {% if project_tasks is not empty %}
-                        <ul style="margin:1rem 0 0; padding-left:1.2rem;">
-                            {% for task in project_tasks %}
-                                <li style="margin-bottom:0.5rem;">
-                                    {{ task.name }}
-                                    <span class="muted">({{ format_time(task.totalSeconds) }})</span>
-                                    <button
-                                        type="button"
-                                        class="btn btn--primary btn--sm js-start-timer"
-                                        data-project-id="{{ project.id }}"
-                                        data-project-name="{{ project.name }}"
-                                        data-task-id="{{ task.id }}"
-                                        data-task-name="{{ task.name }}"
-                                    >
-                                        Start
-                                    </button>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
+                </article>
             {% endfor %}
         </div>
+
+        {% if projects|length > projects_visible_limit %}
+            <div class="projects-section__footer">
+                <button type="button" class="btn btn--ghost js-show-more-projects">
+                    Show more projects ({{ projects|length - projects_visible_limit }})
+                </button>
+            </div>
+        {% endif %}
     {% endif %}
 </section>
 
@@ -88,7 +82,7 @@
                     <th>Ended</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="recent-sessions-body">
                 {% for entry in recent_entries %}
                     <tr>
                         <td>

@@ -6,7 +6,9 @@ namespace Timer\Core;
 
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
 use Timer\Http\Response;
+use Timer\Support\TimeFormatter;
 
 final class View
 {
@@ -22,6 +24,9 @@ final class View
             'debug' => $debug,
             'autoescape' => 'html',
         ]);
+
+        $this->twig->addFunction(new TwigFunction('format_time', [TimeFormatter::class, 'secondsToHuman']));
+        $this->twig->addFunction(new TwigFunction('format_clock', [TimeFormatter::class, 'secondsToClock']));
     }
 
     public function render(string $template, array $data = []): Response

@@ -8,7 +8,6 @@ use Timer\Http\Request;
 use Timer\Http\Response;
 use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\TaskRepository;
-use Timer\Support\TimeFormatter;
 
 final class ProjectController extends BaseController
 {
@@ -18,7 +17,6 @@ final class ProjectController extends BaseController
 
         return $this->view('projects/index.html.twig', [
             'projects' => $projects,
-            'format_time' => [TimeFormatter::class, 'secondsToHuman'],
         ]);
     }
 
@@ -68,7 +66,27 @@ final class ProjectController extends BaseController
         return $this->view('projects/show.html.twig', [
             'project' => $project,
             'tasks' => $tasks,
-            'format_time' => [TimeFormatter::class, 'secondsToHuman'],
+        ]);
+    }
+
+    public function tasksApi(Request $request, int $id): Response
+    {
+        $project = new ProjectRepository($this->app->db())->find($id);
+
+        if ($project === null) {
+            return $this->json(['error' => 'Project not found.'], 404);
+        }
+
+        $tasks = new TaskRepository($this->app->db())->forProject($id);
+
+        return $this->json([
+            'tasks' => array_map(static fn ($task) => [
+                'id' => $task->id,
+                'name' => $task->name,
+                'status' => $task->status,
+                'total_seconds' => $task->totalSeconds,
+                'total_human' => \Timer\Support\TimeFormatter::secondsToHuman($task->totalSeconds),
+            ], $tasks),
         ]);
     }
 
@@ -119,7 +137,13 @@ final class ProjectController extends BaseController
 
     public function destroy(Request $request, int $id): Response
     {
-        new ProjectRepository($this->app->db())->delete($id);
+        $repo = new ProjectRepository($this->app->db());
+
+        if ($repo->find($id) === null) {
+            return Response::html('Project not found', 404);
+        }
+
+        $repo->delete($id);
 
         return $this->redirect('/projects');
     }

@@ -1,0 +1,209 @@
+@use 'sass:color';
+@use 'variables' as *;
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    &--primary {
+        background: $color-primary;
+        color: white;
+
+        &:hover {
+            background: $color-primary-dark;
+            color: white;
+        }
+    }
+
+    &--success {
+        background: $color-success;
+        color: white;
+    }
+
+    &--danger {
+        background: $color-danger;
+        color: white;
+    }
+
+    &--ghost {
+        background: transparent;
+        color: $color-text;
+        border: 1px solid $color-border;
+    }
+
+    &--sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+    }
+
+    &--block {
+        width: 100%;
+    }
+}
+
+.card {
+    background: $color-surface;
+    border: 1px solid $color-border;
+    border-radius: $radius;
+    padding: 1.25rem;
+    box-shadow: $shadow;
+
+    & + & {
+        margin-top: 1rem;
+    }
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+}
+
+input[type='text'],
+input[type='color'],
+textarea,
+select {
+    width: 100%;
+    background: $color-surface-alt;
+    border: 1px solid $color-border;
+    border-radius: 8px;
+    color: $color-text;
+    padding: 0.65rem 0.8rem;
+    font: inherit;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.alert {
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+
+    &--error {
+        background: rgba($color-danger, 0.15);
+        border: 1px solid rgba($color-danger, 0.4);
+        color: #fecaca;
+    }
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &--open {
+        background: #334155;
+        color: #e2e8f0;
+    }
+
+    &--in_progress {
+        background: rgba($color-warning, 0.2);
+        color: #fde68a;
+    }
+
+    &--done {
+        background: rgba($color-success, 0.2);
+        color: #bbf7d0;
+    }
+}
+
+.project-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+        text-align: left;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid $color-border;
+    }
+
+    th {
+        color: $color-text-muted;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+
+    &.is-hidden {
+        display: none;
+    }
+
+    &__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+    }
+
+    &__dialog {
+        position: relative;
+        background: $color-surface;
+        border: 1px solid $color-border;
+        border-radius: $radius;
+        padding: 1.5rem;
+        width: min(400px, 100%);
+        box-shadow: $shadow;
+    }
+
+    &__title {
+        margin: 0 0 0.25rem;
+    }
+}
+
+.danger-zone {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid $color-border;
+
+    h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+        color: #fecaca;
+    }
+}

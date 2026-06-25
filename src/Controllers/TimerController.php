@@ -16,16 +16,13 @@ final class TimerController extends BaseController
 {
     public function status(Request $request): Response
     {
-        $service = $this->timerService();
-
-        return $this->json($service->getStatus());
+        return $this->json($this->timerService()->getStatus());
     }
 
     public function start(Request $request): Response
     {
         $projectId = (int) $request->input('project_id', 0);
-        $taskId = $request->input('task_id');
-        $taskId = $taskId !== null && $taskId !== '' ? (int) $taskId : null;
+        $taskName = trim((string) $request->input('task_name', 'no-work'));
 
         if ($projectId <= 0) {
             return $this->json(['error' => 'Project is required.'], 422);
@@ -37,49 +34,126 @@ final class TimerController extends BaseController
             return $this->json(['error' => 'Project not found.'], 404);
         }
 
-        if ($taskId !== null) {
-            $task = new TaskRepository($this->app->db())->find($taskId);
-
-            if ($task === null || $task->projectId !== $projectId) {
-                return $this->json(['error' => 'Task not found for this project.'], 404);
-            }
-        }
-
         $service = $this->timerService();
-        $entry = $service->start($projectId, $taskId);
+        $entry = $service->start($projectId, $taskName);
         $status = $service->getStatus();
+        $timer = $this->findTimerInStatus($status, $entry->id);
 
         return $this->json([
             'message' => 'Timer started.',
+            'entry' => $timer,
             'status' => $status,
-            'duration_human' => TimeFormatter::secondsToHuman($status['elapsed_seconds']),
         ]);
     }
 
     public function stop(Request $request): Response
     {
+        $entryId = (int) $request->input('entry_id', 0);
+
+        if ($entryId <= 0) {
+            return $this->json(['error' => 'Timer entry is required.'], 422);
+        }
+
         $service = $this->timerService();
-        $entry = $service->stop();
+        $entry = $service->stop($entryId);
 
         if ($entry === null) {
-            return $this->json(['error' => 'No running timer.'], 422);
+            return $this->json(['error' => 'Timer not found or already stopped.'], 422);
+        }
+
+        return $this->json(array_merge(
+            ['message' => 'Timer stopped.', 'status' => $service->getStatus()],
+            $this->stoppedEntryPayload($entry),
+        ));
+    }
+
+    public function pause(Request $request): Response
+    {
+        $entryId = (int) $request->input('entry_id', 0);
+
+        if ($entryId <= 0) {
+            return $this->json(['error' => 'Timer entry is required.'], 422);
+        }
+
+        $service = $this->timerService();
+        $entry = $service->pause($entryId);
+
+        if ($entry === null) {
+            return $this->json(['error' => 'Timer not found or already paused.'], 422);
         }
 
         return $this->json([
-            'message' => 'Timer stopped.',
-            'entry' => [
-                'id' => $entry->id,
-                'project_name' => $entry->projectName,
-                'task_name' => $entry->taskName,
-                'duration_seconds' => $entry->durationSeconds,
-                'duration_human' => TimeFormatter::secondsToHuman((int) $entry->durationSeconds),
-            ],
+            'message' => 'Timer paused.',
             'status' => $service->getStatus(),
         ]);
     }
 
+    public function resume(Request $request): Response
+    {
+        $entryId = (int) $request->input('entry_id', 0);
+
+        if ($entryId <= 0) {
+            return $this->json(['error' => 'Timer entry is required.'], 422);
+        }
+
+        $service = $this->timerService();
+        $entry = $service->resume($entryId);
+
+        if ($entry === null) {
+            return $this->json(['error' => 'Timer not found or not paused.'], 422);
+        }
+
+        return $this->json([
+            'message' => 'Timer resumed.',
+            'status' => $service->getStatus(),
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function stoppedEntryPayload(\Timer\Models\TimeEntry $entry): array
+    {
+        $projectRepo = new ProjectRepository($this->app->db());
+        $timeEntries = new TimeEntryRepository($this->app->db());
+        $project = $projectRepo->find($entry->projectId);
+        $totalToday = $timeEntries->totalSecondsToday();
+
+        return [
+            'entry' => [
+                'id' => $entry->id,
+                'project_id' => $entry->projectId,
+                'project_name' => $entry->projectName,
+                'project_color' => $entry->projectColor,
+                'task_name' => $entry->taskName,
+                'duration_seconds' => $entry->durationSeconds,
+                'duration_human' => TimeFormatter::secondsToHuman((int) $entry->durationSeconds),
+                'ended_at' => $entry->endedAt,
+            ],
+            'project_total_seconds' => $project?->totalSeconds ?? 0,
+            'project_total_human' => TimeFormatter::secondsToHuman($project?->totalSeconds ?? 0),
+            'total_today_seconds' => $totalToday,
+            'total_today_human' => TimeFormatter::secondsToHuman($totalToday),
+        ];
+    }
+
     private function timerService(): TimerService
     {
-        return new TimerService(new TimeEntryRepository($this->app->db()));
+        $db = $this->app->db();
+
+        return new TimerService(
+            new TimeEntryRepository($db),
+            new TaskRepository($db),
+        );
+    }
+
+    /** @param array{timers: list<array<string, mixed>>} $status */
+    private function findTimerInStatus(array $status, int $entryId): ?array
+    {
+        foreach ($status['timers'] as $timer) {
+            if ($timer['id'] === $entryId) {
+                return $timer;
+            }
+        }
+
+        return null;
     }
 }

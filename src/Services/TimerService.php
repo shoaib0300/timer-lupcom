@@ -4,50 +4,34 @@ declare(strict_types=1);
 
 namespace Timer\Services;
 
-use DateTimeImmutable;
 use Timer\Models\TimeEntry;
+use Timer\Repositories\TaskRepository;
 use Timer\Repositories\TimeEntryRepository;
 
 final class TimerService
 {
     public function __construct(
         private readonly TimeEntryRepository $timeEntries,
+        private readonly TaskRepository $tasks,
     ) {
     }
 
+    /** @return array{timers: list<array<string, mixed>>, running: bool} */
     public function getStatus(): array
     {
-        $running = $this->timeEntries->findRunning();
-
-        if ($running === null) {
-            return [
-                'running' => false,
-                'entry' => null,
-                'elapsed_seconds' => 0,
-            ];
-        }
-
-        $startedAt = new DateTimeImmutable($running->startedAt);
-        $elapsed = max(0, (new DateTimeImmutable())->getTimestamp() - $startedAt->getTimestamp());
+        $running = $this->timeEntries->findAllRunning();
+        $timers = array_map($this->formatRunningEntry(...), $running);
 
         return [
-            'running' => true,
-            'entry' => [
-                'id' => $running->id,
-                'project_id' => $running->projectId,
-                'project_name' => $running->projectName,
-                'project_color' => $running->projectColor,
-                'task_id' => $running->taskId,
-                'task_name' => $running->taskName,
-                'started_at' => $running->startedAt,
-            ],
-            'elapsed_seconds' => $elapsed,
+            'timers' => $timers,
+            'running' => $timers !== [],
         ];
     }
 
-    public function start(int $projectId, ?int $taskId): TimeEntry
+    public function start(int $projectId, string $taskName): TimeEntry
     {
-        $this->timeEntries->stopRunning();
+        $taskName = trim($taskName) !== '' ? trim($taskName) : 'no-work';
+        $taskId = $this->tasks->findOrCreateByName($projectId, $taskName);
 
         $entryId = $this->timeEntries->start($projectId, $taskId);
         $entry = $this->timeEntries->findById($entryId);
@@ -59,8 +43,34 @@ final class TimerService
         return $entry;
     }
 
-    public function stop(): ?TimeEntry
+    public function stop(int $entryId): ?TimeEntry
     {
-        return $this->timeEntries->stopRunning();
+        return $this->timeEntries->stop($entryId);
+    }
+
+    public function pause(int $entryId): ?TimeEntry
+    {
+        return $this->timeEntries->pause($entryId);
+    }
+
+    public function resume(int $entryId): ?TimeEntry
+    {
+        return $this->timeEntries->resume($entryId);
+    }
+
+    /** @return array<string, mixed> */
+    private function formatRunningEntry(TimeEntry $entry): array
+    {
+        return [
+            'id' => $entry->id,
+            'project_id' => $entry->projectId,
+            'project_name' => $entry->projectName,
+            'project_color' => $entry->projectColor,
+            'task_id' => $entry->taskId,
+            'task_name' => $entry->taskName,
+            'started_at' => $entry->startedAt,
+            'elapsed_seconds' => $entry->elapsedSeconds(),
+            'is_paused' => $entry->isPaused(),
+        ];
     }
 }
