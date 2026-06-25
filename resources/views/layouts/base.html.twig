@@ -32,6 +32,18 @@
             </header>
 
             <main class="container">
+                {% if not hide_page_back|default(false) %}
+                <button
+                    type="button"
+                    class="page-back"
+                    id="page-back"
+                    aria-label="Go back"
+                    title="Go back"
+                    data-fallback="/"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M15.41 16.59 10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+                </button>
+                {% endif %}
                 {% block content %}{% endblock %}
             </main>
         </div>
@@ -61,7 +73,7 @@
         </div>
     </div>
 
-    <script type="module" src="/assets/js/app.js?v=12"></script>
+    <script type="module" src="/assets/js/app.js?v=14"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -58,7 +58,13 @@
                         <tbody id="project-tasks-body">
                             {% for task in tasks %}
                                 <tr data-task-id="{{ task.id }}">
-                                    <td class="project-show__task-name">{{ task.name }}</td>
+                                    <td class="project-show__task-name">
+                                        {% if task.planioAssignee %}
+                                            <span class="project-show__assignee">{{ task.planioAssignee }}</span>
+                                            <span class="project-show__assignee-sep muted" aria-hidden="true">·</span>
+                                        {% endif %}
+                                        <span class="project-show__task-title">{{ task.name }}</span>
+                                    </td>
                                     <td class="project-show__col-planio">
                                         {% if task.planioIssueId %}
                                             <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ task.planioIssueId }}</span>

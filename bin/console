@@ -5,6 +5,10 @@ declare(strict_types=1);
 use Timer\Core\Application;
 use Timer\Database\Migrator;
 use Timer\Database\Seeder;
+use Timer\Repositories\ProjectRepository;
+use Timer\Repositories\SettingsRepository;
+use Timer\Repositories\TaskRepository;
+use Timer\Services\PlanioSyncService;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -16,5 +20,21 @@ match ($command) {
     'migrate' => $migrator->migrate(),
     'migrate:rollback' => $migrator->rollback((int) ($argv[2] ?? 1)),
     'seed' => (new Seeder($app->db()))->run(),
+    'planio:refresh' => (static function () use ($app): void {
+        $db = $app->db();
+        $service = new PlanioSyncService(
+            new SettingsRepository($db),
+            new ProjectRepository($db),
+            new TaskRepository($db),
+        );
+        $stats = $service->refreshAllLinkedProjects();
+        echo sprintf(
+            "Refreshed %d Planio project(s): %d projects updated, %d tasks updated, %d tasks created.\n",
+            $stats['projects'],
+            $stats['projects_updated'],
+            $stats['tasks_updated'],
+            $stats['tasks_created'],
+        );
+    })(),
     default => throw new InvalidArgumentException("Unknown command: {$command}"),
 };

@@ -92,7 +92,13 @@ final class PlanioClient
     /** @param array<string, mixed> $issue */
     public static function isClosedIssue(array $issue): bool
     {
-        if (!empty($issue['closed_on'])) {
+        $statusId = (int) ($issue['status']['id'] ?? $issue['status_id'] ?? 0);
+        if ($statusId === 4) {
+            return true;
+        }
+
+        $statusName = mb_strtolower(trim((string) ($issue['status']['name'] ?? '')));
+        if ($statusName === 'erledigt') {
             return true;
         }
 
@@ -105,6 +111,14 @@ final class PlanioClient
         $name = trim((string) ($issue['status']['name'] ?? ''));
 
         return $name !== '' ? $name : 'Unknown';
+    }
+
+    /** @param array<string, mixed> $issue */
+    public static function issueAssigneeLabel(array $issue): ?string
+    {
+        $name = trim((string) ($issue['assigned_to']['name'] ?? ''));
+
+        return $name !== '' ? $name : null;
     }
 
     /** @return list<array<string, mixed>> */

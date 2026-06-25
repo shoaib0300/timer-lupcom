@@ -17,10 +17,18 @@ function statusCell(task) {
     return `<span class="badge badge--${escapeHtml(task.status)}">${escapeHtml(label)}</span>`;
 }
 
+function taskNameCell(task) {
+    const assignee = task.planio_assignee
+        ? `<span class="project-show__assignee">${escapeHtml(task.planio_assignee)}</span><span class="project-show__assignee-sep muted" aria-hidden="true">·</span>`
+        : '';
+
+    return `${assignee}<span class="project-show__task-title">${escapeHtml(task.name)}</span>`;
+}
+
 function renderTaskRow(task, project) {
     return `
         <tr data-task-id="${task.id}">
-            <td class="project-show__task-name">${escapeHtml(task.name)}</td>
+            <td class="project-show__task-name">${taskNameCell(task)}</td>
             <td class="project-show__col-planio">${planioIdCell(task.planio_issue_id)}</td>
             <td>${statusCell(task)}</td>
             <td>${escapeHtml(task.total_human)}</td>

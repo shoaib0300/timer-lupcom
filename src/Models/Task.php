@@ -13,6 +13,7 @@ final readonly class Task
         public ?string $description,
         public string $status,
         public ?int $planioIssueId = null,
+        public ?string $planioAssignee = null,
         public string $createdAt,
         public string $updatedAt,
         public int $totalSeconds = 0,
@@ -31,6 +32,9 @@ final readonly class Task
             $row['status'],
             isset($row['planio_issue_id']) && $row['planio_issue_id'] !== null
                 ? (int) $row['planio_issue_id']
+                : null,
+            isset($row['planio_assignee']) && $row['planio_assignee'] !== null && $row['planio_assignee'] !== ''
+                ? (string) $row['planio_assignee']
                 : null,
             $row['created_at'],
             $row['updated_at'],

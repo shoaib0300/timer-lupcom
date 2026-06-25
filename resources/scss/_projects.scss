@@ -149,13 +149,17 @@
     color: $color-text;
     cursor: pointer;
     flex-shrink: 0;
+    text-decoration: none;
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
     svg {
         width: 18px;
         height: 18px;
-        fill: currentColor;
         pointer-events: none;
+    }
+
+    svg path {
+        fill: currentColor;
     }
 
     &:hover {
@@ -236,6 +240,20 @@
 
     &--center {
         align-items: center;
+    }
+
+    &--with-back {
+        gap: 0.75rem;
+
+        .page-back {
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        > .page-title,
+        .page-header__main .page-title {
+            margin-bottom: 0;
+        }
     }
 
     .page-title {
@@ -365,6 +383,20 @@
     &__task-name {
         min-width: 10rem;
         max-width: 28rem;
+        word-break: break-word;
+    }
+
+    &__assignee {
+        font-weight: 600;
+        color: $color-text-muted;
+        white-space: nowrap;
+    }
+
+    &__assignee-sep {
+        margin: 0 0.35rem;
+    }
+
+    &__task-title {
         word-break: break-word;
     }
 

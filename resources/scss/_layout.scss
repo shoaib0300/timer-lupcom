@@ -20,6 +20,38 @@
     padding: 2rem 0 4rem;
 }
 
+.page-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin: 0 0 1.25rem;
+    padding: 0;
+    border: 1px solid $color-border;
+    border-radius: 10px;
+    background: rgba($color-surface-alt, 0.9);
+    color: $color-text;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    svg {
+        width: 22px;
+        height: 22px;
+        pointer-events: none;
+    }
+
+    &:hover {
+        color: $color-text;
+        background: $color-surface;
+        border-color: rgba($color-primary, 0.45);
+    }
+
+    &.is-hidden {
+        display: none;
+    }
+}
+
 .site-header {
     background: rgba($color-surface, 0.9);
     border-bottom: 1px solid $color-border;

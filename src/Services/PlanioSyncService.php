@@ -100,6 +100,31 @@ final class PlanioSyncService
         $this->settings->set('planio.last_sync_at', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
     }
 
+    /**
+     * Re-sync every locally linked Planio project (names + issue statuses).
+     *
+     * @return array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int, projects: int}
+     */
+    public function refreshAllLinkedProjects(): array
+    {
+        $planioProjectIds = $this->projects->linkedPlanioIds();
+
+        if ($planioProjectIds === []) {
+            return [
+                'projects_created' => 0,
+                'projects_updated' => 0,
+                'tasks_created' => 0,
+                'tasks_updated' => 0,
+                'projects' => 0,
+            ];
+        }
+
+        $stats = $this->sync($planioProjectIds, true);
+        $stats['projects'] = count($planioProjectIds);
+
+        return $stats;
+    }
+
     /** @return array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} */
     private static function emptyStats(): array
     {
@@ -162,16 +187,17 @@ final class PlanioSyncService
             $description = isset($issue['description']) ? trim((string) $issue['description']) : null;
             $description = $description !== '' ? $description : null;
             $status = PlanioClient::issueStatusLabel($issue);
+            $assignee = PlanioClient::issueAssigneeLabel($issue);
 
             $existing = $this->tasks->findByPlanioIssueId($localProjectId, $planioIssueId);
 
             if ($existing !== null) {
-                $this->tasks->update($existing->id, $name, $description, $status);
+                $this->tasks->updateFromPlanio($existing->id, $name, $description, $status, $assignee);
                 $stats['tasks_updated']++;
                 continue;
             }
 
-            $this->tasks->create($localProjectId, $name, $description, $status, $planioIssueId);
+            $this->tasks->create($localProjectId, $name, $description, $status, $planioIssueId, $assignee);
             $stats['tasks_created']++;
         }
     }

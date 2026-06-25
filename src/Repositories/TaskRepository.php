@@ -72,11 +72,12 @@ final class TaskRepository
         ?string $description,
         string $status,
         ?int $planioIssueId = null,
+        ?string $planioAssignee = null,
     ): int {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO tasks (project_id, name, description, status, planio_issue_id) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO tasks (project_id, name, description, status, planio_issue_id, planio_assignee) VALUES (?, ?, ?, ?, ?, ?)',
         );
-        $stmt->execute([$projectId, $name, $description, $status, $planioIssueId]);
+        $stmt->execute([$projectId, $name, $description, $status, $planioIssueId, $planioAssignee]);
 
         return (int) $this->pdo->lastInsertId();
     }
@@ -102,6 +103,19 @@ final class TaskRepository
             'UPDATE tasks SET name = ?, description = ?, status = ? WHERE id = ?',
         );
         $stmt->execute([$name, $description, $status, $id]);
+    }
+
+    public function updateFromPlanio(
+        int $id,
+        string $name,
+        ?string $description,
+        string $status,
+        ?string $planioAssignee,
+    ): void {
+        $stmt = $this->pdo->prepare(
+            'UPDATE tasks SET name = ?, description = ?, status = ?, planio_assignee = ? WHERE id = ?',
+        );
+        $stmt->execute([$name, $description, $status, $planioAssignee, $id]);
     }
 
     public function delete(int $id): void
