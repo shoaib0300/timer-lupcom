@@ -9,6 +9,7 @@ use Timer\Http\Response;
 use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\SettingsRepository;
 use Timer\Repositories\TaskRepository;
+use Timer\Repositories\TimeEntryRepository;
 use Timer\Services\PlanioClient;
 use Timer\Services\PlanioSyncService;
 
@@ -71,9 +72,33 @@ final class PlanioController extends BaseController
 
     public function disconnect(Request $request): Response
     {
-        new SettingsRepository($this->app->db())->clearPlanio();
+        $db = $this->app->db();
+        $settings = new SettingsRepository($db);
+        $projects = new ProjectRepository($db);
+        $timeEntries = new TimeEntryRepository($db);
+        $sync = new PlanioSyncService(
+            $settings,
+            $projects,
+            new TaskRepository($db),
+        );
 
-        return $this->redirectWith('/settings/planio', 'success', 'Planio connection removed. Enter your API key to connect again.');
+        $db->beginTransaction();
+
+        try {
+            $removed = $sync->purgeImportedProjects($timeEntries);
+            $settings->clearPlanio();
+            $db->commit();
+        } catch (\Throwable $exception) {
+            $db->rollBack();
+
+            return $this->redirectWith('/settings/planio', 'error', $exception->getMessage());
+        }
+
+        return $this->redirectWith(
+            '/settings/planio',
+            'success',
+            $this->trans('planio.disconnected', ['count' => (string) $removed]),
+        );
     }
 
     public function testApi(Request $request): Response

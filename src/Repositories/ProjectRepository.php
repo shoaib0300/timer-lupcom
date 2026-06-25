@@ -88,6 +88,17 @@ final class ProjectRepository
         return array_map(intval(...), $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
+    /** @return list<int> */
+    public function importedLocalIds(): array
+    {
+        $stmt = $this->pdo->query('SELECT id FROM projects WHERE planio_id IS NOT NULL');
+        if (!$stmt) {
+            return [];
+        }
+
+        return array_map(intval(...), $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
     public function update(int $id, string $name, ?string $description, string $color): void
     {
         $stmt = $this->pdo->prepare(

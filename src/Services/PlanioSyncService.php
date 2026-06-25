@@ -7,6 +7,7 @@ namespace Timer\Services;
 use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\SettingsRepository;
 use Timer\Repositories\TaskRepository;
+use Timer\Repositories\TimeEntryRepository;
 
 final class PlanioSyncService
 {
@@ -200,5 +201,23 @@ final class PlanioSyncService
             $this->tasks->create($localProjectId, $name, $description, $status, $planioIssueId, $assignee);
             $stats['tasks_created']++;
         }
+    }
+
+    public function purgeImportedProjects(TimeEntryRepository $timeEntries): int
+    {
+        $projectIds = $this->projects->importedLocalIds();
+
+        if ($projectIds === []) {
+            return 0;
+        }
+
+        $timeEntries->stopRunningForProjects($projectIds);
+        $timeEntries->detachFromProjects($projectIds);
+
+        foreach ($projectIds as $projectId) {
+            $this->projects->delete($projectId);
+        }
+
+        return count($projectIds);
     }
 }

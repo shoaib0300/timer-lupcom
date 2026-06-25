@@ -307,6 +307,55 @@ final class TimeEntryRepository
         return (int) $this->pdo->lastInsertId();
     }
 
+    /** @param list<int> $projectIds */
+    public function stopRunningForProjects(array $projectIds): void
+    {
+        if ($projectIds === []) {
+            return;
+        }
+
+        foreach ($this->findAllRunning() as $entry) {
+            if ($entry->projectId !== null && in_array($entry->projectId, $projectIds, true)) {
+                $this->stop($entry->id);
+            }
+        }
+    }
+
+    /** @param list<int> $projectIds */
+    public function detachFromProjects(array $projectIds): void
+    {
+        if ($projectIds === []) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
+        $sql = "UPDATE time_entries te
+            INNER JOIN projects p ON p.id = te.project_id
+            LEFT JOIN tasks t ON t.id = te.task_id
+            SET
+                te.notes = CASE
+                    WHEN te.notes IS NULL OR te.notes = '' THEN
+                        CONCAT(
+                            p.name,
+                            IF(t.name IS NOT NULL AND t.name != '', CONCAT(' · ', t.name), '')
+                        )
+                    ELSE
+                        CONCAT(
+                            te.notes,
+                            ' (',
+                            p.name,
+                            IF(t.name IS NOT NULL AND t.name != '', CONCAT(' · ', t.name), ''),
+                            ')'
+                        )
+                END,
+                te.project_id = NULL,
+                te.task_id = NULL
+            WHERE te.project_id IN ($placeholders)";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($projectIds);
+    }
+
     public function totalSecondsInRange(
         string $from,
         string $to,
