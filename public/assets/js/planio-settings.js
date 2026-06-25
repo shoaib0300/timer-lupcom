@@ -1,4 +1,4 @@
-import { escapeHtml } from './utils.js';
+import { escapeHtml, t } from './utils.js';
 
 const loadBtn = document.getElementById('planio-load-projects');
 const testBtn = document.getElementById('planio-test-btn');
@@ -84,7 +84,12 @@ function mergeStats(into, from) {
 }
 
 function formatImportMessage(stats) {
-    return `Imported from Planio: ${stats.projects_created} new and ${stats.projects_updated} updated projects locally. Tasks: ${stats.tasks_created} new, ${stats.tasks_updated} updated. Nothing was sent to Planio.`;
+    return t('imported_summary', {
+        created: stats.projects_created,
+        updated: stats.projects_updated,
+        tasks_created: stats.tasks_created,
+        tasks_updated: stats.tasks_updated,
+    });
 }
 
 function projectNameForId(id) {
@@ -98,7 +103,7 @@ function updateSelectedCount() {
     }
 
     const selected = listEl.querySelectorAll('input[type="checkbox"]:checked').length;
-    countEl.textContent = `${selected} selected`;
+    countEl.textContent = t('selected_count', { count: selected });
 }
 
 function renderProjects() {
@@ -118,7 +123,7 @@ function renderProjects() {
     });
 
     if (filtered.length === 0) {
-        listEl.innerHTML = '<p class="muted" style="padding:1rem;">No projects match your filter.</p>';
+        listEl.innerHTML = '<p class="muted" style="padding:1rem;">' + escapeHtml(t('no_filter_match')) + '</p>';
         listEl.classList.remove('is-hidden');
         updateSelectedCount();
         return;
@@ -131,7 +136,7 @@ function renderProjects() {
                 <strong>${escapeHtml(project.name)}</strong>
                 <span>#${project.id} · ${escapeHtml(project.identifier)}${project.parent_name ? ` · under ${escapeHtml(project.parent_name)}` : ''}</span>
             </div>
-            ${project.is_linked ? '<span class="settings-page__badge">Imported</span>' : ''}
+            ${project.is_linked ? '<span class="settings-page__badge">' + escapeHtml(t('imported_badge')) + '</span>' : ''}
         </label>
     `).join('');
 
@@ -151,7 +156,7 @@ async function loadProjects() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'Could not load projects.');
+            throw new Error(data.error || t('could_not_load_projects'));
         }
 
         projects = data.projects || [];
@@ -159,7 +164,7 @@ async function loadProjects() {
 
         if (projects.length === 0) {
             emptyEl?.classList.remove('is-hidden');
-            emptyEl.textContent = 'No projects found for your account.';
+            emptyEl.textContent = t('no_projects_found');
             return;
         }
 
@@ -183,10 +188,10 @@ async function testConnection() {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.error || 'Connection test failed.');
+            throw new Error(data.error || t('connection_test_failed'));
         }
 
-        showFeedback(`Connected as ${data.user?.name || 'user'}. Reloading…`);
+        showFeedback(t('connected_as', { name: data.user?.name || t('unknown') }));
         window.setTimeout(() => window.location.reload(), 800);
     } catch (error) {
         showFeedback(error.message, true);
@@ -204,7 +209,7 @@ async function syncSelected() {
 
     const selected = [...listEl.querySelectorAll('input[type="checkbox"]:checked')].map((el) => el.value);
     if (selected.length === 0) {
-        showFeedback('Select at least one project to import.', true);
+        showFeedback(t('select_one_project'), true);
         return;
     }
 
@@ -214,7 +219,7 @@ async function syncSelected() {
 
     importing = true;
     setImportControlsDisabled(true);
-    setImportProgress(0, selected.length, 'Starting import…', `0 of ${selected.length} projects`);
+    setImportProgress(0, selected.length, t('starting_import'), t('projects_progress', { done: 0, total: selected.length }));
 
     try {
         for (let index = 0; index < selected.length; index += 1) {
@@ -225,8 +230,8 @@ async function syncSelected() {
             setImportProgress(
                 completedBefore,
                 selected.length,
-                `Importing ${name}…`,
-                `${completedBefore} of ${selected.length} projects`,
+                t('importing_name', { name }),
+                t('projects_progress', { done: completedBefore, total: selected.length }),
             );
 
             const body = new URLSearchParams();
@@ -243,7 +248,7 @@ async function syncSelected() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || 'Import failed.');
+                    throw new Error(data.error || t('import_failed'));
                 }
 
                 mergeStats(totals, data.stats || {});
@@ -256,17 +261,17 @@ async function syncSelected() {
                 completed,
                 selected.length,
                 failures.length > 0 && completed === selected.length
-                    ? 'Import finished with errors'
+                    ? t('import_with_errors')
                     : completed === selected.length
-                        ? 'Import complete'
-                        : `Importing ${name}…`,
-                `${completed} of ${selected.length} projects`,
+                        ? t('import_complete')
+                        : t('importing_name', { name }),
+                t('projects_progress', { done: completed, total: selected.length }),
             );
         }
 
         if (failures.length > 0) {
             const summary = formatImportMessage(totals);
-            showFeedback(`${summary} ${failures.length} project(s) failed: ${failures.slice(0, 3).join('; ')}${failures.length > 3 ? '…' : ''}`, true);
+            showFeedback(`${summary} ${t('projects_failed', { count: failures.length, details: failures.slice(0, 3).join('; ') + (failures.length > 3 ? '…' : '') })}`, true);
         } else {
             showFeedback(formatImportMessage(totals));
         }

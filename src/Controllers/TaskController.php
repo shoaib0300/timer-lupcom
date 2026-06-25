@@ -23,7 +23,7 @@ final class TaskController extends BaseController
             'task' => null,
             'project' => $project,
             'action' => '/projects/' . $projectId . '/tasks',
-            'title' => 'New Task',
+            'title' => $this->trans('tasks.title_new'),
         ]);
     }
 
@@ -43,7 +43,7 @@ final class TaskController extends BaseController
                 'task' => null,
                 'project' => $project,
                 'action' => '/projects/' . $projectId . '/tasks',
-                'title' => 'New Task',
+                'title' => $this->trans('tasks.title_new'),
                 'error' => 'Task name is required.',
             ]);
         }
@@ -73,7 +73,7 @@ final class TaskController extends BaseController
             'task' => $task,
             'project' => $project,
             'action' => '/tasks/' . $id,
-            'title' => 'Edit Task',
+            'title' => $this->trans('tasks.title_edit'),
         ]);
     }
 
@@ -95,7 +95,7 @@ final class TaskController extends BaseController
                 'task' => $task,
                 'project' => $project,
                 'action' => '/tasks/' . $id,
-                'title' => 'Edit Task',
+                'title' => $this->trans('tasks.title_edit'),
                 'error' => 'Task name is required.',
             ]);
         }

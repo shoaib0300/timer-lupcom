@@ -37,7 +37,7 @@ final class ProjectController extends BaseController
         return $this->view('projects/form.html.twig', [
             'project' => null,
             'action' => '/projects',
-            'title' => 'New Project',
+            'title' => $this->trans('projects.new'),
         ]);
     }
 
@@ -49,7 +49,7 @@ final class ProjectController extends BaseController
             return $this->view('projects/form.html.twig', [
                 'project' => null,
                 'action' => '/projects',
-                'title' => 'New Project',
+                'title' => $this->trans('projects.new'),
                 'error' => 'Project name is required.',
             ]);
         }
@@ -115,7 +115,7 @@ final class ProjectController extends BaseController
         return $this->view('projects/form.html.twig', [
             'project' => $project,
             'action' => '/projects/' . $id,
-            'title' => 'Edit Project',
+            'title' => $this->trans('projects.edit'),
         ]);
     }
 
@@ -134,7 +134,7 @@ final class ProjectController extends BaseController
             return $this->view('projects/form.html.twig', [
                 'project' => $project,
                 'action' => '/projects/' . $id,
-                'title' => 'Edit Project',
+                'title' => $this->trans('projects.edit'),
                 'error' => 'Project name is required.',
             ]);
         }

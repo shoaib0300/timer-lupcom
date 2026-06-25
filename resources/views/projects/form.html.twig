@@ -13,32 +13,32 @@
 
     <form method="post" action="{{ action }}">
         <div class="form-group">
-            <label for="name">Name</label>
+            <label for="name">{{ trans('projects.form.name') }}</label>
             <input type="text" id="name" name="name" value="{{ project.name ?? '' }}" required>
         </div>
 
         <div class="form-group">
-            <label for="description">Description</label>
+            <label for="description">{{ trans('projects.form.description') }}</label>
             <textarea id="description" name="description">{{ project.description ?? '' }}</textarea>
         </div>
 
         <div class="form-group">
-            <label for="color">Color</label>
+            <label for="color">{{ trans('projects.form.color') }}</label>
             <input type="color" id="color" name="color" value="{{ project.color ?? '#3b82f6' }}">
         </div>
 
         <div class="actions">
-            <button type="submit" class="btn btn--primary">Save</button>
-            <a href="{% if project %}/projects/{{ project.id }}{% else %}/projects{% endif %}" class="btn btn--ghost">Cancel</a>
+            <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+            <a href="{% if project %}/projects/{{ project.id }}{% else %}/projects{% endif %}" class="btn btn--ghost">{{ trans('common.cancel') }}</a>
         </div>
     </form>
 
     {% if project %}
         <div class="danger-zone">
-            <h2>Delete project</h2>
-            <p class="muted">Removes all tasks and time entries for this project.</p>
-            <form method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? This cannot be undone.');">
-                <button type="submit" class="btn btn--danger btn--sm">Delete project</button>
+            <h2>{{ trans('projects.form.danger_zone') }}</h2>
+            <p class="muted">{{ trans('projects.form.delete_note') }}</p>
+            <form method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('{{ trans('projects.form.delete_confirm_undo', {name: project.name})|e('js') }}');">
+                <button type="submit" class="btn btn--danger btn--sm">{{ trans('dashboard.delete_project') }}</button>
             </form>
         </div>
     {% endif %}

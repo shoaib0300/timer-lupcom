@@ -1,45 +1,45 @@
 {% extends 'layouts/base.html.twig' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}{{ trans('dashboard.title') }}{% endblock %}
 
 {% set active_nav = 'dashboard' %}
 {% set hide_page_back = true %}
 
 {% block content %}
 <div class="dashboard-page">
-<h1 class="page-title">Dashboard</h1>
+<h1 class="page-title">{{ trans('dashboard.title') }}</h1>
 
 <div class="grid grid--2">
     <div class="card">
-        <div class="muted">Tracked today</div>
+        <div class="muted">{{ trans('dashboard.tracked_today') }}</div>
         <div class="stat js-total-today" data-total-seconds="{{ total_today_seconds }}">{{ total_today }}</div>
     </div>
     <div class="card">
-        <div class="muted">Projects</div>
+        <div class="muted">{{ trans('nav.projects') }}</div>
         <div class="stat">{{ projects|length }}</div>
     </div>
 </div>
 
 <section class="card projects-section">
     <div class="section-header projects-section__header">
-        <h2>Projects</h2>
-        <a href="/projects/create" class="btn btn--ghost btn--sm">New project</a>
+        <h2>{{ trans('nav.projects') }}</h2>
+        <a href="/projects/create" class="btn btn--ghost btn--sm">{{ trans('dashboard.new_project') }}</a>
     </div>
 
     <div class="projects-section__toolbar">
-        <label class="projects-section__search-label" for="project-search">Search</label>
+        <label class="projects-section__search-label" for="project-search">{{ trans('common.search') }}</label>
         <input
             type="search"
             id="project-search"
             class="projects-section__search"
-            placeholder="Search projects…"
+            placeholder="{{ trans('dashboard.search_projects') }}"
             autocomplete="off"
         >
     </div>
-    <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">No projects match your search.</p>
+    <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">{{ trans('dashboard.no_search_match') }}</p>
 
     {% if projects is empty %}
-        <p class="muted">No projects yet. <a href="/projects/create">Create your first project</a>.</p>
+        <p class="muted">{{ trans('dashboard.no_projects') }} <a href="/projects/create">{{ trans('dashboard.create_first') }}</a>.</p>
     {% else %}
         <div class="grid grid--projects" id="projects-grid" data-show-increment="{{ projects_show_increment }}" data-visible-limit="{{ projects_visible_limit }}">
             {% for project in projects %}
@@ -55,7 +55,7 @@
                     </h3>
                     <div class="project-card__meta">
                         <p class="project-card__time muted js-project-total" data-total-seconds="{{ project.totalSeconds }}">{{ format_time(project.totalSeconds) }}</p>
-                        <span class="project-card__badge js-project-running-badge" hidden>Running</span>
+                        <span class="project-card__badge js-project-running-badge" hidden>{{ trans('dashboard.running') }}</span>
                     </div>
                     <div class="project-card__actions">
                         <button
@@ -63,11 +63,11 @@
                             class="card-icon-btn card-icon-btn--start js-start-timer"
                             data-project-id="{{ project.id }}"
                             data-project-name="{{ project.name }}"
-                            title="Start timer"
-                            aria-label="Start timer for {{ project.name }}"
+                            title="{{ trans('timer.start_timer') }}"
+                            aria-label="{{ trans('timer.start_timer_for', {name: project.name}) }}"
                         ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg></button>
-                        <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;?');">
-                            <button type="submit" class="card-icon-btn card-icon-btn--delete" title="Delete project" aria-label="Delete {{ project.name }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg></button>
+                        <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('{{ trans('dashboard.delete_project_confirm', {name: project.name})|e('js') }}');">
+                            <button type="submit" class="card-icon-btn card-icon-btn--delete" title="{{ trans('dashboard.delete_project') }}" aria-label="{{ trans('common.delete') }} {{ project.name }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg></button>
                         </form>
                     </div>
                 </article>
@@ -76,7 +76,7 @@
 
         {% if projects|length > projects_visible_limit %}
             <div class="projects-section__footer">
-                <button type="button" class="btn btn--ghost js-show-more-projects">Show more projects</button>
+                <button type="button" class="btn btn--ghost js-show-more-projects" data-more-count="{{ projects|length - projects_visible_limit }}">{{ trans('dashboard.show_more', {count: projects|length - projects_visible_limit}) }}</button>
             </div>
         {% endif %}
     {% endif %}
@@ -84,49 +84,49 @@
 
 <section class="card manual-entry">
     <div class="manual-entry__header">
-        <h2>Log time</h2>
+        <h2>{{ trans('dashboard.log_time') }}</h2>
     </div>
-    <p class="muted manual-entry__intro">Forgot to start a timer? Pick the date you worked, optionally link a project and task, or log general office time with a reason.</p>
+    <p class="muted manual-entry__intro">{{ trans('dashboard.log_time_intro') }}</p>
     <form id="manual-entry-form" class="manual-entry__form" data-today="{{ today_date }}">
         <div class="manual-entry__row">
             <div class="form-group">
-                <label for="manual-work-date">Date</label>
+                <label for="manual-work-date">{{ trans('common.date') }}</label>
                 <input type="date" id="manual-work-date" name="work_date" class="manual-entry__date" value="{{ today_date }}" max="{{ today_date }}" required>
             </div>
             <div class="manual-entry__duration">
                 <div class="form-group">
-                    <label for="manual-duration-hours">Hours</label>
+                    <label for="manual-duration-hours">{{ trans('common.hours') }}</label>
                     <input type="number" id="manual-duration-hours" name="duration_hours" min="0" max="24" value="1" required>
                 </div>
                 <div class="form-group">
-                    <label for="manual-duration-minutes">Minutes</label>
+                    <label for="manual-duration-minutes">{{ trans('common.minutes') }}</label>
                     <input type="number" id="manual-duration-minutes" name="duration_minutes" min="0" max="59" value="0" required>
                 </div>
             </div>
         </div>
         <div class="manual-entry__row">
             <div class="form-group">
-                <label for="manual-project">Project</label>
+                <label for="manual-project">{{ trans('common.project') }}</label>
                 <select id="manual-project" name="project_id">
-                    <option value="">No project (general time)</option>
+                    <option value="">{{ trans('common.no_project_general') }}</option>
                     {% for project in projects %}
                         <option value="{{ project.id }}">{{ project.name }}</option>
                     {% endfor %}
                 </select>
             </div>
             <div class="form-group">
-                <label for="manual-task">Task</label>
+                <label for="manual-task">{{ trans('common.task') }}</label>
                 <select id="manual-task" name="task_id" disabled>
-                    <option value="">Select a project first</option>
+                    <option value="">{{ trans('common.select_project_first') }}</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="manual-reason" id="manual-reason-label">Reason</label>
-                <input type="text" id="manual-reason" name="reason" placeholder="e.g. Office / waiting for work">
+                <label for="manual-reason" id="manual-reason-label">{{ trans('dashboard.reason') }}</label>
+                <input type="text" id="manual-reason" name="reason" placeholder="{{ trans('dashboard.reason_placeholder') }}">
             </div>
             <div class="form-group manual-entry__actions">
                 <label>&nbsp;</label>
-                <button type="submit" class="btn btn--primary">Add time</button>
+                <button type="submit" class="btn btn--primary">{{ trans('dashboard.add_time') }}</button>
             </div>
         </div>
         <p class="manual-entry__feedback is-hidden" id="manual-entry-feedback" role="status"></p>
@@ -135,18 +135,18 @@
 
 <section class="card sessions-card">
     <div class="sessions-card__header">
-        <h2>Today's sessions</h2>
+        <h2>{{ trans('dashboard.todays_sessions') }}</h2>
     </div>
-    <p class="muted sessions-card__note">Only sessions from today are listed here. Entries for other dates appear in <a href="/reports">Time log</a>.</p>
+    <p class="muted sessions-card__note">{{ trans('dashboard.sessions_note_prefix') }} <a href="/reports">{{ trans('nav.time_log') }}</a>{{ trans('dashboard.sessions_note_suffix') }}</p>
     {% if recent_entries is empty %}
-        <p class="muted js-sessions-empty">No sessions tracked today yet.</p>
+        <p class="muted js-sessions-empty">{{ trans('dashboard.no_sessions_today') }}</p>
         <table class="table is-hidden" id="sessions-table">
             <thead>
                 <tr>
-                    <th>Project</th>
-                    <th>Task / reason</th>
-                    <th>Duration</th>
-                    <th>Ended</th>
+                    <th>{{ trans('common.project') }}</th>
+                    <th>{{ trans('dashboard.task_reason') }}</th>
+                    <th>{{ trans('common.duration') }}</th>
+                    <th>{{ trans('common.ended') }}</th>
                 </tr>
             </thead>
             <tbody id="recent-sessions-body"></tbody>
@@ -155,10 +155,10 @@
         <table class="table" id="sessions-table">
             <thead>
                 <tr>
-                    <th>Project</th>
-                    <th>Task / reason</th>
-                    <th>Duration</th>
-                    <th>Ended</th>
+                    <th>{{ trans('common.project') }}</th>
+                    <th>{{ trans('dashboard.task_reason') }}</th>
+                    <th>{{ trans('common.duration') }}</th>
+                    <th>{{ trans('common.ended') }}</th>
                 </tr>
             </thead>
             <tbody id="recent-sessions-body">
@@ -167,13 +167,19 @@
                         <td>
                             {% if entry.isGeneral %}
                                 <span class="project-dot" style="background: #64748b;"></span>
-                                General
+                                {{ trans('common.general') }}
                             {% else %}
                                 <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
                                 {{ entry.projectName }}
                             {% endif %}
                         </td>
-                        <td>{{ entry.displayLabel() }}</td>
+                        <td>
+                            {% if entry.isGeneral %}
+                                {{ entry.notes ?: trans('common.general_time') }}
+                            {% else %}
+                                {{ entry.displayLabel() }}
+                            {% endif %}
+                        </td>
                         <td>{{ format_time(entry.durationSeconds) }}</td>
                         <td class="muted">{{ entry.endedAt }}</td>
                     </tr>

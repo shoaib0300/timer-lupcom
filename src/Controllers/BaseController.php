@@ -20,6 +20,12 @@ abstract class BaseController
         return $this->app->view()->render($template, $data);
     }
 
+    /** @param array<string, scalar> $params */
+    protected function trans(string $key, array $params = []): string
+    {
+        return $this->app->translator()->trans($key, $params);
+    }
+
     protected function redirect(string $path): Response
     {
         return Response::redirect($path);

@@ -1,40 +1,40 @@
 {% extends 'layouts/base.html.twig' %}
 
-{% block title %}Projects{% endblock %}
+{% block title %}{{ trans('projects.title') }}{% endblock %}
 {% set active_nav = 'projects' %}
 
 {% block content %}
 <div class="projects-page">
     <div class="page-header page-header--center">
-        <h1 class="page-title" style="margin:0;">Projects</h1>
-        <a href="/projects/create" class="btn btn--primary">New project</a>
+        <h1 class="page-title" style="margin:0;">{{ trans('projects.title') }}</h1>
+        <a href="/projects/create" class="btn btn--primary">{{ trans('projects.new') }}</a>
     </div>
 
     {% if projects is empty %}
         <div class="card">
-            <p class="muted">No projects yet.</p>
+            <p class="muted">{{ trans('dashboard.no_projects') }}</p>
         </div>
     {% else %}
         <div class="card">
             <div class="projects-section__toolbar">
-                <label class="projects-section__search-label" for="project-search">Search</label>
+                <label class="projects-section__search-label" for="project-search">{{ trans('common.search') }}</label>
                 <input
                     type="search"
                     id="project-search"
                     class="projects-section__search"
-                    placeholder="Search projects…"
+                    placeholder="{{ trans('dashboard.search_projects') }}"
                     autocomplete="off"
                 >
             </div>
-            <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">No projects match your search.</p>
+            <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">{{ trans('projects.no_match') }}</p>
 
             <table class="table" id="projects-table">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Planio #</th>
-                        <th>Tasks</th>
-                        <th>Time tracked</th>
+                        <th>{{ trans('common.name') }}</th>
+                        <th>{{ trans('projects.planio_number') }}</th>
+                        <th>{{ trans('projects.tasks') }}</th>
+                        <th>{{ trans('projects.time_tracked') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -53,7 +53,7 @@
                                 {% if project.planioId %}
                                     <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ project.planioId }}</span>
                                 {% else %}
-                                    <span class="muted">—</span>
+                                    <span class="muted">{{ trans('common.none') }}</span>
                                 {% endif %}
                             </td>
                             <td>{{ project.taskCount }}</td>
@@ -63,11 +63,11 @@
                                     <a
                                         href="/projects/{{ project.id }}/edit"
                                         class="card-icon-btn card-icon-btn--edit"
-                                        title="Edit project"
-                                        aria-label="Edit {{ project.name }}"
+                                        title="{{ trans('projects.edit') }}"
+                                        aria-label="{{ trans('common.edit') }} {{ project.name }}"
                                     ><svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04l-1.34-1.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83a1 1 0 0 0 0-1.41z"/></svg></a>
-                                    <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? All tasks and time entries will be removed.');">
-                                        <button type="submit" class="card-icon-btn card-icon-btn--delete" title="Delete project" aria-label="Delete {{ project.name }}"><svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg></button>
+                                    <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('{{ trans('projects.delete_confirm', {name: project.name})|e('js') }}');">
+                                        <button type="submit" class="card-icon-btn card-icon-btn--delete" title="{{ trans('dashboard.delete_project') }}" aria-label="{{ trans('common.delete') }} {{ project.name }}"><svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg></button>
                                     </form>
                                 </div>
                             </td>

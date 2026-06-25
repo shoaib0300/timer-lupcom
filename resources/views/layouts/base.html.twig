@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ locale }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Timer{% endblock %} | Lupcom Timer</title>
+    <title>{% block title %}{{ trans('app.name') }}{% endblock %} | {{ trans('app.title_suffix') }}</title>
     <link rel="stylesheet" href="/assets/css/main.css">
     {% block head %}{% endblock %}
 </head>
@@ -11,22 +11,22 @@
     <div class="app-shell">
         <aside class="timer-sidebar" id="timer-sidebar">
             <div class="timer-sidebar__header">
-                <h2 class="timer-sidebar__title">Active timers</h2>
+                <h2 class="timer-sidebar__title">{{ trans('timer.active_timers') }}</h2>
                 <span class="timer-sidebar__count" id="timer-count">0</span>
             </div>
             <div class="timer-sidebar__list" id="timer-list"></div>
-            <p class="timer-sidebar__empty muted" id="timer-empty">No active timers</p>
+            <p class="timer-sidebar__empty muted" id="timer-empty">{{ trans('timer.no_active') }}</p>
         </aside>
 
         <div class="app-main">
             <header class="site-header">
                 <div class="site-header__inner">
-                    <a href="/" class="brand">Lupcom Timer</a>
+                    <a href="/" class="brand">{{ trans('app.name') }}</a>
                     <nav class="nav">
-                        <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">Dashboard</a>
-                        <a href="/reports" class="{% if active_nav == 'reports' %}is-active{% endif %}">Time log</a>
-                        <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">Projects</a>
-                        <a href="/settings/planio" class="{% if active_nav == 'planio' %}is-active{% endif %}">Planio</a>
+                        <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">{{ trans('nav.dashboard') }}</a>
+                        <a href="/reports" class="{% if active_nav == 'reports' %}is-active{% endif %}">{{ trans('nav.time_log') }}</a>
+                        <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">{{ trans('nav.projects') }}</a>
+                        <a href="/settings/planio" class="{% if active_nav == 'planio' %}is-active{% endif %}">{{ trans('nav.planio') }}</a>
                     </nav>
                 </div>
             </header>
@@ -37,8 +37,8 @@
                     type="button"
                     class="page-back"
                     id="page-back"
-                    aria-label="Go back"
-                    title="Go back"
+                    aria-label="{{ trans('common.back') }}"
+                    title="{{ trans('common.back') }}"
                     data-fallback="/"
                 >
                     <svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M15.41 16.59 10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
@@ -52,28 +52,29 @@
     <div id="timer-modal" class="modal is-hidden" aria-hidden="true">
         <div class="modal__backdrop" data-modal-close></div>
         <div class="modal__dialog" role="dialog" aria-labelledby="timer-modal-title">
-            <h3 id="timer-modal-title" class="modal__title">Start timer</h3>
+            <h3 id="timer-modal-title" class="modal__title">{{ trans('timer.start_timer') }}</h3>
             <p class="muted" id="timer-modal-project"></p>
             <form id="timer-start-form">
                 <div class="form-group">
-                    <label for="timer-task-select">Task</label>
+                    <label for="timer-task-select">{{ trans('common.task') }}</label>
                     <select id="timer-task-select" name="task_select" required>
-                        <option value="">Loading tasks…</option>
+                        <option value="">{{ trans('timer.loading_tasks') }}</option>
                     </select>
                 </div>
                 <div class="form-group is-hidden" id="timer-new-task-group">
-                    <label for="timer-task-name">New task name</label>
-                    <input type="text" id="timer-task-name" name="task_name" placeholder="Enter task name" autocomplete="off">
+                    <label for="timer-task-name">{{ trans('timer.new_task_name') }}</label>
+                    <input type="text" id="timer-task-name" name="task_name" placeholder="{{ trans('timer.task_placeholder') }}" autocomplete="off">
                 </div>
                 <div class="actions">
-                    <button type="submit" class="btn btn--success">Start</button>
-                    <button type="button" class="btn btn--ghost" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn btn--success">{{ trans('common.start') }}</button>
+                    <button type="button" class="btn btn--ghost" data-modal-close>{{ trans('common.cancel') }}</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script type="module" src="/assets/js/app.js?v=14"></script>
+    <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
+    <script type="module" src="/assets/js/app.js?v=15"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

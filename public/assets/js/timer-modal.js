@@ -1,4 +1,5 @@
 import { fetchProjectTasks, startTimer } from './timer-api.js';
+import { t } from './utils.js';
 
 const NEW_TASK_VALUE = '__new__';
 
@@ -39,7 +40,7 @@ export function createTimerModal(modal, modalProject, startForm, onStarted) {
 
         const createOption = document.createElement('option');
         createOption.value = NEW_TASK_VALUE;
-        createOption.textContent = '+ Create new task';
+        createOption.textContent = t('create_new_task');
         taskSelect.appendChild(createOption);
 
         const preferred = preferredTaskName && preferredTaskName !== 'no-work'
@@ -68,7 +69,7 @@ export function createTimerModal(modal, modalProject, startForm, onStarted) {
         modal.classList.remove('is-hidden');
         modal.setAttribute('aria-hidden', 'false');
 
-        taskSelect.innerHTML = '<option value="">Loading tasks…</option>';
+        taskSelect.innerHTML = `<option value="">${t('loading_tasks')}</option>`;
         taskSelect.disabled = true;
         setNewTaskMode(false);
 
@@ -87,7 +88,7 @@ export function createTimerModal(modal, modalProject, startForm, onStarted) {
         pendingProject = null;
         startForm.reset();
         setNewTaskMode(false);
-        taskSelect.innerHTML = '<option value="">Loading tasks…</option>';
+        taskSelect.innerHTML = `<option value="">${t('loading_tasks')}</option>`;
     }
 
     function resolveTaskName() {

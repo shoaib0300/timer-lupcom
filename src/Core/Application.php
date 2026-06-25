@@ -10,12 +10,13 @@ use PDOException;
 use RuntimeException;
 use Timer\Http\Request;
 use Timer\Http\Response;
+use Timer\Support\Translator;
 
 final class Application
 {
     private array $config;
     private ?PDO $pdo = null;
-    private ?View $view = null;
+    private ?Translator $translator = null;
 
     public function __construct(
         private readonly string $basePath,
@@ -31,11 +32,28 @@ final class Application
 
     public function run(): void
     {
+        $this->translator = Translator::fromRequest(
+            $this->basePath . '/resources/lang',
+            $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? null,
+        );
+
         $request = Request::fromGlobals();
         $router = new Router(require $this->basePath . '/config/routes.php');
         $response = $router->dispatch($request, $this);
 
         $response->send();
+    }
+
+    public function translator(): Translator
+    {
+        if ($this->translator === null) {
+            $this->translator = Translator::fromRequest(
+                $this->basePath . '/resources/lang',
+                null,
+            );
+        }
+
+        return $this->translator;
     }
 
     public function basePath(): string
@@ -59,14 +77,11 @@ final class Application
 
     public function view(): View
     {
-        if ($this->view === null) {
-            $this->view = new View(
-                $this->config['app']['views_path'],
-                $this->config['app']['debug'],
-            );
-        }
-
-        return $this->view;
+        return new View(
+            $this->config['app']['views_path'],
+            $this->config['app']['debug'],
+            $this->translator(),
+        );
     }
 
     private function loadEnvironment(): void

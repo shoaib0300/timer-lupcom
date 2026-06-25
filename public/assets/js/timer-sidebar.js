@@ -1,4 +1,4 @@
-import { escapeHtml, formatClock, ICONS } from './utils.js';
+import { escapeHtml, formatClock, ICONS, t } from './utils.js';
 import { postTimerAction } from './timer-api.js';
 import { updateDashboardAfterStop } from './dashboard.js';
 import { syncProjectCards } from './project-cards.js';
@@ -16,22 +16,22 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
     function renderTimerItem(timer) {
         const paused = Boolean(timer.is_paused);
         const toggleBtn = paused
-            ? `<button type="button" class="timer-icon-btn timer-icon-btn--play js-resume-timer" data-entry-id="${timer.id}" title="Resume" aria-label="Resume">${ICONS.play}</button>`
-            : `<button type="button" class="timer-icon-btn timer-icon-btn--pause js-pause-timer" data-entry-id="${timer.id}" title="Pause" aria-label="Pause">${ICONS.pause}</button>`;
+            ? `<button type="button" class="timer-icon-btn timer-icon-btn--play js-resume-timer" data-entry-id="${timer.id}" title="${t('resume')}" aria-label="${t('resume')}">${ICONS.play}</button>`
+            : `<button type="button" class="timer-icon-btn timer-icon-btn--pause js-pause-timer" data-entry-id="${timer.id}" title="${t('pause')}" aria-label="${t('pause')}">${ICONS.pause}</button>`;
 
         return `
             <article class="timer-item${paused ? ' is-paused' : ''}" data-entry-id="${timer.id}">
                 <span class="project-dot timer-item__dot" style="background:${escapeHtml(timer.project_color || '#3b82f6')}"></span>
                 <div class="timer-item__content">
                     <div class="timer-item__row">
-                        <span class="timer-item__project">${escapeHtml(timer.project_name || 'Project')}</span>
+                        <span class="timer-item__project">${escapeHtml(timer.project_name || t('project_fallback'))}</span>
                         <time class="timer-item__clock" data-clock-for="${timer.id}">${formatClock(timer.elapsed_seconds || 0)}</time>
                     </div>
                     <div class="timer-item__row">
-                        <span class="timer-item__task">${escapeHtml(timer.task_name || 'no-work')}</span>
+                        <span class="timer-item__task">${escapeHtml(timer.task_name || t('no_work'))}</span>
                         <div class="timer-item__actions">
                             ${toggleBtn}
-                            <button type="button" class="timer-icon-btn timer-icon-btn--stop js-stop-timer" data-entry-id="${timer.id}" title="Stop" aria-label="Stop">${ICONS.stop}</button>
+                            <button type="button" class="timer-icon-btn timer-icon-btn--stop js-stop-timer" data-entry-id="${timer.id}" title="${t('stop')}" aria-label="${t('stop')}">${ICONS.stop}</button>
                         </div>
                     </div>
                 </div>

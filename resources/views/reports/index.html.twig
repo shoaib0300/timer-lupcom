@@ -1,11 +1,11 @@
 {% extends 'layouts/base.html.twig' %}
 
-{% block title %}Time log{% endblock %}
+{% block title %}{{ trans('reports.title') }}{% endblock %}
 {% set active_nav = 'reports' %}
 
 {% block content %}
 <div class="reports-page">
-<h1 class="page-title">Time log</h1>
+<h1 class="page-title">{{ trans('reports.title') }}</h1>
 
 <div class="card reports-filters">
     <form method="get" action="/reports" class="reports-filters__form" id="reports-filter-form">
@@ -16,9 +16,9 @@
 
         <div class="reports-filters__row">
             <div class="form-group">
-                <label for="filter-project">Project</label>
+                <label for="filter-project">{{ trans('common.project') }}</label>
                 <select id="filter-project" name="project_id">
-                    <option value="">All projects</option>
+                    <option value="">{{ trans('common.all_projects') }}</option>
                     {% for project in projects %}
                         <option value="{{ project.id }}"{% if project_id == project.id %} selected{% endif %}>
                             {{ project.name }}
@@ -28,9 +28,9 @@
             </div>
 
             <div class="form-group">
-                <label for="filter-task">Task</label>
+                <label for="filter-task">{{ trans('common.task') }}</label>
                 <select id="filter-task" name="task_id"{% if project_id is empty %} disabled{% endif %}>
-                    <option value="">All tasks</option>
+                    <option value="">{{ trans('common.all_tasks') }}</option>
                     {% for task in tasks %}
                         <option value="{{ task.id }}"{% if task_id == task.id %} selected{% endif %}>
                             {{ task.name }}
@@ -41,7 +41,7 @@
 
             <div class="form-group reports-filters__actions">
                 <label>&nbsp;</label>
-                <button type="submit" class="btn btn--primary">Apply filters</button>
+                <button type="submit" class="btn btn--primary">{{ trans('common.apply_filters') }}</button>
             </div>
         </div>
     </form>
@@ -50,22 +50,22 @@
 <section class="card calendar-card">
     <div class="calendar-header">
         <div class="calendar-header__nav">
-            <a href="/reports?{{ prev_month_query }}" class="btn btn--ghost btn--sm" aria-label="Previous month">&larr;</a>
+            <a href="/reports?{{ prev_month_query }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.previous_month') }}">&larr;</a>
             <h2 class="calendar-header__title">{{ month_label }}</h2>
-            <a href="/reports?{{ next_month_query }}" class="btn btn--ghost btn--sm" aria-label="Next month">&rarr;</a>
+            <a href="/reports?{{ next_month_query }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.next_month') }}">&rarr;</a>
         </div>
-        <p class="muted calendar-header__total">Month total: <strong>{{ month_total }}</strong></p>
+        <p class="muted calendar-header__total">{{ trans('common.month_total', {total: month_total})|raw }}</p>
     </div>
 
-    <div class="calendar-grid" role="grid" aria-label="Monthly time log">
+    <div class="calendar-grid" role="grid" aria-label="{{ trans('reports.calendar_label') }}">
         <div class="calendar-grid__weekdays" aria-hidden="true">
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
-            <span>Sun</span>
+            <span>{{ trans('reports.weekday.mon') }}</span>
+            <span>{{ trans('reports.weekday.tue') }}</span>
+            <span>{{ trans('reports.weekday.wed') }}</span>
+            <span>{{ trans('reports.weekday.thu') }}</span>
+            <span>{{ trans('reports.weekday.fri') }}</span>
+            <span>{{ trans('reports.weekday.sat') }}</span>
+            <span>{{ trans('reports.weekday.sun') }}</span>
         </div>
         <div class="calendar-grid__days">
             {% for cell in calendar_cells %}
@@ -93,19 +93,19 @@
     <section class="card reports-page__day-detail">
         <div class="section-header">
             <h2>{{ selected_day_label }}</h2>
-            <span class="muted">Total: <strong>{{ day_total }}</strong></span>
+            <span class="muted">{{ trans('common.total') }}: <strong>{{ day_total }}</strong></span>
         </div>
 
         {% if day_entries is empty %}
-            <p class="muted">No tracked time on this day for the current filters.</p>
+            <p class="muted">{{ trans('reports.no_time_day') }}</p>
         {% else %}
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Project</th>
-                        <th>Task / reason</th>
-                        <th>Started</th>
-                        <th>Duration</th>
+                        <th>{{ trans('common.project') }}</th>
+                        <th>{{ trans('dashboard.task_reason') }}</th>
+                        <th>{{ trans('common.started') }}</th>
+                        <th>{{ trans('common.duration') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -114,13 +114,19 @@
                             <td>
                                 {% if entry.isGeneral %}
                                     <span class="project-dot" style="background: #64748b;"></span>
-                                    General
+                                    {{ trans('common.general') }}
                                 {% else %}
                                     <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
                                     {{ entry.projectName }}
                                 {% endif %}
                             </td>
-                            <td>{{ entry.displayLabel() }}</td>
+                            <td>
+                                {% if entry.isGeneral %}
+                                    {{ entry.notes ?: trans('common.general_time') }}
+                                {% else %}
+                                    {{ entry.displayLabel() }}
+                                {% endif %}
+                            </td>
                             <td class="muted">{{ entry.startedAt }}</td>
                             <td>{{ format_time(entry.durationSeconds) }}</td>
                         </tr>
@@ -130,7 +136,7 @@
         {% endif %}
     </section>
 {% else %}
-    <p class="muted reports-hint">Click a day on the calendar to see session details.</p>
+    <p class="muted reports-hint">{{ trans('reports.click_day') }}</p>
 {% endif %}
 </div>
 {% endblock %}

@@ -18,3 +18,14 @@ export function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+export function t(key, params = {}) {
+    const strings = window.__I18N__ || {};
+    let message = strings[key] ?? key;
+
+    Object.entries(params).forEach(([name, value]) => {
+        message = message.replaceAll(`:${name}`, String(value));
+    });
+
+    return message;
+}

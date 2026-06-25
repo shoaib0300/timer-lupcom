@@ -15,7 +15,7 @@
                 {% if project.planioId %}
                     <span class="project-show__planio-badge">Planio #{{ project.planioId }}</span>
                 {% endif %}
-                <span class="muted js-project-total" data-project-id="{{ project.id }}" data-total-seconds="{{ project.totalSeconds }}">{{ format_time(project.totalSeconds) }} tracked</span>
+                <span class="muted js-project-total" data-project-id="{{ project.id }}" data-total-seconds="{{ project.totalSeconds }}">{{ trans('projects.tracked', {time: format_time(project.totalSeconds)}) }}</span>
             </div>
             {% if project.description %}
                 <p class="project-show__description muted">{{ project.description }}</p>
@@ -28,31 +28,31 @@
                 data-project-id="{{ project.id }}"
                 data-project-name="{{ project.name }}"
             >
-                Start timer
+                {{ trans('timer.start_timer') }}
             </button>
-            <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost">Edit</a>
-            <a href="/projects/{{ project.id }}/tasks/create" class="btn btn--primary">Add task</a>
-            <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete this project? All tasks and time entries will be removed.');">
-                <button type="submit" class="btn btn--danger">Delete</button>
+            <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost">{{ trans('common.edit') }}</a>
+            <a href="/projects/{{ project.id }}/tasks/create" class="btn btn--primary">{{ trans('projects.add_task') }}</a>
+            <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('{{ trans('projects.delete_confirm_short')|e('js') }}');">
+                <button type="submit" class="btn btn--danger">{{ trans('common.delete') }}</button>
             </form>
         </div>
     </div>
 
     <div class="card project-show__tasks" id="project-tasks" data-project-id="{{ project.id }}" data-project-name="{{ project.name }}">
-        <h2>Tasks</h2>
+        <h2>{{ trans('projects.tasks') }}</h2>
         <div id="project-tasks-content">
             {% if tasks is empty %}
-                <p class="muted js-tasks-empty">No tasks for this project yet.</p>
+                <p class="muted js-tasks-empty">{{ trans('projects.no_tasks_yet') }}</p>
             {% else %}
                 <div class="project-show__table-wrap">
                     <table class="table project-show__table">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th class="project-show__col-planio">Planio #</th>
-                                <th>Status</th>
-                                <th>Time</th>
-                                <th class="project-show__col-actions">Actions</th>
+                                <th>{{ trans('common.name') }}</th>
+                                <th class="project-show__col-planio">{{ trans('projects.planio_number') }}</th>
+                                <th>{{ trans('common.status') }}</th>
+                                <th>{{ trans('common.time') }}</th>
+                                <th class="project-show__col-actions">{{ trans('common.actions') }}</th>
                             </tr>
                         </thead>
                         <tbody id="project-tasks-body">
@@ -69,12 +69,12 @@
                                         {% if task.planioIssueId %}
                                             <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ task.planioIssueId }}</span>
                                         {% else %}
-                                            <span class="muted">—</span>
+                                            <span class="muted">{{ trans('common.none') }}</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if task.planioIssueId %}
-                                            <span class="badge badge--planio" title="Synced from Planio">{{ task.status }}</span>
+                                            <span class="badge badge--planio" title="{{ trans('tasks.synced_from_planio') }}">{{ task.status }}</span>
                                         {% else %}
                                             <span class="badge badge--{{ task.status }}">{{ task.status|replace({'_': ' '}) }}</span>
                                         {% endif %}
@@ -89,11 +89,11 @@
                                                 data-project-name="{{ project.name }}"
                                                 data-task-name="{{ task.name }}"
                                             >
-                                                Start
+                                                {{ trans('common.start') }}
                                             </button>
-                                            <a href="/tasks/{{ task.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
-                                            <form class="inline-form" method="post" action="/tasks/{{ task.id }}/delete" onsubmit="return confirm('Delete this task?');">
-                                                <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                                            <a href="/tasks/{{ task.id }}/edit" class="btn btn--ghost btn--sm">{{ trans('common.edit') }}</a>
+                                            <form class="inline-form" method="post" action="/tasks/{{ task.id }}/delete" onsubmit="return confirm('{{ trans('tasks.delete_confirm')|e('js') }}');">
+                                                <button type="submit" class="btn btn--danger btn--sm">{{ trans('common.delete') }}</button>
                                             </form>
                                         </div>
                                     </td>

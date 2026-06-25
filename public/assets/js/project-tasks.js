@@ -1,4 +1,4 @@
-import { escapeHtml } from './utils.js';
+import { escapeHtml, t } from './utils.js';
 
 function planioIdCell(planioIssueId) {
     if (!planioIssueId) {
@@ -10,7 +10,7 @@ function planioIdCell(planioIssueId) {
 
 function statusCell(task) {
     if (task.planio_issue_id) {
-        return `<span class="badge badge--planio" title="Synced from Planio">${escapeHtml(task.status)}</span>`;
+        return `<span class="badge badge--planio" title="${escapeHtml(t('synced_from_planio'))}">${escapeHtml(task.status)}</span>`;
     }
 
     const label = task.status.replace(/_/g, ' ');
@@ -40,10 +40,10 @@ function renderTaskRow(task, project) {
                         data-project-id="${project.id}"
                         data-project-name="${escapeHtml(project.name)}"
                         data-task-name="${escapeHtml(task.name)}"
-                    >Start</button>
-                    <a href="/tasks/${task.id}/edit" class="btn btn--ghost btn--sm">Edit</a>
-                    <form class="inline-form" method="post" action="/tasks/${task.id}/delete" onsubmit="return confirm('Delete this task?');">
-                        <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                    >${escapeHtml(t('start'))}</button>
+                    <a href="/tasks/${task.id}/edit" class="btn btn--ghost btn--sm">${escapeHtml(t('edit'))}</a>
+                    <form class="inline-form" method="post" action="/tasks/${task.id}/delete" onsubmit="return confirm('${escapeHtml(t('delete_task_confirm'))}');">
+                        <button type="submit" class="btn btn--danger btn--sm">${escapeHtml(t('delete'))}</button>
                     </form>
                 </div>
             </td>
@@ -72,7 +72,7 @@ export async function refreshProjectTasks(projectId, projectName) {
     }
 
     if (!tasks.length) {
-        content.innerHTML = '<p class="muted js-tasks-empty">No tasks for this project yet.</p>';
+        content.innerHTML = '<p class="muted js-tasks-empty">' + escapeHtml(t('no_tasks_yet')) + '</p>';
         return;
     }
 

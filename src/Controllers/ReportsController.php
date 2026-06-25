@@ -11,6 +11,7 @@ use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\TaskRepository;
 use Timer\Repositories\TimeEntryRepository;
 use Timer\Support\CalendarGrid;
+use Timer\Support\Locale;
 use Timer\Support\TimeFormatter;
 
 final class ReportsController extends BaseController
@@ -67,16 +68,18 @@ final class ReportsController extends BaseController
         $prevMonth = $firstDay->modify('-1 month')->format('Y-m');
         $nextMonth = $firstDay->modify('+1 month')->format('Y-m');
 
+        $locale = $this->app->translator()->locale();
+
         return $this->view('reports/index.html.twig', [
             'month' => $month,
-            'month_label' => $firstDay->format('F Y'),
+            'month_label' => Locale::formatMonth($firstDay, $locale),
             'prev_month_query' => $this->filterQuery($prevMonth, $projectId, $taskId),
             'next_month_query' => $this->filterQuery($nextMonth, $projectId, $taskId),
             'project_id' => $projectId,
             'task_id' => $taskId,
             'selected_day' => $selectedDay,
             'selected_day_label' => $selectedDay
-                ? (new DateTimeImmutable($selectedDay))->format('l, j F Y')
+                ? Locale::formatDay(new DateTimeImmutable($selectedDay), $locale)
                 : null,
             'projects' => $projects,
             'tasks' => $tasks,

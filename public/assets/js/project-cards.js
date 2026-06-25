@@ -1,4 +1,5 @@
 import { attachProjectSearch } from './projects-search.js';
+import { t } from './utils.js';
 
 export function syncProjectCards(timers) {
     document.querySelectorAll('.project-card[data-project-id]').forEach((card) => {
@@ -98,8 +99,7 @@ export function initProjectGridExpand() {
         }
 
         const nextCount = Math.min(increment, hidden.length);
-        const label = nextCount === 1 ? 'project' : 'projects';
-        button.textContent = `Show ${nextCount} more ${label}`;
+        button.textContent = t('show_more_projects', { count: nextCount });
         button.hidden = false;
     }
 

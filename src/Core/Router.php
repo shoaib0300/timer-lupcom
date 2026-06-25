@@ -26,10 +26,10 @@ final class Router
 
         switch ($routeInfo[0]) {
             case Dispatcher::NOT_FOUND:
-                return Response::html('Page not found', 404);
+                return Response::html($app->translator()->trans('error.page_not_found'), 404);
 
             case Dispatcher::METHOD_NOT_ALLOWED:
-                return Response::html('Method not allowed', 405);
+                return Response::html($app->translator()->trans('error.method_not_allowed'), 405);
 
             case Dispatcher::FOUND:
                 [$handler, $vars] = [$routeInfo[1], $routeInfo[2]];
@@ -45,7 +45,7 @@ final class Router
                 return Response::html((string) $result);
 
             default:
-                return Response::html('Unexpected routing error', 500);
+                return Response::html($app->translator()->trans('error.server_error'), 500);
         }
     }
 

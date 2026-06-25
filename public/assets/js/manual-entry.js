@@ -1,4 +1,4 @@
-import { escapeHtml } from './utils.js';
+import { escapeHtml, t } from './utils.js';
 import { createManualEntry, fetchProjectTasks } from './timer-api.js';
 
 const manualForm = document.getElementById('manual-entry-form');
@@ -23,10 +23,10 @@ function isEntryToday(entry) {
 function renderSessionRow(entry) {
     const isGeneral = entry.is_general;
     const projectCell = isGeneral
-        ? '<span class="project-dot" style="background:#64748b;"></span> General'
+        ? '<span class="project-dot" style="background:#64748b;"></span> ' + escapeHtml(t('general'))
         : `<span class="project-dot" style="background:${escapeHtml(entry.project_color || '#3b82f6')}"></span> ${escapeHtml(entry.project_name || '')}`;
     const label = isGeneral
-        ? escapeHtml(entry.reason || 'General time')
+        ? escapeHtml(entry.reason || t('general_time'))
         : escapeHtml(entry.task_name || entry.reason || '—');
 
     return `
@@ -119,13 +119,13 @@ function syncReasonField() {
     const hasProject = Boolean(projectSelect?.value);
 
     if (reasonLabel) {
-        reasonLabel.textContent = hasProject ? 'Note (optional)' : 'Reason';
+        reasonLabel.textContent = hasProject ? t('note_optional') : t('reason');
     }
 
     if (reasonInput) {
         reasonInput.placeholder = hasProject
-            ? 'Optional note'
-            : 'e.g. Office / waiting for work';
+            ? t('optional_note')
+            : t('reason_placeholder');
         reasonInput.required = !hasProject;
     }
 }
@@ -220,7 +220,7 @@ if (manualForm) {
             }
         }
 
-        showFeedback(data.message || 'Time logged.');
+        showFeedback(data.message || t('time_logged'));
         resetManualForm();
     });
 }
