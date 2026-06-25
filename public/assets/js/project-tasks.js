@@ -8,11 +8,21 @@ function planioIdCell(planioIssueId) {
     return `<span class="project-show__planio-badge project-show__planio-badge--sm">#${escapeHtml(String(planioIssueId))}</span>`;
 }
 
+function statusCell(task) {
+    if (task.planio_issue_id) {
+        return `<span class="badge badge--planio" title="Synced from Planio">${escapeHtml(task.status)}</span>`;
+    }
+
+    const label = task.status.replace(/_/g, ' ');
+    return `<span class="badge badge--${escapeHtml(task.status)}">${escapeHtml(label)}</span>`;
+}
+
 function renderTaskRow(task, project) {
     return `
         <tr data-task-id="${task.id}">
             <td class="project-show__task-name">${escapeHtml(task.name)}</td>
             <td class="project-show__col-planio">${planioIdCell(task.planio_issue_id)}</td>
+            <td>${statusCell(task)}</td>
             <td>${escapeHtml(task.total_human)}</td>
             <td class="project-show__col-actions">
                 <div class="project-show__row-actions">
@@ -65,6 +75,7 @@ export async function refreshProjectTasks(projectId, projectName) {
                     <tr>
                         <th>Name</th>
                         <th class="project-show__col-planio">Planio #</th>
+                        <th>Status</th>
                         <th>Time</th>
                         <th class="project-show__col-actions">Actions</th>
                     </tr>

@@ -58,11 +58,18 @@
                             </td>
                             <td>{{ project.taskCount }}</td>
                             <td>{{ format_time(project.totalSeconds) }}</td>
-                            <td class="actions">
-                                <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
-                                <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? All tasks and time entries will be removed.');">
-                                    <button type="submit" class="btn btn--danger btn--sm">Delete</button>
-                                </form>
+                            <td class="projects-page__actions">
+                                <div class="projects-page__row-actions">
+                                    <a
+                                        href="/projects/{{ project.id }}/edit"
+                                        class="card-icon-btn card-icon-btn--edit"
+                                        title="Edit project"
+                                        aria-label="Edit {{ project.name }}"
+                                    ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/></svg></a>
+                                    <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? All tasks and time entries will be removed.');">
+                                        <button type="submit" class="card-icon-btn card-icon-btn--delete" title="Delete project" aria-label="Delete {{ project.name }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg></button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     {% endfor %}

@@ -50,6 +50,7 @@
                             <tr>
                                 <th>Name</th>
                                 <th class="project-show__col-planio">Planio #</th>
+                                <th>Status</th>
                                 <th>Time</th>
                                 <th class="project-show__col-actions">Actions</th>
                             </tr>
@@ -63,6 +64,13 @@
                                             <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ task.planioIssueId }}</span>
                                         {% else %}
                                             <span class="muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.planioIssueId %}
+                                            <span class="badge badge--planio" title="Synced from Planio">{{ task.status }}</span>
+                                        {% else %}
+                                            <span class="badge badge--{{ task.status }}">{{ task.status|replace({'_': ' '}) }}</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ format_time(task.totalSeconds) }}</td>

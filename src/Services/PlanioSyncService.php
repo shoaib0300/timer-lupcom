@@ -150,18 +150,18 @@ final class PlanioSyncService
   /** @param array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} $stats */
     private function syncIssues(PlanioClient $client, int $planioProjectId, int $localProjectId, array &$stats): void
     {
-        $issues = $client->openIssuesForProject($planioProjectId);
+        $issues = $client->importableIssuesForProject($planioProjectId);
 
         foreach ($issues as $issue) {
             $planioIssueId = (int) ($issue['id'] ?? 0);
-            if ($planioIssueId <= 0) {
+            if ($planioIssueId <= 0 || PlanioClient::isClosedIssue($issue)) {
                 continue;
             }
 
             $name = (string) ($issue['subject'] ?? 'Issue ' . $planioIssueId);
             $description = isset($issue['description']) ? trim((string) $issue['description']) : null;
             $description = $description !== '' ? $description : null;
-            $status = $this->mapIssueStatus($issue);
+            $status = PlanioClient::issueStatusLabel($issue);
 
             $existing = $this->tasks->findByPlanioIssueId($localProjectId, $planioIssueId);
 
@@ -174,25 +174,5 @@ final class PlanioSyncService
             $this->tasks->create($localProjectId, $name, $description, $status, $planioIssueId);
             $stats['tasks_created']++;
         }
-    }
-
-    /** @param array<string, mixed> $issue */
-    private function mapIssueStatus(array $issue): string
-    {
-        if (!empty($issue['closed_on'])) {
-            return 'done';
-        }
-
-        $statusName = strtolower((string) ($issue['status']['name'] ?? ''));
-
-        if (
-            str_contains($statusName, 'progress')
-            || str_contains($statusName, 'bearbeit')
-            || str_contains($statusName, 'feedback')
-        ) {
-            return 'in_progress';
-        }
-
-        return 'open';
     }
 }

@@ -91,7 +91,7 @@
                 <h2>Import projects</h2>
                 <button type="button" class="btn btn--ghost btn--sm" id="planio-load-projects">Load projects</button>
             </div>
-            <p class="muted">Select projects to copy into the timer app. Re-importing refreshes names and open issues locally — Planio is not modified.</p>
+            <p class="muted">Select projects to copy into the timer app. Issues are imported with their Planio status (closed issues such as Erledigt are skipped). Re-importing refreshes names and statuses locally — Planio is not modified.</p>
 
             <div class="settings-page__filters">
                 <div class="form-group">
@@ -104,7 +104,7 @@
                 </label>
                 <label class="settings-page__checkbox">
                     <input type="checkbox" id="planio-import-issues" checked>
-                    Import open issues as tasks
+                    Import issues as tasks (excluding closed)
                 </label>
             </div>
 

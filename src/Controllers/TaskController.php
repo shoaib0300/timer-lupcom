@@ -100,11 +100,15 @@ final class TaskController extends BaseController
             ]);
         }
 
+        $status = $task->planioIssueId !== null
+            ? $task->status
+            : $this->sanitizeStatus((string) $request->input('status', $task->status));
+
         $repo->update(
             $id,
             $name,
             $this->nullableString($request->input('description')),
-            $this->sanitizeStatus((string) $request->input('status', $task->status)),
+            $status,
         );
 
         return $this->redirect('/projects/' . $task->projectId);

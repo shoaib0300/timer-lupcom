@@ -65,7 +65,7 @@ final class PlanioClient
     }
 
     /** @return list<array<string, mixed>> */
-    public function openIssuesForProject(int $planioProjectId): array
+    public function importableIssuesForProject(int $planioProjectId): array
     {
         $issues = [];
         $offset = 0;
@@ -83,7 +83,34 @@ final class PlanioClient
             $total = (int) ($data['total_count'] ?? count($issues));
         } while ($offset < $total && $batch !== []);
 
-        return $issues;
+        return array_values(array_filter(
+            $issues,
+            static fn (array $issue): bool => !self::isClosedIssue($issue),
+        ));
+    }
+
+    /** @param array<string, mixed> $issue */
+    public static function isClosedIssue(array $issue): bool
+    {
+        if (!empty($issue['closed_on'])) {
+            return true;
+        }
+
+        return (bool) ($issue['status']['is_closed'] ?? false);
+    }
+
+    /** @param array<string, mixed> $issue */
+    public static function issueStatusLabel(array $issue): string
+    {
+        $name = trim((string) ($issue['status']['name'] ?? ''));
+
+        return $name !== '' ? $name : 'Unknown';
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function openIssuesForProject(int $planioProjectId): array
+    {
+        return $this->importableIssuesForProject($planioProjectId);
     }
 
     /** @param array<string, scalar> $query */

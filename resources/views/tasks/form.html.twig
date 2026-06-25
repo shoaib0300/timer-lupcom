@@ -25,12 +25,19 @@
 
         <div class="form-group">
             <label for="status">Status</label>
-            <select id="status" name="status">
-                {% set current = task.status ?? 'open' %}
-                <option value="open" {% if current == 'open' %}selected{% endif %}>Open</option>
-                <option value="in_progress" {% if current == 'in_progress' %}selected{% endif %}>In progress</option>
-                <option value="done" {% if current == 'done' %}selected{% endif %}>Done</option>
-            </select>
+            {% if task is defined and task and task.planioIssueId %}
+                <p class="task-form__planio-status">
+                    <span class="badge badge--planio">{{ task.status }}</span>
+                </p>
+                <p class="muted task-form__planio-status-note">Synced from Planio — update status in Planio, then re-import the project.</p>
+            {% else %}
+                <select id="status" name="status">
+                    {% set current = task.status ?? 'open' %}
+                    <option value="open" {% if current == 'open' %}selected{% endif %}>Open</option>
+                    <option value="in_progress" {% if current == 'in_progress' %}selected{% endif %}>In progress</option>
+                    <option value="done" {% if current == 'done' %}selected{% endif %}>Done</option>
+                </select>
+            {% endif %}
         </div>
 
         <div class="actions">

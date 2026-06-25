@@ -193,6 +193,14 @@ textarea {
         background: rgba($color-success, 0.2);
         color: #bbf7d0;
     }
+
+    &--planio {
+        text-transform: none;
+        letter-spacing: normal;
+        font-weight: 600;
+        background: rgba($color-primary, 0.18);
+        color: #bfdbfe;
+    }
 }
 
 .project-dot {
@@ -201,6 +209,15 @@ textarea {
     border-radius: 50%;
     display: inline-block;
     margin-right: 0.5rem;
+}
+
+.task-form__planio-status {
+    margin: 0;
+}
+
+.task-form__planio-status-note {
+    margin: 0.45rem 0 0;
+    font-size: 0.82rem;
 }
 
 .table {

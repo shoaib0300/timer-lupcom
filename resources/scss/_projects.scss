@@ -192,6 +192,25 @@
         }
     }
 
+    &--edit {
+        width: 36px;
+        height: 36px;
+        text-decoration: none;
+        opacity: 0.85;
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        &:hover {
+            opacity: 1;
+            color: $color-primary;
+            border-color: rgba($color-primary, 0.4);
+            background: rgba($color-primary, 0.12);
+        }
+    }
+
     @media (max-width: $bp-mobile) {
         width: 44px;
         height: 44px;
@@ -221,6 +240,29 @@
 
     .page-title {
         margin-bottom: 0.5rem;
+    }
+}
+
+.projects-page {
+    &__actions {
+        width: 1%;
+        white-space: nowrap;
+    }
+
+    &__row-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.35rem;
+
+        .inline-form {
+            display: inline-flex;
+            margin: 0;
+        }
+
+        .card-icon-btn--delete {
+            margin-left: 0;
+        }
     }
 }
 
