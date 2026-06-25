@@ -35,6 +35,7 @@ final class DashboardController extends BaseController
         return $this->view('dashboard/index.html.twig', [
             'projects' => $projects,
             'projects_visible_limit' => ProjectSorter::visibleLimit(),
+            'projects_show_increment' => ProjectSorter::showIncrement(),
             'recent_entries' => $timeEntries->recent(),
             'total_today' => TimeFormatter::secondsToHuman($totalTodaySeconds),
             'total_today_seconds' => $totalTodaySeconds,

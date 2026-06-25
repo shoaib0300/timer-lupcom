@@ -20,11 +20,33 @@ export function initProjectGridExpand() {
         return;
     }
 
+    const increment = Number.parseInt(grid.dataset.showIncrement || '3', 10);
+
+    function collapsedCards() {
+        return [...grid.querySelectorAll('.project-card--collapsed')];
+    }
+
+    function updateButton() {
+        const hidden = collapsedCards();
+
+        if (hidden.length === 0) {
+            button.hidden = true;
+            return;
+        }
+
+        const nextCount = Math.min(increment, hidden.length);
+        const label = nextCount === 1 ? 'project' : 'projects';
+        button.textContent = `Show ${nextCount} more ${label}`;
+        button.hidden = false;
+    }
+
+    updateButton();
+
     button.addEventListener('click', () => {
-        grid.classList.add('is-expanded');
-        grid.querySelectorAll('.project-card--collapsed').forEach((card) => {
-            card.classList.remove('project-card--collapsed');
-        });
-        button.hidden = true;
+        collapsedCards()
+            .slice(0, increment)
+            .forEach((card) => card.classList.remove('project-card--collapsed'));
+
+        updateButton();
     });
 }

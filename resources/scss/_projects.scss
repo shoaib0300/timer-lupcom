@@ -13,11 +13,12 @@
 }
 
 .grid--projects {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-items: stretch;
+    gap: 1rem;
 
     @media (max-width: $bp-tablet) {
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     @media (max-width: $bp-mobile-sm) {
@@ -36,10 +37,6 @@
 
     &--collapsed {
         display: none;
-    }
-
-    .grid--projects.is-expanded &--collapsed {
-        display: flex;
     }
 
     &.is-tracking {

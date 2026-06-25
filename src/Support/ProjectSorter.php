@@ -8,7 +8,9 @@ use Timer\Models\Project;
 
 final class ProjectSorter
 {
-    private const int VISIBLE_LIMIT = 6;
+    private const int VISIBLE_LIMIT = 3;
+
+    private const int SHOW_INCREMENT = 3;
 
     /**
      * @param list<Project> $projects
@@ -37,5 +39,10 @@ final class ProjectSorter
     public static function visibleLimit(): int
     {
         return self::VISIBLE_LIMIT;
+    }
+
+    public static function showIncrement(): int
+    {
+        return self::SHOW_INCREMENT;
     }
 }

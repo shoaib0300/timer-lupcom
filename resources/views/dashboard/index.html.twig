@@ -27,7 +27,7 @@
     {% if projects is empty %}
         <p class="muted">No projects yet. <a href="/projects/create">Create your first project</a>.</p>
     {% else %}
-        <div class="grid grid--projects" id="projects-grid">
+        <div class="grid grid--projects" id="projects-grid" data-show-increment="{{ projects_show_increment }}">
             {% for project in projects %}
                 <article
                     class="project-card{% if loop.index > projects_visible_limit %} project-card--collapsed{% endif %}"
@@ -60,9 +60,7 @@
 
         {% if projects|length > projects_visible_limit %}
             <div class="projects-section__footer">
-                <button type="button" class="btn btn--ghost js-show-more-projects">
-                    Show more projects ({{ projects|length - projects_visible_limit }})
-                </button>
+                <button type="button" class="btn btn--ghost js-show-more-projects">Show more projects</button>
             </div>
         {% endif %}
     {% endif %}
