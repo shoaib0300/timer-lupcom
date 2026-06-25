@@ -11,6 +11,9 @@ return [
     'nav.projects' => 'Projects',
     'nav.planio' => 'Planio',
 
+    'theme.light' => 'Light mode',
+    'theme.dark' => 'Dark mode',
+
     'common.back' => 'Go back',
     'common.cancel' => 'Cancel',
     'common.save' => 'Save',
@@ -176,6 +179,8 @@ return [
     'js.time_logged' => 'Time logged.',
     'js.general' => 'General',
     'js.general_time' => 'General time',
+    'js.theme_light' => 'Light mode',
+    'js.theme_dark' => 'Dark mode',
     'js.optional_note' => 'Optional note',
     'js.note_optional' => 'Note (optional)',
     'js.reason' => 'Reason',

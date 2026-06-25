@@ -4,8 +4,8 @@
 .timer-sidebar {
     width: $sidebar-width;
     flex-shrink: 0;
-    background: rgba($color-surface, 0.98);
-    border-right: 1px solid $color-border;
+    background: color-mix(in srgb, var(--color-surface) 98%, transparent);
+    border-right: 1px solid var(--color-border);
     padding: 0.75rem 0.65rem;
     display: flex;
     flex-direction: column;
@@ -26,7 +26,7 @@
         max-height: none;
         position: relative;
         border-right: none;
-        border-bottom: 1px solid $color-border;
+        border-bottom: 1px solid var(--color-border);
         padding: 0.65rem 0.75rem;
     }
 
@@ -43,7 +43,7 @@
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
-        color: $color-text-muted;
+        color: var(--color-text-muted);
     }
 
     &__count {
@@ -84,8 +84,8 @@
 }
 
 .timer-item {
-    background: $color-surface-alt;
-    border: 1px solid $color-border;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
     border-radius: 10px;
     padding: 0.5rem 0.55rem;
     display: flex;
@@ -108,7 +108,7 @@
         opacity: 0.8;
 
         .timer-item__clock {
-            color: $color-text-muted;
+            color: var(--color-text-muted);
         }
     }
 
@@ -145,7 +145,7 @@
 
     &__task {
         font-size: 0.7rem;
-        color: $color-text-muted;
+        color: var(--color-text-muted);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -158,7 +158,7 @@
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         flex-shrink: 0;
-        color: $color-text;
+        color: var(--color-text);
     }
 
     &__actions {
@@ -175,10 +175,10 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    border: 1px solid $color-border;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    background: rgba($color-bg, 0.5);
-    color: $color-text;
+    background: var(--icon-btn-bg);
+    color: var(--icon-btn-color);
     cursor: pointer;
     flex-shrink: 0;
     transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
@@ -190,11 +190,10 @@
     }
 
     &:hover {
-        background: $color-surface;
-        border-color: color.adjust($color-border, $lightness: 8%);
+        background: var(--color-surface);
+        border-color: var(--color-border-hover);
     }
 
-    // Pause / resume — larger primary control (harder to miss, easier to tap)
     &--pause,
     &--play {
         width: 36px;
@@ -228,13 +227,12 @@
         background: rgba($color-success, 0.12);
     }
 
-    // Stop — smaller, separated, so it's harder to hit by accident
     &--stop {
         width: 26px;
         height: 26px;
         margin-left: 0.15rem;
         opacity: 0.75;
-        border-color: rgba($color-border, 0.8);
+        border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
 
         svg {
             width: 10px;

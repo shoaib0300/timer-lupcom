@@ -4,8 +4,10 @@ import { createTimerModal } from './timer-modal.js';
 import { syncProjectCards, initProjectGridExpand } from './project-cards.js';
 import { initProjectTasksRefresh } from './project-tasks.js';
 import { initPageBack } from './page-back.js';
+import { initThemeToggle } from './theme.js';
 
 initPageBack();
+initThemeToggle();
 
 const listEl = document.getElementById('timer-list');
 const emptyEl = document.getElementById('timer-empty');

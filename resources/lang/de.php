@@ -11,6 +11,9 @@ return [
     'nav.projects' => 'Projekte',
     'nav.planio' => 'Planio',
 
+    'theme.light' => 'Hellmodus',
+    'theme.dark' => 'Dunkelmodus',
+
     'common.back' => 'Zurück',
     'common.cancel' => 'Abbrechen',
     'common.save' => 'Speichern',
@@ -176,6 +179,8 @@ return [
     'js.time_logged' => 'Zeit erfasst.',
     'js.general' => 'Allgemein',
     'js.general_time' => 'Allgemeine Zeit',
+    'js.theme_light' => 'Hellmodus',
+    'js.theme_dark' => 'Dunkelmodus',
     'js.optional_note' => 'Optionale Notiz',
     'js.note_optional' => 'Notiz (optional)',
     'js.reason' => 'Begründung',

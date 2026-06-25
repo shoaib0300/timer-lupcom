@@ -45,8 +45,13 @@
 
     &--ghost {
         background: transparent;
-        color: $color-text;
-        border: 1px solid $color-border;
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+
+        &:hover {
+            background: color-mix(in srgb, var(--color-surface-alt) 55%, transparent);
+            border-color: var(--color-border-hover);
+        }
     }
 
     &--sm {
@@ -60,11 +65,11 @@
 }
 
 .card {
-    background: $color-surface;
-    border: 1px solid $color-border;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: $radius;
     padding: 1.25rem;
-    box-shadow: $shadow;
+    box-shadow: var(--shadow);
 
     & + & {
         margin-top: 1rem;
@@ -95,17 +100,16 @@ input[type='number'],
 textarea,
 select {
     width: 100%;
-    background: $color-surface-alt;
-    border: 1px solid $color-border;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    color: $color-text;
+    color: var(--color-text);
     padding: 0.65rem 0.8rem;
     font: inherit;
-    color-scheme: dark;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
     &::placeholder {
-        color: $color-text-muted;
+        color: var(--color-text-muted);
         opacity: 0.9;
     }
 
@@ -134,7 +138,7 @@ input[type='time'] {
     &::-webkit-calendar-picker-indicator {
         cursor: pointer;
         opacity: 0.85;
-        filter: invert(0.85);
+        filter: var(--calendar-picker-filter);
     }
 }
 
@@ -161,13 +165,13 @@ textarea {
     &--error {
         background: rgba($color-danger, 0.15);
         border: 1px solid rgba($color-danger, 0.4);
-        color: #fecaca;
+        color: var(--alert-error-text);
     }
 
     &--success {
         background: rgba($color-success, 0.12);
         border: 1px solid rgba($color-success, 0.35);
-        color: #bbf7d0;
+        color: var(--alert-success-text);
     }
 }
 
@@ -180,18 +184,18 @@ textarea {
     text-transform: uppercase;
 
     &--open {
-        background: #334155;
-        color: #e2e8f0;
+        background: var(--badge-open-bg);
+        color: var(--badge-open-text);
     }
 
     &--in_progress {
         background: rgba($color-warning, 0.2);
-        color: #fde68a;
+        color: var(--badge-progress-text);
     }
 
     &--done {
         background: rgba($color-success, 0.2);
-        color: #bbf7d0;
+        color: var(--badge-done-text);
     }
 
     &--planio {
@@ -199,7 +203,7 @@ textarea {
         letter-spacing: normal;
         font-weight: 600;
         background: rgba($color-primary, 0.18);
-        color: #bfdbfe;
+        color: var(--badge-planio-text);
     }
 }
 
@@ -228,11 +232,11 @@ textarea {
     td {
         text-align: left;
         padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid $color-border;
+        border-bottom: 1px solid var(--color-border);
     }
 
     th {
-        color: $color-text-muted;
+        color: var(--color-text-muted);
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -255,17 +259,17 @@ textarea {
     &__backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.55);
+        background: var(--modal-backdrop);
     }
 
     &__dialog {
         position: relative;
-        background: $color-surface;
-        border: 1px solid $color-border;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
         border-radius: $radius;
         padding: 1.5rem;
         width: min(400px, 100%);
-        box-shadow: $shadow;
+        box-shadow: var(--shadow);
     }
 
     &__title {
@@ -276,11 +280,11 @@ textarea {
 .danger-zone {
     margin-top: 2rem;
     padding-top: 1.25rem;
-    border-top: 1px solid $color-border;
+    border-top: 1px solid var(--color-border);
 
     h2 {
         margin: 0 0 0.5rem;
         font-size: 1rem;
-        color: #fecaca;
+        color: var(--danger-zone-title);
     }
 }

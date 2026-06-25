@@ -1,0 +1,61 @@
+// Theme tokens — dark is the default; light overrides below.
+:root,
+html[data-theme='dark'] {
+    color-scheme: dark;
+
+    --color-bg: #0f172a;
+    --color-bg-end: #111827;
+    --color-surface: #1e293b;
+    --color-surface-alt: #334155;
+    --color-text: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-border: #475569;
+    --color-border-hover: #64748b;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    --modal-backdrop: rgba(0, 0, 0, 0.55);
+
+    --badge-open-bg: #334155;
+    --badge-open-text: #e2e8f0;
+    --badge-progress-text: #fde68a;
+    --badge-done-text: #bbf7d0;
+    --badge-planio-text: #bfdbfe;
+    --alert-success-text: #bbf7d0;
+    --alert-error-text: #fecaca;
+    --danger-zone-title: #fecaca;
+    --project-badge-text: #86efac;
+    --planio-badge-text: #93c5fd;
+    --calendar-picker-filter: invert(0.85);
+    --icon-btn-bg: #283548;
+    --icon-btn-color: #f8fafc;
+    --icon-btn-delete-color: #cbd5e1;
+}
+
+html[data-theme='light'] {
+    color-scheme: light;
+
+    --color-bg: #ffffff;
+    --color-bg-end: #f8fafc;
+    --color-surface: #ffffff;
+    --color-surface-alt: #f1f5f9;
+    --color-text: #0f172a;
+    --color-text-muted: #64748b;
+    --color-border: #cbd5e1;
+    --color-border-hover: #94a3b8;
+    --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    --modal-backdrop: rgba(15, 23, 42, 0.35);
+
+    --badge-open-bg: #e2e8f0;
+    --badge-open-text: #334155;
+    --badge-progress-text: #b45309;
+    --badge-done-text: #15803d;
+    --badge-planio-text: #1d4ed8;
+    --alert-success-text: #15803d;
+    --alert-error-text: #b91c1c;
+    --danger-zone-title: #b91c1c;
+    --project-badge-text: #15803d;
+    --planio-badge-text: #1d4ed8;
+    --calendar-picker-filter: none;
+    --icon-btn-bg: #ffffff;
+    --icon-btn-color: #334155;
+    --icon-btn-delete-color: #475569;
+}

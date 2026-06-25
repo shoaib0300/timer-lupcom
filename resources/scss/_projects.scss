@@ -23,13 +23,12 @@
 
     &__search {
         width: 100%;
-        background: $color-surface-alt;
-        border: 1px solid $color-border;
+        background: var(--color-surface-alt);
+        border: 1px solid var(--color-border);
         border-radius: 8px;
-        color: $color-text;
+        color: var(--color-text);
         padding: 0.65rem 0.8rem;
         font: inherit;
-        color-scheme: dark;
 
         &:focus {
             outline: none;
@@ -66,8 +65,8 @@
 }
 
 .project-card {
-    background: $color-surface-alt;
-    border: 1px solid $color-border;
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     padding: 1rem;
     display: flex;
@@ -94,7 +93,7 @@
         min-width: 0;
 
         a {
-            color: $color-text;
+            color: var(--color-text);
             display: inline;
 
             &:hover {
@@ -125,7 +124,7 @@
         padding: 0.15rem 0.45rem;
         border-radius: 999px;
         background: rgba($color-success, 0.18);
-        color: #86efac;
+        color: var(--project-badge-text);
     }
 
     &__actions {
@@ -143,10 +142,10 @@
     width: 40px;
     height: 40px;
     padding: 0;
-    border: 1px solid $color-border;
+    border: 1px solid var(--color-border);
     border-radius: 10px;
-    background: rgba($color-bg, 0.45);
-    color: $color-text;
+    background: var(--icon-btn-bg);
+    color: var(--icon-btn-color);
     cursor: pointer;
     flex-shrink: 0;
     text-decoration: none;
@@ -156,6 +155,7 @@
         width: 18px;
         height: 18px;
         pointer-events: none;
+        display: block;
     }
 
     svg path {
@@ -163,13 +163,15 @@
     }
 
     &:hover {
-        background: $color-surface;
-        border-color: color.adjust($color-border, $lightness: 8%);
+        background: var(--color-surface);
+        border-color: var(--color-border-hover);
+        color: var(--color-text);
     }
 
     &--start {
         background: rgba($color-success, 0.15);
         border-color: rgba($color-success, 0.35);
+        color: $color-success;
 
         &:hover {
             color: $color-success;
@@ -181,7 +183,7 @@
         margin-left: auto;
         width: 36px;
         height: 36px;
-        opacity: 0.8;
+        color: var(--icon-btn-delete-color);
 
         svg {
             width: 16px;
@@ -189,7 +191,6 @@
         }
 
         &:hover {
-            opacity: 1;
             color: $color-danger;
             border-color: rgba($color-danger, 0.4);
             background: rgba($color-danger, 0.1);
@@ -200,7 +201,6 @@
         width: 36px;
         height: 36px;
         text-decoration: none;
-        opacity: 0.85;
 
         svg {
             width: 16px;
@@ -208,7 +208,6 @@
         }
 
         &:hover {
-            opacity: 1;
             color: $color-primary;
             border-color: rgba($color-primary, 0.4);
             background: rgba($color-primary, 0.12);
@@ -330,7 +329,7 @@
         border-radius: 999px;
         background: rgba($color-primary, 0.15);
         border: 1px solid rgba($color-primary, 0.35);
-        color: #93c5fd;
+        color: var(--planio-badge-text);
 
         &--sm {
             font-size: 0.7rem;
@@ -388,7 +387,7 @@
 
     &__assignee {
         font-weight: 600;
-        color: $color-text-muted;
+        color: var(--color-text-muted);
         white-space: nowrap;
     }
 
