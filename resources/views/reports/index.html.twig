@@ -1,0 +1,133 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}Time log{% endblock %}
+{% set active_nav = 'reports' %}
+
+{% block content %}
+<h1 class="page-title">Time log</h1>
+
+<div class="card reports-filters">
+    <form method="get" action="/reports" class="reports-filters__form" id="reports-filter-form">
+        <input type="hidden" name="month" value="{{ month }}">
+        {% if selected_day %}
+            <input type="hidden" name="day" value="{{ selected_day }}">
+        {% endif %}
+
+        <div class="reports-filters__row">
+            <div class="form-group">
+                <label for="filter-project">Project</label>
+                <select id="filter-project" name="project_id">
+                    <option value="">All projects</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}"{% if project_id == project.id %} selected{% endif %}>
+                            {{ project.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="filter-task">Task</label>
+                <select id="filter-task" name="task_id"{% if project_id is empty %} disabled{% endif %}>
+                    <option value="">All tasks</option>
+                    {% for task in tasks %}
+                        <option value="{{ task.id }}"{% if task_id == task.id %} selected{% endif %}>
+                            {{ task.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group reports-filters__actions">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn--primary">Apply filters</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<section class="card calendar-card">
+    <div class="calendar-header">
+        <div class="calendar-header__nav">
+            <a href="/reports?{{ prev_month_query }}" class="btn btn--ghost btn--sm" aria-label="Previous month">&larr;</a>
+            <h2 class="calendar-header__title">{{ month_label }}</h2>
+            <a href="/reports?{{ next_month_query }}" class="btn btn--ghost btn--sm" aria-label="Next month">&rarr;</a>
+        </div>
+        <p class="muted calendar-header__total">Month total: <strong>{{ month_total }}</strong></p>
+    </div>
+
+    <div class="calendar-grid" role="grid" aria-label="Monthly time log">
+        <div class="calendar-grid__weekdays" aria-hidden="true">
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+            <span>Sun</span>
+        </div>
+        <div class="calendar-grid__days">
+            {% for cell in calendar_cells %}
+                {% set cell_month = cell.date|slice(0, 7) %}
+                {% set day_query = 'month=' ~ cell_month %}
+                {% if project_id %}{% set day_query = day_query ~ '&project_id=' ~ project_id %}{% endif %}
+                {% if task_id %}{% set day_query = day_query ~ '&task_id=' ~ task_id %}{% endif %}
+                {% set day_query = day_query ~ '&day=' ~ cell.date %}
+                <a
+                    href="/reports?{{ day_query }}"
+                    class="calendar-day{% if not cell.in_month %} calendar-day--outside{% endif %}{% if cell.is_today %} calendar-day--today{% endif %}{% if selected_day == cell.date %} calendar-day--selected{% endif %}{% if cell.total_seconds > 0 %} calendar-day--has-time{% endif %}"
+                    aria-label="{{ cell.date }}{% if cell.total_seconds > 0 %}, {{ format_time(cell.total_seconds) }}{% endif %}"
+                >
+                    <span class="calendar-day__number">{{ cell.day }}</span>
+                    {% if cell.total_seconds > 0 %}
+                        <span class="calendar-day__time">{{ format_time(cell.total_seconds) }}</span>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if selected_day %}
+    <section class="card" style="margin-top: 1.5rem;">
+        <div class="section-header">
+            <h2>{{ selected_day_label }}</h2>
+            <span class="muted">Total: <strong>{{ day_total }}</strong></span>
+        </div>
+
+        {% if day_entries is empty %}
+            <p class="muted">No tracked time on this day for the current filters.</p>
+        {% else %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Task</th>
+                        <th>Started</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in day_entries %}
+                        <tr>
+                            <td>
+                                <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
+                                {{ entry.projectName }}
+                            </td>
+                            <td>{{ entry.taskName ?? '—' }}</td>
+                            <td class="muted">{{ entry.startedAt }}</td>
+                            <td>{{ format_time(entry.durationSeconds) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
+{% else %}
+    <p class="muted reports-hint">Click a day on the calendar to see session details.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/assets/js/reports.js"></script>
+{% endblock %}

@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Timer\Controllers\DashboardController;
 use Timer\Controllers\ProjectController;
+use Timer\Controllers\ReportsController;
 use Timer\Controllers\TaskController;
 use Timer\Controllers\TimerController;
 
 return static function (FastRoute\RouteCollector $r): void {
     $r->get('/', [DashboardController::class, 'index']);
+    $r->get('/reports', [ReportsController::class, 'index']);
 
     $r->get('/projects', [ProjectController::class, 'index']);
     $r->get('/projects/create', [ProjectController::class, 'create']);

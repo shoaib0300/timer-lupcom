@@ -9,6 +9,12 @@ use Timer\Models\Project;
 
 final class ProjectRepository
 {
+    private const string STATS_SELECT = 'SELECT p.*,
+                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds,
+                (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id) AS task_count,
+                (SELECT MAX(COALESCE(te2.ended_at, te2.started_at))
+                    FROM time_entries te2 WHERE te2.project_id = p.id) AS last_activity_at';
+
     public function __construct(
         private readonly PDO $pdo,
     ) {
@@ -17,9 +23,7 @@ final class ProjectRepository
     /** @return list<Project> */
     public function allWithStats(): array
     {
-        $sql = 'SELECT p.*,
-                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds,
-                (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id) AS task_count
+        $sql = self::STATS_SELECT . '
             FROM projects p
             LEFT JOIN time_entries te ON te.project_id = p.id AND te.ended_at IS NOT NULL
             GROUP BY p.id
@@ -36,9 +40,7 @@ final class ProjectRepository
     public function find(int $id): ?Project
     {
         $stmt = $this->pdo->prepare(
-            'SELECT p.*,
-                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds,
-                (SELECT COUNT(*) FROM tasks t WHERE t.project_id = p.id) AS task_count
+            self::STATS_SELECT . '
             FROM projects p
             LEFT JOIN time_entries te ON te.project_id = p.id AND te.ended_at IS NOT NULL
             WHERE p.id = ?

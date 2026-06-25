@@ -15,6 +15,7 @@ final readonly class Project
         public string $updatedAt,
         public int $totalSeconds = 0,
         public int $taskCount = 0,
+        public ?string $lastActivityAt = null,
     ) {
     }
 
@@ -30,6 +31,7 @@ final readonly class Project
             $row['updated_at'],
             (int) ($row['total_seconds'] ?? 0),
             (int) ($row['task_count'] ?? 0),
+            isset($row['last_activity_at']) ? (string) $row['last_activity_at'] : null,
         );
     }
 }

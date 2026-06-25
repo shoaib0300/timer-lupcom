@@ -14,6 +14,18 @@ final class ProjectController extends BaseController
     public function index(Request $request): Response
     {
         $projects = new ProjectRepository($this->app->db())->allWithStats();
+        $timeEntries = new \Timer\Repositories\TimeEntryRepository($this->app->db());
+        $timerService = new \Timer\Services\TimerService(
+            $timeEntries,
+            new TaskRepository($this->app->db()),
+        );
+
+        $timerStatus = $timerService->getStatus();
+        $runningProjectIds = array_map(
+            static fn (array $timer): int => (int) $timer['project_id'],
+            $timerStatus['timers'],
+        );
+        $projects = \Timer\Support\ProjectSorter::forDashboard($projects, $runningProjectIds);
 
         return $this->view('projects/index.html.twig', [
             'projects' => $projects,

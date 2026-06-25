@@ -30,7 +30,14 @@ final class ProjectSorter
                 return $bRunning <=> $aRunning;
             }
 
-            return strcmp($b->updatedAt, $a->updatedAt);
+            $aActivity = $a->lastActivityAt ?? '';
+            $bActivity = $b->lastActivityAt ?? '';
+
+            if ($aActivity !== $bActivity) {
+                return strcmp($bActivity, $aActivity);
+            }
+
+            return strcmp($a->name, $b->name);
         });
 
         return $projects;
