@@ -1,3 +1,14 @@
+export async function fetchProjectTasks(projectId) {
+    const response = await fetch(`/api/projects/${projectId}/tasks`);
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data = await response.json();
+    return data.tasks || [];
+}
+
 export async function fetchTimerStatus() {
     const response = await fetch('/api/timer/status');
     return response.json();

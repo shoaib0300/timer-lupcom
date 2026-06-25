@@ -42,8 +42,14 @@
             <p class="muted" id="timer-modal-project"></p>
             <form id="timer-start-form">
                 <div class="form-group">
-                    <label for="timer-task-name">Task name</label>
-                    <input type="text" id="timer-task-name" name="task_name" value="no-work" required autofocus>
+                    <label for="timer-task-select">Task</label>
+                    <select id="timer-task-select" name="task_select" required>
+                        <option value="">Loading tasks…</option>
+                    </select>
+                </div>
+                <div class="form-group is-hidden" id="timer-new-task-group">
+                    <label for="timer-task-name">New task name</label>
+                    <input type="text" id="timer-task-name" name="task_name" placeholder="Enter task name" autocomplete="off">
                 </div>
                 <div class="actions">
                     <button type="submit" class="btn btn--success">Start</button>
@@ -53,7 +59,7 @@
         </div>
     </div>
 
-    <script type="module" src="/assets/js/app.js?v=10"></script>
+    <script type="module" src="/assets/js/app.js?v=11"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -10,7 +10,6 @@ const countEl = document.getElementById('timer-count');
 const modal = document.getElementById('timer-modal');
 const modalProject = document.getElementById('timer-modal-project');
 const startForm = document.getElementById('timer-start-form');
-const taskNameInput = document.getElementById('timer-task-name');
 
 if (listEl && emptyEl && countEl) {
     const sidebar = createTimerSidebar(listEl, emptyEl, countEl, (status) => {
@@ -21,12 +20,11 @@ if (listEl && emptyEl && countEl) {
         sidebar.applyStatus(status);
     };
 
-    if (modal && modalProject && startForm && taskNameInput) {
+    if (modal && modalProject && startForm) {
         createTimerModal(
             modal,
             modalProject,
             startForm,
-            taskNameInput,
             initProjectTasksRefresh(onTimerStarted),
         );
     }
