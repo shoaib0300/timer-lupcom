@@ -222,6 +222,53 @@
         align-items: center;
     }
 
+    &__import-progress {
+        margin-top: 1rem;
+        padding: 1rem;
+        border-radius: $radius;
+        background: rgba($color-surface-alt, 0.45);
+        border: 1px solid $color-border;
+
+        &.is-hidden {
+            display: none;
+        }
+    }
+
+    &__progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.6rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    &__progress-pct {
+        font-variant-numeric: tabular-nums;
+        color: $color-primary;
+    }
+
+    &__progress-track {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba($color-border, 0.65);
+        overflow: hidden;
+    }
+
+    &__progress-bar {
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, $color-primary, lighten($color-primary, 12%));
+        transition: width 0.35s ease;
+    }
+
+    &__progress-detail {
+        margin: 0.55rem 0 0;
+        font-size: 0.82rem;
+    }
+
     &__feedback {
         margin: 1rem 0 0;
         padding: 0.75rem 1rem;

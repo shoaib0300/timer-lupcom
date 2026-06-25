@@ -4,6 +4,45 @@
 .projects-section {
     margin-top: 1.5rem;
 
+    &__header {
+        margin-bottom: 0.75rem;
+    }
+
+    &__toolbar {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-bottom: 1rem;
+        max-width: 360px;
+    }
+
+    &__search-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    &__search {
+        width: 100%;
+        background: $color-surface-alt;
+        border: 1px solid $color-border;
+        border-radius: 8px;
+        color: $color-text;
+        padding: 0.65rem 0.8rem;
+        font: inherit;
+        color-scheme: dark;
+
+        &:focus {
+            outline: none;
+            border-color: $color-primary;
+            box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+        }
+    }
+
+    &__search-empty {
+        margin: -0.5rem 0 1rem;
+        font-size: 0.9rem;
+    }
+
     &__footer {
         display: flex;
         justify-content: center;
@@ -37,6 +76,10 @@
 
     &--collapsed {
         display: none;
+    }
+
+    &--hidden {
+        display: none !important;
     }
 
     &.is-tracking {

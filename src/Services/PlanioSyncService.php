@@ -60,36 +60,67 @@ final class PlanioSyncService
             throw new \InvalidArgumentException('Select at least one project to import.');
         }
 
-        $client = $this->clientFromSettings();
-        $remoteProjects = $client->allProjects();
-        $remoteById = [];
-        foreach ($remoteProjects as $project) {
-            $remoteById[(int) $project['id']] = $project;
-        }
-
-        $stats = [
-            'projects_created' => 0,
-            'projects_updated' => 0,
-            'tasks_created' => 0,
-            'tasks_updated' => 0,
-        ];
+        $stats = self::emptyStats();
 
         foreach ($planioProjectIds as $planioId) {
-            if (!isset($remoteById[$planioId])) {
-                continue;
-            }
-
-            $remote = $remoteById[$planioId];
-            $localId = $this->upsertProject($remote, $stats);
-
-            if ($importIssues && $localId !== null) {
-                $this->syncIssues($client, $planioId, $localId, $stats);
-            }
+            $itemStats = $this->syncProject($planioId, $importIssues);
+            self::mergeStats($stats, $itemStats);
         }
 
         $this->settings->set('planio.last_sync_at', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
 
         return $stats;
+    }
+
+    /**
+     * @return array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int, project_name: string}
+     */
+    public function syncProject(int $planioProjectId, bool $importIssues): array
+    {
+        if ($planioProjectId <= 0) {
+            throw new \InvalidArgumentException('Invalid project id.');
+        }
+
+        $client = $this->clientFromSettings();
+        $remote = $client->project($planioProjectId);
+        $stats = self::emptyStats();
+        $localId = $this->upsertProject($remote, $stats);
+
+        if ($importIssues && $localId !== null) {
+            $this->syncIssues($client, $planioProjectId, $localId, $stats);
+        }
+
+        $stats['project_name'] = (string) ($remote['name'] ?? 'Project ' . $planioProjectId);
+
+        return $stats;
+    }
+
+    public function markSyncComplete(): void
+    {
+        $this->settings->set('planio.last_sync_at', (new \DateTimeImmutable())->format('Y-m-d H:i:s'));
+    }
+
+    /** @return array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} */
+    private static function emptyStats(): array
+    {
+        return [
+            'projects_created' => 0,
+            'projects_updated' => 0,
+            'tasks_created' => 0,
+            'tasks_updated' => 0,
+        ];
+    }
+
+    /**
+     * @param array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} $into
+     * @param array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} $from
+     */
+    private static function mergeStats(array &$into, array $from): void
+    {
+        $into['projects_created'] += $from['projects_created'];
+        $into['projects_updated'] += $from['projects_updated'];
+        $into['tasks_created'] += $from['tasks_created'];
+        $into['tasks_updated'] += $from['tasks_updated'];
     }
 
     /** @param array<string, mixed> $remote */

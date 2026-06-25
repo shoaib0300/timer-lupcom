@@ -4,45 +4,78 @@
 {% set active_nav = 'projects' %}
 
 {% block content %}
-<div class="page-header page-header--center">
-    <h1 class="page-title" style="margin:0;">Projects</h1>
-    <a href="/projects/create" class="btn btn--primary">New project</a>
-</div>
+<div class="projects-page">
+    <div class="page-header page-header--center">
+        <h1 class="page-title" style="margin:0;">Projects</h1>
+        <a href="/projects/create" class="btn btn--primary">New project</a>
+    </div>
 
-{% if projects is empty %}
-    <div class="card">
-        <p class="muted">No projects yet.</p>
-    </div>
-{% else %}
-    <div class="card">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Tasks</th>
-                    <th>Time tracked</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for project in projects %}
+    {% if projects is empty %}
+        <div class="card">
+            <p class="muted">No projects yet.</p>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="projects-section__toolbar">
+                <label class="projects-section__search-label" for="project-search">Search</label>
+                <input
+                    type="search"
+                    id="project-search"
+                    class="projects-section__search"
+                    placeholder="Search projects…"
+                    autocomplete="off"
+                >
+            </div>
+            <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">No projects match your search.</p>
+
+            <table class="table" id="projects-table">
+                <thead>
                     <tr>
-                        <td>
-                            <span class="project-dot" style="background: {{ project.color }};"></span>
-                            <a href="/projects/{{ project.id }}">{{ project.name }}</a>
-                        </td>
-                        <td>{{ project.taskCount }}</td>
-                        <td>{{ format_time(project.totalSeconds) }}</td>
-                        <td class="actions">
-                            <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
-                            <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? All tasks and time entries will be removed.');">
-                                <button type="submit" class="btn btn--danger btn--sm">Delete</button>
-                            </form>
-                        </td>
+                        <th>Name</th>
+                        <th>Planio #</th>
+                        <th>Tasks</th>
+                        <th>Time tracked</th>
+                        <th></th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-{% endif %}
+                </thead>
+                <tbody>
+                    {% for project in projects %}
+                        <tr
+                            data-project-id="{{ project.id }}"
+                            data-project-name="{{ project.name }}"
+                            {% if project.planioId %}data-planio-id="{{ project.planioId }}"{% endif %}
+                        >
+                            <td>
+                                <span class="project-dot" style="background: {{ project.color }};"></span>
+                                <a href="/projects/{{ project.id }}">{{ project.name }}</a>
+                            </td>
+                            <td>
+                                {% if project.planioId %}
+                                    <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ project.planioId }}</span>
+                                {% else %}
+                                    <span class="muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ project.taskCount }}</td>
+                            <td>{{ format_time(project.totalSeconds) }}</td>
+                            <td class="actions">
+                                <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
+                                <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete project &quot;{{ project.name|e('js') }}&quot;? All tasks and time entries will be removed.');">
+                                    <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+    import { initProjectsTableSearch } from '/assets/js/project-cards.js';
+    initProjectsTableSearch();
+</script>
 {% endblock %}

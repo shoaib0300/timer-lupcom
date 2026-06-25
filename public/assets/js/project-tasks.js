@@ -9,12 +9,10 @@ function planioIdCell(planioIssueId) {
 }
 
 function renderTaskRow(task, project) {
-    const statusLabel = task.status.replace(/_/g, ' ');
     return `
         <tr data-task-id="${task.id}">
             <td class="project-show__task-name">${escapeHtml(task.name)}</td>
             <td class="project-show__col-planio">${planioIdCell(task.planio_issue_id)}</td>
-            <td><span class="badge badge--${escapeHtml(task.status)}">${escapeHtml(statusLabel)}</span></td>
             <td>${escapeHtml(task.total_human)}</td>
             <td class="project-show__col-actions">
                 <div class="project-show__row-actions">
@@ -67,7 +65,6 @@ export async function refreshProjectTasks(projectId, projectName) {
                     <tr>
                         <th>Name</th>
                         <th class="project-show__col-planio">Planio #</th>
-                        <th>Status</th>
                         <th>Time</th>
                         <th class="project-show__col-actions">Actions</th>
                     </tr>

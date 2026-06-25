@@ -118,6 +118,17 @@
                 <span class="muted" id="planio-selected-count">0 selected</span>
             </div>
 
+            <div class="settings-page__import-progress is-hidden" id="planio-import-progress" role="status" aria-live="polite">
+                <div class="settings-page__progress-header">
+                    <span id="planio-import-progress-label">Importing…</span>
+                    <span class="settings-page__progress-pct" id="planio-import-progress-pct">0%</span>
+                </div>
+                <div class="settings-page__progress-track">
+                    <div class="settings-page__progress-bar" id="planio-import-progress-bar"></div>
+                </div>
+                <p class="muted settings-page__progress-detail" id="planio-import-progress-detail"></p>
+            </div>
+
             <p class="settings-page__feedback is-hidden" id="planio-sync-feedback" role="status"></p>
         </section>
     {% endif %}

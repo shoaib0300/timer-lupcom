@@ -3,9 +3,15 @@
     "private": true,
     "scripts": {
         "build:css": "sass resources/scss:public/assets/css --style=compressed --no-source-map",
+        "build:js": "esbuild resources/js/projects-search.js --bundle --format=esm --outfile=public/assets/js/projects-search.js --minify",
+        "build": "npm run build:css && npm run build:js",
         "watch:css": "sass resources/scss:public/assets/css --watch"
     },
+    "dependencies": {
+        "fuse.js": "^7.1.0"
+    },
     "devDependencies": {
+        "esbuild": "^0.25.0",
         "sass": "^1.83.0"
     }
 }

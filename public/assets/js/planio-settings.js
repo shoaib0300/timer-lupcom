@@ -12,8 +12,14 @@ const loadingEl = document.getElementById('planio-projects-loading');
 const actionsEl = document.getElementById('planio-import-actions');
 const countEl = document.getElementById('planio-selected-count');
 const feedbackEl = document.getElementById('planio-sync-feedback');
+const progressEl = document.getElementById('planio-import-progress');
+const progressLabelEl = document.getElementById('planio-import-progress-label');
+const progressPctEl = document.getElementById('planio-import-progress-pct');
+const progressBarEl = document.getElementById('planio-import-progress-bar');
+const progressDetailEl = document.getElementById('planio-import-progress-detail');
 
 let projects = [];
+let importing = false;
 
 function showFeedback(message, isError = false) {
     if (!feedbackEl) {
@@ -29,6 +35,61 @@ function showFeedback(message, isError = false) {
 
 function hideFeedback() {
     feedbackEl?.classList.add('is-hidden');
+}
+
+function hideProgress() {
+    progressEl?.classList.add('is-hidden');
+}
+
+function setImportProgress(completed, total, label, detail = '') {
+    if (!progressEl) {
+        return;
+    }
+
+    const safeTotal = Math.max(total, 1);
+    const pct = Math.min(100, Math.round((completed / safeTotal) * 100));
+
+    progressEl.classList.remove('is-hidden');
+    progressLabelEl.textContent = label;
+    progressPctEl.textContent = `${pct}%`;
+    progressBarEl.style.width = `${pct}%`;
+    progressDetailEl.textContent = detail;
+}
+
+function setImportControlsDisabled(disabled) {
+    syncBtn?.toggleAttribute('disabled', disabled);
+    loadBtn?.toggleAttribute('disabled', disabled);
+    filterInput?.toggleAttribute('disabled', disabled);
+    selectVisible?.toggleAttribute('disabled', disabled);
+    importIssues?.toggleAttribute('disabled', disabled);
+    listEl?.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+        input.toggleAttribute('disabled', disabled);
+    });
+}
+
+function emptyStats() {
+    return {
+        projects_created: 0,
+        projects_updated: 0,
+        tasks_created: 0,
+        tasks_updated: 0,
+    };
+}
+
+function mergeStats(into, from) {
+    into.projects_created += from.projects_created || 0;
+    into.projects_updated += from.projects_updated || 0;
+    into.tasks_created += from.tasks_created || 0;
+    into.tasks_updated += from.tasks_updated || 0;
+}
+
+function formatImportMessage(stats) {
+    return `Imported from Planio: ${stats.projects_created} new and ${stats.projects_updated} updated projects locally. Tasks: ${stats.tasks_created} new, ${stats.tasks_updated} updated. Nothing was sent to Planio.`;
+}
+
+function projectNameForId(id) {
+    const project = projects.find((item) => String(item.id) === String(id));
+    return project?.name || `Project #${id}`;
 }
 
 function updateSelectedCount() {
@@ -65,7 +126,7 @@ function renderProjects() {
 
     listEl.innerHTML = filtered.map((project) => `
         <label class="settings-page__project-item${project.is_linked ? ' settings-page__project-item--linked' : ''}" data-planio-id="${project.id}">
-            <input type="checkbox" name="project_ids[]" value="${project.id}">
+            <input type="checkbox" name="project_ids[]" value="${project.id}"${importing ? ' disabled' : ''}>
             <div class="settings-page__project-meta">
                 <strong>${escapeHtml(project.name)}</strong>
                 <span>#${project.id} · ${escapeHtml(project.identifier)}${project.parent_name ? ` · under ${escapeHtml(project.parent_name)}` : ''}</span>
@@ -107,7 +168,9 @@ async function loadProjects() {
         loadingEl?.classList.add('is-hidden');
         showFeedback(error.message, true);
     } finally {
-        loadBtn?.removeAttribute('disabled');
+        if (!importing) {
+            loadBtn?.removeAttribute('disabled');
+        }
     }
 }
 
@@ -133,6 +196,10 @@ async function testConnection() {
 }
 
 async function syncSelected() {
+    if (importing) {
+        return;
+    }
+
     hideFeedback();
 
     const selected = [...listEl.querySelectorAll('input[type="checkbox"]:checked')].map((el) => el.value);
@@ -141,30 +208,76 @@ async function syncSelected() {
         return;
     }
 
-    const body = new URLSearchParams();
-    selected.forEach((id) => body.append('project_ids[]', id));
-    body.append('import_issues', importIssues?.checked ? '1' : '0');
+    const importIssuesEnabled = importIssues?.checked ?? false;
+    const totals = emptyStats();
+    const failures = [];
 
-    syncBtn?.setAttribute('disabled', 'disabled');
+    importing = true;
+    setImportControlsDisabled(true);
+    setImportProgress(0, selected.length, 'Starting import…', `0 of ${selected.length} projects`);
 
     try {
-        const response = await fetch('/api/planio/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body,
-        });
-        const data = await response.json();
+        for (let index = 0; index < selected.length; index += 1) {
+            const id = selected[index];
+            const name = projectNameForId(id);
+            const completedBefore = index;
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Import failed.');
+            setImportProgress(
+                completedBefore,
+                selected.length,
+                `Importing ${name}…`,
+                `${completedBefore} of ${selected.length} projects`,
+            );
+
+            const body = new URLSearchParams();
+            body.append('project_id', id);
+            body.append('import_issues', importIssuesEnabled ? '1' : '0');
+            body.append('finalize', index === selected.length - 1 ? '1' : '0');
+
+            try {
+                const response = await fetch('/api/planio/sync-item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body,
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Import failed.');
+                }
+
+                mergeStats(totals, data.stats || {});
+            } catch (error) {
+                failures.push(`${name}: ${error.message}`);
+            }
+
+            const completed = index + 1;
+            setImportProgress(
+                completed,
+                selected.length,
+                failures.length > 0 && completed === selected.length
+                    ? 'Import finished with errors'
+                    : completed === selected.length
+                        ? 'Import complete'
+                        : `Importing ${name}…`,
+                `${completed} of ${selected.length} projects`,
+            );
         }
 
-        showFeedback(data.message || 'Import complete.');
+        if (failures.length > 0) {
+            const summary = formatImportMessage(totals);
+            showFeedback(`${summary} ${failures.length} project(s) failed: ${failures.slice(0, 3).join('; ')}${failures.length > 3 ? '…' : ''}`, true);
+        } else {
+            showFeedback(formatImportMessage(totals));
+        }
+
         await loadProjects();
     } catch (error) {
         showFeedback(error.message, true);
+        hideProgress();
     } finally {
-        syncBtn?.removeAttribute('disabled');
+        importing = false;
+        setImportControlsDisabled(false);
     }
 }
 

@@ -20,19 +20,33 @@
 </div>
 
 <section class="card projects-section">
-    <div class="section-header">
+    <div class="section-header projects-section__header">
         <h2>Projects</h2>
         <a href="/projects/create" class="btn btn--ghost btn--sm">New project</a>
     </div>
 
+    <div class="projects-section__toolbar">
+        <label class="projects-section__search-label" for="project-search">Search</label>
+        <input
+            type="search"
+            id="project-search"
+            class="projects-section__search"
+            placeholder="Search projects…"
+            autocomplete="off"
+        >
+    </div>
+    <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">No projects match your search.</p>
+
     {% if projects is empty %}
         <p class="muted">No projects yet. <a href="/projects/create">Create your first project</a>.</p>
     {% else %}
-        <div class="grid grid--projects" id="projects-grid" data-show-increment="{{ projects_show_increment }}">
+        <div class="grid grid--projects" id="projects-grid" data-show-increment="{{ projects_show_increment }}" data-visible-limit="{{ projects_visible_limit }}">
             {% for project in projects %}
                 <article
                     class="project-card{% if loop.index > projects_visible_limit %} project-card--collapsed{% endif %}"
                     data-project-id="{{ project.id }}"
+                    data-project-name="{{ project.name }}"
+                    {% if project.planioId %}data-planio-id="{{ project.planioId }}"{% endif %}
                 >
                     <h3 class="project-card__title">
                         <span class="project-dot" style="background: {{ project.color }};"></span>

@@ -164,18 +164,52 @@ final class PlanioController extends BaseController
             $stats = $this->syncService()->sync($projectIds, $importIssues);
 
             return $this->json([
-                'message' => sprintf(
-                    'Imported from Planio: %d new and %d updated projects locally. Tasks: %d new, %d updated. Nothing was sent to Planio.',
-                    $stats['projects_created'],
-                    $stats['projects_updated'],
-                    $stats['tasks_created'],
-                    $stats['tasks_updated'],
-                ),
+                'message' => $this->syncMessage($stats),
                 'stats' => $stats,
             ]);
         } catch (\Throwable $exception) {
             return $this->json(['error' => $exception->getMessage()], 422);
         }
+    }
+
+    public function syncItem(Request $request): Response
+    {
+        $settings = new SettingsRepository($this->app->db());
+
+        if (!$settings->isPlanioConfigured()) {
+            return $this->json(['error' => 'Planio is not configured.'], 422);
+        }
+
+        $projectId = (int) $request->input('project_id', 0);
+        $importIssues = filter_var($request->input('import_issues', false), FILTER_VALIDATE_BOOL);
+        $finalize = filter_var($request->input('finalize', false), FILTER_VALIDATE_BOOL);
+
+        try {
+            $stats = $this->syncService()->syncProject($projectId, $importIssues);
+
+            if ($finalize) {
+                $this->syncService()->markSyncComplete();
+            }
+
+            return $this->json([
+                'stats' => $stats,
+                'project_name' => $stats['project_name'],
+            ]);
+        } catch (\Throwable $exception) {
+            return $this->json(['error' => $exception->getMessage()], 422);
+        }
+    }
+
+    /** @param array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} $stats */
+    private function syncMessage(array $stats): string
+    {
+        return sprintf(
+            'Imported from Planio: %d new and %d updated projects locally. Tasks: %d new, %d updated. Nothing was sent to Planio.',
+            $stats['projects_created'],
+            $stats['projects_updated'],
+            $stats['tasks_created'],
+            $stats['tasks_updated'],
+        );
     }
 
     private function syncService(): PlanioSyncService

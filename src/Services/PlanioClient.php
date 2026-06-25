@@ -56,6 +56,14 @@ final class PlanioClient
         return $projects;
     }
 
+    /** @return array<string, mixed> */
+    public function project(int $planioProjectId): array
+    {
+        $data = $this->get('/projects/' . $planioProjectId . '.json');
+
+        return $data['project'] ?? throw new RuntimeException('Project not found on Planio.');
+    }
+
     /** @return list<array<string, mixed>> */
     public function openIssuesForProject(int $planioProjectId): array
     {
