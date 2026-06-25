@@ -16,6 +16,7 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+    <div id="theme-transition" class="theme-transition" aria-hidden="true" hidden></div>
     <div class="app-shell">
         <aside class="timer-sidebar" id="timer-sidebar">
             <div class="timer-sidebar__header">
@@ -92,7 +93,7 @@
     </div>
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=16"></script>
+    <script type="module" src="/assets/js/app.js?v=17"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

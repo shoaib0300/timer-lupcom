@@ -1,0 +1,389 @@
+@use 'variables' as *;
+
+.theme-transition {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+
+    // Sun disk
+    &::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        width: min(22vw, 140px);
+        height: min(22vw, 140px);
+        margin-left: min(-11vw, -70px);
+        border-radius: 50%;
+        opacity: 0;
+        filter: blur(1px);
+    }
+
+    // Horizon haze / atmospheric glow
+    &::after {
+        content: '';
+        position: absolute;
+        left: -10%;
+        right: -10%;
+        bottom: 0;
+        height: 42%;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    &--sunset {
+        visibility: visible;
+        animation: theme-overlay-sunset 1.65s cubic-bezier(0.33, 0, 0.2, 1) forwards;
+
+        &::before {
+            background: radial-gradient(
+                circle at 42% 42%,
+                #fffef2 0%,
+                #ffe8a3 18%,
+                #ffb347 42%,
+                rgba(255, 120, 60, 0.55) 62%,
+                transparent 76%
+            );
+            box-shadow:
+                0 0 48px 22px rgba(255, 190, 100, 0.35),
+                0 0 100px 48px rgba(255, 130, 70, 0.18);
+            animation: theme-sun-set 1.65s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+        }
+
+        &::after {
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(255, 168, 104, 0.08) 35%,
+                rgba(255, 120, 72, 0.22) 68%,
+                rgba(255, 88, 56, 0.28) 100%
+            );
+            animation: theme-haze-sunset 1.65s ease-out forwards;
+        }
+    }
+
+    &--sunrise {
+        visibility: visible;
+        animation: theme-overlay-sunrise 1.65s cubic-bezier(0.33, 0, 0.2, 1) forwards;
+
+        &::before {
+            background: radial-gradient(
+                circle at 50% 50%,
+                #fffef8 0%,
+                #fff0c4 20%,
+                #ffc96b 45%,
+                rgba(255, 168, 88, 0.5) 65%,
+                transparent 78%
+            );
+            box-shadow:
+                0 0 40px 18px rgba(255, 220, 150, 0.4),
+                0 0 90px 40px rgba(255, 180, 100, 0.2);
+            animation: theme-sun-rise 1.65s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+        }
+
+        &::after {
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(255, 200, 150, 0.1) 40%,
+                rgba(255, 170, 110, 0.24) 72%,
+                rgba(255, 210, 160, 0.32) 100%
+            );
+            animation: theme-haze-sunrise 1.65s ease-out forwards;
+        }
+    }
+}
+
+// Light → dark: golden hour → rose twilight → night
+@keyframes theme-overlay-sunset {
+    0% {
+        opacity: 0;
+        background: linear-gradient(
+            180deg,
+            #5b7c9e 0%,
+            #8eb4d4 38%,
+            #d4a574 78%,
+            #e8b87a 100%
+        );
+    }
+
+    18% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #3d5a80 0%,
+            #6a8caf 22%,
+            #c4a0b8 48%,
+            #e8926f 72%,
+            #f4c27a 90%,
+            #fae8b8 100%
+        );
+    }
+
+    38% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #2a3a5c 0%,
+            #5c4d7d 20%,
+            #9d6b8a 42%,
+            #d97a5c 66%,
+            #f0a060 84%,
+            #f8d49a 100%
+        );
+    }
+
+    58% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #141e30 0%,
+            #2d3560 18%,
+            #5a4578 38%,
+            #8b4f5e 58%,
+            #b85c42 78%,
+            #6b3a2e 100%
+        );
+    }
+
+    78% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #0c1220 0%,
+            #151d32 30%,
+            #2a2548 52%,
+            #3d2f4a 72%,
+            #1a1528 100%
+        );
+    }
+
+    100% {
+        opacity: 0;
+        background: linear-gradient(160deg, #0f172a 0%, #111827 100%);
+    }
+}
+
+// Dark → light: night → pre-dawn → dawn → morning sky
+@keyframes theme-overlay-sunrise {
+    0% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #0b1324 0%,
+            #121c33 35%,
+            #1a2540 68%,
+            #1e2a42 100%
+        );
+    }
+
+    18% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #0f1a30 0%,
+            #1c2844 28%,
+            #3a3568 52%,
+            #6b5a82 72%,
+            #4a3f5c 100%
+        );
+    }
+
+    38% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #1a2d4a 0%,
+            #3d4f78 22%,
+            #7b6b9a 44%,
+            #d4a0a8 68%,
+            #f0b88a 86%,
+            #f8d8a8 100%
+        );
+    }
+
+    58% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #6a9ec4 0%,
+            #9ec4e0 24%,
+            #c8dff0 44%,
+            #f5d4b8 68%,
+            #ffd89b 86%,
+            #fff3d6 100%
+        );
+    }
+
+    78% {
+        opacity: 1;
+        background: linear-gradient(
+            180deg,
+            #b8d9f0 0%,
+            #d8ebf8 35%,
+            #eef6fc 62%,
+            #faf4ea 84%,
+            #ffffff 100%
+        );
+    }
+
+    100% {
+        opacity: 0;
+        background: linear-gradient(160deg, #ffffff 0%, #f8fafc 100%);
+    }
+}
+
+@keyframes theme-sun-set {
+    0% {
+        bottom: 28%;
+        opacity: 0;
+        transform: scale(1);
+        filter: blur(1px) brightness(1.1);
+    }
+
+    20% {
+        opacity: 1;
+        transform: scale(1.02);
+        filter: blur(1px) brightness(1.15);
+    }
+
+    45% {
+        bottom: 12%;
+        opacity: 1;
+        transform: scale(1.12);
+        filter: blur(2px) brightness(1.05);
+    }
+
+    65% {
+        bottom: 2%;
+        opacity: 0.85;
+        transform: scale(1.25);
+        filter: blur(4px) brightness(0.95) saturate(1.2);
+    }
+
+    100% {
+        bottom: -28%;
+        opacity: 0;
+        transform: scale(1.4);
+        filter: blur(8px) brightness(0.7) saturate(1.4);
+    }
+}
+
+@keyframes theme-sun-rise {
+    0% {
+        bottom: -28%;
+        opacity: 0;
+        transform: scale(1.35);
+        filter: blur(8px) brightness(0.75) saturate(1.3);
+    }
+
+    25% {
+        bottom: 2%;
+        opacity: 0.7;
+        transform: scale(1.2);
+        filter: blur(4px) brightness(0.9) saturate(1.15);
+    }
+
+    48% {
+        bottom: 10%;
+        opacity: 1;
+        transform: scale(1.08);
+        filter: blur(2px) brightness(1.05);
+    }
+
+    72% {
+        bottom: 22%;
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(1px) brightness(1.12);
+    }
+
+    100% {
+        bottom: 38%;
+        opacity: 0;
+        transform: scale(0.92);
+        filter: blur(2px) brightness(1.2);
+    }
+}
+
+@keyframes theme-haze-sunset {
+    0% {
+        opacity: 0;
+    }
+
+    25% {
+        opacity: 0.55;
+    }
+
+    55% {
+        opacity: 0.85;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes theme-haze-sunrise {
+    0% {
+        opacity: 0;
+    }
+
+    30% {
+        opacity: 0.45;
+    }
+
+    60% {
+        opacity: 0.9;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .theme-transition {
+        &--sunset,
+        &--sunrise {
+            animation-duration: 0.01ms;
+
+            &::before,
+            &::after {
+                animation-duration: 0.01ms;
+            }
+        }
+    }
+}
+
+html.theme-changing {
+    body {
+        transition: background 1s ease, color 0.6s ease;
+    }
+
+    .site-header,
+    .timer-sidebar,
+    .card,
+    .project-card {
+        transition:
+            background 0.6s ease,
+            border-color 0.6s ease,
+            color 0.5s ease,
+            box-shadow 0.6s ease;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.theme-changing {
+        body,
+        .site-header,
+        .timer-sidebar,
+        .card,
+        .project-card {
+            transition: none;
+        }
+    }
+}
