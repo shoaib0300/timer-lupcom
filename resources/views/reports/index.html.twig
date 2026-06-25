@@ -103,7 +103,7 @@
                 <thead>
                     <tr>
                         <th>Project</th>
-                        <th>Task</th>
+                        <th>Task / reason</th>
                         <th>Started</th>
                         <th>Duration</th>
                     </tr>
@@ -112,10 +112,15 @@
                     {% for entry in day_entries %}
                         <tr>
                             <td>
-                                <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
-                                {{ entry.projectName }}
+                                {% if entry.isGeneral %}
+                                    <span class="project-dot" style="background: #64748b;"></span>
+                                    General
+                                {% else %}
+                                    <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
+                                    {{ entry.projectName }}
+                                {% endif %}
                             </td>
-                            <td>{{ entry.taskName ?? '—' }}</td>
+                            <td>{{ entry.displayLabel() }}</td>
                             <td class="muted">{{ entry.startedAt }}</td>
                             <td>{{ format_time(entry.durationSeconds) }}</td>
                         </tr>

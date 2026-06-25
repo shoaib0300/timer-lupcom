@@ -10,6 +10,11 @@ use Timer\Models\TimeEntry;
 
 final class TimeEntryRepository
 {
+    private const string ENTRY_SELECT = 'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
+            FROM time_entries te
+            LEFT JOIN projects p ON p.id = te.project_id
+            LEFT JOIN tasks t ON t.id = te.task_id';
+
     public function __construct(
         private readonly PDO $pdo,
     ) {
@@ -19,10 +24,7 @@ final class TimeEntryRepository
     public function findAllRunning(): array
     {
         $stmt = $this->pdo->query(
-            'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
-            FROM time_entries te
-            JOIN projects p ON p.id = te.project_id
-            LEFT JOIN tasks t ON t.id = te.task_id
+            self::ENTRY_SELECT . '
             WHERE te.ended_at IS NULL
             ORDER BY te.started_at ASC',
         );
@@ -116,10 +118,7 @@ final class TimeEntryRepository
     public function findById(int $id): ?TimeEntry
     {
         $stmt = $this->pdo->prepare(
-            'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
-            FROM time_entries te
-            JOIN projects p ON p.id = te.project_id
-            LEFT JOIN tasks t ON t.id = te.task_id
+            self::ENTRY_SELECT . '
             WHERE te.id = ?',
         );
         $stmt->execute([$id]);
@@ -132,10 +131,7 @@ final class TimeEntryRepository
     public function recentToday(int $limit = 50): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
-            FROM time_entries te
-            JOIN projects p ON p.id = te.project_id
-            LEFT JOIN tasks t ON t.id = te.task_id
+            self::ENTRY_SELECT . '
             WHERE te.ended_at IS NOT NULL
               AND DATE(te.started_at) = CURDATE()
             ORDER BY te.ended_at DESC
@@ -154,10 +150,7 @@ final class TimeEntryRepository
     public function recent(int $limit = 20): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
-            FROM time_entries te
-            JOIN projects p ON p.id = te.project_id
-            LEFT JOIN tasks t ON t.id = te.task_id
+            self::ENTRY_SELECT . '
             WHERE te.ended_at IS NOT NULL
             ORDER BY te.ended_at DESC
             LIMIT ?',
@@ -228,10 +221,7 @@ final class TimeEntryRepository
         ?int $taskId = null,
         int $limit = 100,
     ): array {
-        $sql = 'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
-            FROM time_entries te
-            JOIN projects p ON p.id = te.project_id
-            LEFT JOIN tasks t ON t.id = te.task_id
+        $sql = self::ENTRY_SELECT . '
             WHERE te.ended_at IS NOT NULL
               AND DATE(te.started_at) = ?';
         $params = [$date];
@@ -264,6 +254,57 @@ final class TimeEntryRepository
             TimeEntry::fromRow(...),
             $stmt->fetchAll(),
         );
+    }
+
+    public function createManual(
+        int $durationSeconds,
+        DateTimeImmutable $workDate,
+        ?int $projectId = null,
+        ?int $taskId = null,
+        ?string $notes = null,
+    ): int {
+        if ($durationSeconds <= 0) {
+            throw new \InvalidArgumentException('Duration must be greater than zero.');
+        }
+
+        $notes = $notes !== null ? trim($notes) : null;
+        $isGeneral = $projectId === null;
+
+        if ($isGeneral && ($notes === null || $notes === '')) {
+            throw new \InvalidArgumentException('Reason is required when no project is selected.');
+        }
+
+        $today = new DateTimeImmutable('today');
+        $endedAt = $workDate->format('Y-m-d') === $today->format('Y-m-d')
+            ? new DateTimeImmutable()
+            : $workDate->setTime(17, 0, 0);
+
+        $startedAt = $endedAt->modify('-' . $durationSeconds . ' seconds');
+        $dayStart = $workDate->setTime(0, 0, 0);
+
+        if ($startedAt < $dayStart) {
+            $startedAt = $dayStart;
+            $durationSeconds = max(0, $endedAt->getTimestamp() - $startedAt->getTimestamp());
+        }
+
+        if ($durationSeconds <= 0) {
+            throw new \InvalidArgumentException('Duration is too long for the selected date.');
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO time_entries (project_id, task_id, started_at, ended_at, duration_seconds, notes)
+            VALUES (?, ?, ?, ?, ?, ?)',
+        );
+        $stmt->execute([
+            $projectId,
+            $taskId,
+            $startedAt->format('Y-m-d H:i:s'),
+            $endedAt->format('Y-m-d H:i:s'),
+            $durationSeconds,
+            $notes !== '' ? $notes : null,
+        ]);
+
+        return (int) $this->pdo->lastInsertId();
     }
 
     public function totalSecondsInRange(

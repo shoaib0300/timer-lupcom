@@ -52,14 +52,40 @@ final class ProjectRepository
         return $row ? Project::fromRow($row) : null;
     }
 
-    public function create(string $name, ?string $description, string $color): int
+    public function create(string $name, ?string $description, string $color, ?int $planioId = null): int
     {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO projects (name, description, color) VALUES (?, ?, ?)',
+            'INSERT INTO projects (name, description, color, planio_id) VALUES (?, ?, ?, ?)',
         );
-        $stmt->execute([$name, $description, $color]);
+        $stmt->execute([$name, $description, $color, $planioId]);
 
         return (int) $this->pdo->lastInsertId();
+    }
+
+    public function findByPlanioId(int $planioId): ?Project
+    {
+        $stmt = $this->pdo->prepare(
+            self::STATS_SELECT . '
+            FROM projects p
+            LEFT JOIN time_entries te ON te.project_id = p.id AND te.ended_at IS NOT NULL
+            WHERE p.planio_id = ?
+            GROUP BY p.id',
+        );
+        $stmt->execute([$planioId]);
+        $row = $stmt->fetch();
+
+        return $row ? Project::fromRow($row) : null;
+    }
+
+    /** @return list<int> */
+    public function linkedPlanioIds(): array
+    {
+        $stmt = $this->pdo->query('SELECT planio_id FROM projects WHERE planio_id IS NOT NULL');
+        if (!$stmt) {
+            return [];
+        }
+
+        return array_map(intval(...), $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
     public function update(int $id, string $name, ?string $description, string $color): void

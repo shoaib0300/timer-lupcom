@@ -1,0 +1,129 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}Planio{% endblock %}
+{% set active_nav = 'planio' %}
+
+{% block content %}
+<div class="settings-page">
+    <h1 class="page-title">Planio integration</h1>
+    <p class="muted settings-page__intro">Read-only import from Planio into this timer app. Projects and issues are copied here for tracking — nothing is sent back to Planio.</p>
+
+    <div class="settings-page__readonly-banner" role="note">
+        <strong>Import only</strong> — We only <em>fetch</em> data from <code>support.lupcom.de</code> (projects, issues, your profile). Timer sessions stay in this app and are never pushed to Planio.
+    </div>
+
+    {% if flash_success %}
+        <div class="alert alert--success">{{ flash_success }}</div>
+    {% endif %}
+    {% if flash_error %}
+        <div class="alert alert--error">{{ flash_error }}</div>
+    {% endif %}
+
+    <section class="card settings-page__connection">
+        <h2>Connection</h2>
+
+        {% if has_api_key %}
+            <p class="settings-page__status">
+                <span class="settings-page__status-dot" aria-hidden="true"></span>
+                A Planio API key is already stored in this app. The field below stays empty for security — your key is not shown again after saving.
+            </p>
+        {% endif %}
+
+        <form method="post" action="/settings/planio" class="settings-page__form">
+            <div class="settings-page__row">
+                <div class="form-group">
+                    <label for="planio-base-url">Planio URL</label>
+                    <input
+                        type="url"
+                        id="planio-base-url"
+                        name="base_url"
+                        value="{{ planio.base_url|default('https://support.lupcom.de') }}"
+                        placeholder="https://support.lupcom.de"
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="planio-api-key">API access key</label>
+                    <input
+                        type="password"
+                        id="planio-api-key"
+                        name="api_key"
+                        value=""
+                        placeholder="{% if has_api_key %}Key saved — enter new key to replace{% else %}Paste API key from My account{% endif %}"
+                        autocomplete="off"
+                        {% if not has_api_key %}required{% endif %}
+                    >
+                    <p class="muted settings-page__hint">Find it on Planio → My account → API access key (right side).</p>
+                </div>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">Save connection</button>
+                {% if has_api_key %}
+                    <button type="button" class="btn btn--ghost" id="planio-test-btn">Test connection</button>
+                {% endif %}
+            </div>
+        </form>
+
+        {% if has_api_key %}
+            <form method="post" action="/settings/planio/disconnect" class="settings-page__disconnect" onsubmit="return confirm('Remove stored Planio credentials from this app?');">
+                <button type="submit" class="btn btn--ghost btn--sm">Disconnect</button>
+            </form>
+        {% endif %}
+
+        {% if has_api_key and planio.user_name %}
+            <div class="settings-page__user card">
+                <h3>Last verified as</h3>
+                <p class="muted settings-page__user-note">From the last successful save or test — not live until you click Test connection.</p>
+                <dl class="settings-page__user-details">
+                    <div><dt>Name</dt><dd>{{ planio.user_name }}</dd></div>
+                    {% if planio.user_login %}<div><dt>Login</dt><dd>{{ planio.user_login }}</dd></div>{% endif %}
+                    {% if planio.user_id %}<div><dt>User ID</dt><dd>{{ planio.user_id }}</dd></div>{% endif %}
+                    {% if planio.user_email %}<div><dt>Email</dt><dd>{{ planio.user_email }}</dd></div>{% endif %}
+                    {% if planio.last_sync_at %}<div><dt>Last import</dt><dd>{{ planio.last_sync_at }}</dd></div>{% endif %}
+                </dl>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if has_api_key %}
+        <section class="card settings-page__import">
+            <div class="settings-page__import-header">
+                <h2>Import projects</h2>
+                <button type="button" class="btn btn--ghost btn--sm" id="planio-load-projects">Load projects</button>
+            </div>
+            <p class="muted">Select projects to copy into the timer app. Re-importing refreshes names and open issues locally — Planio is not modified.</p>
+
+            <div class="settings-page__filters">
+                <div class="form-group">
+                    <label for="planio-project-filter">Filter</label>
+                    <input type="search" id="planio-project-filter" placeholder="Search by name or identifier…">
+                </div>
+                <label class="settings-page__checkbox">
+                    <input type="checkbox" id="planio-select-visible">
+                    Select visible
+                </label>
+                <label class="settings-page__checkbox">
+                    <input type="checkbox" id="planio-import-issues" checked>
+                    Import open issues as tasks
+                </label>
+            </div>
+
+            <p class="muted is-hidden" id="planio-projects-empty">No projects loaded yet. Click “Load projects”.</p>
+            <p class="muted is-hidden" id="planio-projects-loading">Loading projects from Planio…</p>
+
+            <div class="settings-page__project-list is-hidden" id="planio-project-list"></div>
+
+            <div class="actions settings-page__import-actions is-hidden" id="planio-import-actions">
+                <button type="button" class="btn btn--primary" id="planio-sync-btn">Import selected</button>
+                <span class="muted" id="planio-selected-count">0 selected</span>
+            </div>
+
+            <p class="settings-page__feedback is-hidden" id="planio-sync-feedback" role="status"></p>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/assets/js/planio-settings.js"></script>
+{% endblock %}

@@ -10,7 +10,7 @@ final readonly class TimeEntry
 {
     public function __construct(
         public int $id,
-        public int $projectId,
+        public ?int $projectId,
         public ?int $taskId,
         public string $startedAt,
         public ?string $endedAt,
@@ -54,12 +54,28 @@ final readonly class TimeEntry
         );
     }
 
+    public function isGeneral(): bool
+    {
+        return $this->projectId === null;
+    }
+
+    public function displayLabel(): string
+    {
+        if ($this->isGeneral()) {
+            return $this->notes ?? 'General time';
+        }
+
+        return $this->taskName ?? '—';
+    }
+
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {
         return new self(
             (int) $row['id'],
-            (int) $row['project_id'],
+            isset($row['project_id']) && $row['project_id'] !== null
+                ? (int) $row['project_id']
+                : null,
             isset($row['task_id']) ? (int) $row['task_id'] : null,
             $row['started_at'],
             $row['ended_at'] ?? null,

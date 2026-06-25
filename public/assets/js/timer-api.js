@@ -1,3 +1,21 @@
+export async function createManualEntry(formData) {
+    const body = new URLSearchParams(formData);
+    const response = await fetch('/api/time-entries/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert(data.error || 'Could not log time.');
+        return null;
+    }
+
+    return data;
+}
+
 export async function fetchProjectTasks(projectId) {
     const response = await fetch(`/api/projects/${projectId}/tasks`);
 

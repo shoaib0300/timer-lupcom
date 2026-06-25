@@ -83,6 +83,9 @@ label {
 
 input[type='text'],
 input[type='color'],
+input[type='date'],
+input[type='time'],
+input[type='number'],
 textarea,
 select {
     width: 100%;
@@ -92,6 +95,39 @@ select {
     color: $color-text;
     padding: 0.65rem 0.8rem;
     font: inherit;
+    color-scheme: dark;
+
+    &:focus {
+        outline: none;
+        border-color: $color-primary;
+        box-shadow: 0 0 0 2px rgba($color-primary, 0.2);
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+}
+
+input[type='date'],
+input[type='time'] {
+    min-height: 2.75rem;
+
+    &::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+        opacity: 0.85;
+        filter: invert(0.85);
+    }
+}
+
+input[type='number'] {
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 }
 
 textarea {
@@ -108,6 +144,12 @@ textarea {
         background: rgba($color-danger, 0.15);
         border: 1px solid rgba($color-danger, 0.4);
         color: #fecaca;
+    }
+
+    &--success {
+        background: rgba($color-success, 0.12);
+        border: 1px solid rgba($color-success, 0.35);
+        color: #bbf7d0;
     }
 }
 

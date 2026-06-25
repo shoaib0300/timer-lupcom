@@ -66,14 +66,34 @@ final class TaskRepository
         return $this->create($projectId, $name, null, 'in_progress');
     }
 
-    public function create(int $projectId, string $name, ?string $description, string $status): int
-    {
+    public function create(
+        int $projectId,
+        string $name,
+        ?string $description,
+        string $status,
+        ?int $planioIssueId = null,
+    ): int {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO tasks (project_id, name, description, status) VALUES (?, ?, ?, ?)',
+            'INSERT INTO tasks (project_id, name, description, status, planio_issue_id) VALUES (?, ?, ?, ?, ?)',
         );
-        $stmt->execute([$projectId, $name, $description, $status]);
+        $stmt->execute([$projectId, $name, $description, $status, $planioIssueId]);
 
         return (int) $this->pdo->lastInsertId();
+    }
+
+    public function findByPlanioIssueId(int $projectId, int $planioIssueId): ?Task
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT t.*, p.name AS project_name, 0 AS total_seconds
+            FROM tasks t
+            JOIN projects p ON p.id = t.project_id
+            WHERE t.project_id = ? AND t.planio_issue_id = ?
+            LIMIT 1',
+        );
+        $stmt->execute([$projectId, $planioIssueId]);
+        $row = $stmt->fetch();
+
+        return $row ? Task::fromRow($row) : null;
     }
 
     public function update(int $id, string $name, ?string $description, string $status): void

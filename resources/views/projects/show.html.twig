@@ -4,75 +4,94 @@
 {% set active_nav = 'projects' %}
 
 {% block content %}
-<div class="page-header">
-    <div>
-        <h1 class="page-title">
-            <span class="project-dot" style="background: {{ project.color }};"></span>
-            {{ project.name }}
-        </h1>
-        {% if project.description %}
-            <p class="muted">{{ project.description }}</p>
-        {% endif %}
-        <p class="muted js-project-total" data-project-id="{{ project.id }}" data-total-seconds="{{ project.totalSeconds }}">{{ format_time(project.totalSeconds) }} tracked</p>
+<div class="project-show">
+    <div class="page-header project-show__header">
+        <div class="project-show__intro">
+            <h1 class="page-title">
+                <span class="project-dot" style="background: {{ project.color }};"></span>
+                {{ project.name }}
+            </h1>
+            <div class="project-show__meta">
+                {% if project.planioId %}
+                    <span class="project-show__planio-badge">Planio #{{ project.planioId }}</span>
+                {% endif %}
+                <span class="muted js-project-total" data-project-id="{{ project.id }}" data-total-seconds="{{ project.totalSeconds }}">{{ format_time(project.totalSeconds) }} tracked</span>
+            </div>
+            {% if project.description %}
+                <p class="project-show__description muted">{{ project.description }}</p>
+            {% endif %}
+        </div>
+        <div class="actions project-show__actions">
+            <button
+                type="button"
+                class="btn btn--success js-start-timer"
+                data-project-id="{{ project.id }}"
+                data-project-name="{{ project.name }}"
+            >
+                Start timer
+            </button>
+            <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost">Edit</a>
+            <a href="/projects/{{ project.id }}/tasks/create" class="btn btn--primary">Add task</a>
+            <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete this project? All tasks and time entries will be removed.');">
+                <button type="submit" class="btn btn--danger">Delete</button>
+            </form>
+        </div>
     </div>
-    <div class="actions">
-        <button
-            type="button"
-            class="btn btn--success js-start-timer"
-            data-project-id="{{ project.id }}"
-            data-project-name="{{ project.name }}"
-        >
-            Start timer
-        </button>
-        <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost">Edit</a>
-        <a href="/projects/{{ project.id }}/tasks/create" class="btn btn--primary">Add task</a>
-        <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('Delete this project? All tasks and time entries will be removed.');">
-            <button type="submit" class="btn btn--danger">Delete</button>
-        </form>
-    </div>
-</div>
 
-<div class="card" id="project-tasks" data-project-id="{{ project.id }}" data-project-name="{{ project.name }}">
-    <h2>Tasks</h2>
-    <div id="project-tasks-content">
-        {% if tasks is empty %}
-            <p class="muted js-tasks-empty">No tasks for this project yet.</p>
-        {% else %}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Time</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="project-tasks-body">
-                    {% for task in tasks %}
-                        <tr data-task-id="{{ task.id }}">
-                            <td>{{ task.name }}</td>
-                            <td><span class="badge badge--{{ task.status }}">{{ task.status|replace({'_': ' '}) }}</span></td>
-                            <td>{{ format_time(task.totalSeconds) }}</td>
-                            <td class="actions">
-                                <button
-                                    type="button"
-                                    class="btn btn--primary btn--sm js-start-timer"
-                                    data-project-id="{{ project.id }}"
-                                    data-project-name="{{ project.name }}"
-                                    data-task-name="{{ task.name }}"
-                                >
-                                    Start
-                                </button>
-                                <a href="/tasks/{{ task.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
-                                <form class="inline-form" method="post" action="/tasks/{{ task.id }}/delete" onsubmit="return confirm('Delete this task?');">
-                                    <button type="submit" class="btn btn--danger btn--sm">Delete</button>
-                                </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
+    <div class="card project-show__tasks" id="project-tasks" data-project-id="{{ project.id }}" data-project-name="{{ project.name }}">
+        <h2>Tasks</h2>
+        <div id="project-tasks-content">
+            {% if tasks is empty %}
+                <p class="muted js-tasks-empty">No tasks for this project yet.</p>
+            {% else %}
+                <div class="project-show__table-wrap">
+                    <table class="table project-show__table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th class="project-show__col-planio">Planio #</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                                <th class="project-show__col-actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="project-tasks-body">
+                            {% for task in tasks %}
+                                <tr data-task-id="{{ task.id }}">
+                                    <td class="project-show__task-name">{{ task.name }}</td>
+                                    <td class="project-show__col-planio">
+                                        {% if task.planioIssueId %}
+                                            <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ task.planioIssueId }}</span>
+                                        {% else %}
+                                            <span class="muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge badge--{{ task.status }}">{{ task.status|replace({'_': ' '}) }}</span></td>
+                                    <td>{{ format_time(task.totalSeconds) }}</td>
+                                    <td class="project-show__col-actions">
+                                        <div class="project-show__row-actions">
+                                            <button
+                                                type="button"
+                                                class="btn btn--primary btn--sm js-start-timer"
+                                                data-project-id="{{ project.id }}"
+                                                data-project-name="{{ project.name }}"
+                                                data-task-name="{{ task.name }}"
+                                            >
+                                                Start
+                                            </button>
+                                            <a href="/tasks/{{ task.id }}/edit" class="btn btn--ghost btn--sm">Edit</a>
+                                            <form class="inline-form" method="post" action="/tasks/{{ task.id }}/delete" onsubmit="return confirm('Delete this task?');">
+                                                <button type="submit" class="btn btn--danger btn--sm">Delete</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}

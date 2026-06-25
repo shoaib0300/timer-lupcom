@@ -114,7 +114,9 @@ final class TimerController extends BaseController
     {
         $projectRepo = new ProjectRepository($this->app->db());
         $timeEntries = new TimeEntryRepository($this->app->db());
-        $project = $projectRepo->find($entry->projectId);
+        $project = $entry->projectId !== null
+            ? $projectRepo->find($entry->projectId)
+            : null;
         $totalToday = $timeEntries->totalSecondsToday();
 
         return [
@@ -124,6 +126,8 @@ final class TimerController extends BaseController
                 'project_name' => $entry->projectName,
                 'project_color' => $entry->projectColor,
                 'task_name' => $entry->taskName,
+                'reason' => $entry->notes,
+                'is_general' => $entry->isGeneral(),
                 'duration_seconds' => $entry->durationSeconds,
                 'duration_human' => TimeFormatter::secondsToHuman((int) $entry->durationSeconds),
                 'ended_at' => $entry->endedAt,

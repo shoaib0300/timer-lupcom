@@ -1,0 +1,244 @@
+@use 'variables' as *;
+
+.settings-page {
+    &__intro {
+        margin: -0.5rem 0 1rem;
+    }
+
+    &__readonly-banner {
+        margin-bottom: 1.5rem;
+        padding: 0.85rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        background: rgba($color-primary, 0.1);
+        border: 1px solid rgba($color-primary, 0.28);
+        color: $color-text;
+
+        code {
+            font-size: 0.85em;
+        }
+    }
+
+    &__connection,
+    &__import {
+        margin-bottom: 1.5rem;
+
+        h2 {
+            margin: 0 0 1rem;
+        }
+    }
+
+    &__form {
+        margin: 0;
+
+        .form-group {
+            margin-bottom: 0;
+        }
+    }
+
+    &__row {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        margin-bottom: 1rem;
+    }
+
+    &__hint {
+        margin: 0.35rem 0 0;
+        font-size: 0.8rem;
+    }
+
+    &__status {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.6rem;
+        margin: 0 0 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        background: rgba($color-primary, 0.1);
+        border: 1px solid rgba($color-primary, 0.25);
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+    &__status-dot {
+        width: 8px;
+        height: 8px;
+        margin-top: 0.35rem;
+        border-radius: 50%;
+        background: $color-success;
+        flex-shrink: 0;
+    }
+
+    &__disconnect {
+        margin-top: 0.75rem;
+    }
+
+    &__user-note {
+        margin: -0.35rem 0 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    &__user {
+        margin-top: 1.25rem;
+        padding: 1rem;
+        background: rgba($color-surface-alt, 0.45);
+        border: 1px solid $color-border;
+        border-radius: $radius;
+        box-shadow: none;
+
+        h3 {
+            margin: 0 0 0.75rem;
+            font-size: 0.95rem;
+        }
+    }
+
+    &__user-details {
+        display: grid;
+        gap: 0.5rem 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        margin: 0;
+
+        div {
+            min-width: 0;
+        }
+
+        dt {
+            margin: 0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: $color-text-muted;
+        }
+
+        dd {
+            margin: 0.15rem 0 0;
+            font-weight: 600;
+            word-break: break-word;
+        }
+    }
+
+    &__import-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+
+        h2 {
+            margin: 0;
+        }
+    }
+
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        margin: 1rem 0;
+
+        .form-group {
+            flex: 1;
+            min-width: 220px;
+            margin-bottom: 0;
+        }
+    }
+
+    &__checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.9rem;
+        margin-bottom: 0.35rem;
+        cursor: pointer;
+
+        input {
+            width: auto;
+        }
+    }
+
+    &__project-list {
+        max-height: 28rem;
+        overflow: auto;
+        border: 1px solid $color-border;
+        border-radius: $radius;
+        background: rgba($color-surface-alt, 0.35);
+    }
+
+    &__project-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid $color-border;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        input {
+            width: auto;
+            margin-top: 0.2rem;
+        }
+
+        &--linked {
+            background: rgba($color-success, 0.06);
+        }
+    }
+
+    &__project-meta {
+        flex: 1;
+        min-width: 0;
+
+        strong {
+            display: block;
+            line-height: 1.35;
+        }
+
+        span {
+            display: block;
+            font-size: 0.8rem;
+            color: $color-text-muted;
+            margin-top: 0.15rem;
+        }
+    }
+
+    &__badge {
+        flex-shrink: 0;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding: 0.2rem 0.45rem;
+        border-radius: 999px;
+        background: rgba($color-success, 0.15);
+        color: #86efac;
+    }
+
+    &__import-actions {
+        margin-top: 1rem;
+        align-items: center;
+    }
+
+    &__feedback {
+        margin: 1rem 0 0;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        background: rgba($color-success, 0.12);
+        border: 1px solid rgba($color-success, 0.35);
+        color: #bbf7d0;
+
+        &.is-hidden {
+            display: none;
+        }
+
+        &--error {
+            background: rgba($color-danger, 0.12);
+            border-color: rgba($color-danger, 0.35);
+            color: #fecaca;
+        }
+    }
+}

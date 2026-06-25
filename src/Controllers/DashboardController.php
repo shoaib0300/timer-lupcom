@@ -9,6 +9,7 @@ use Timer\Http\Response;
 use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\TaskRepository;
 use Timer\Repositories\TimeEntryRepository;
+use Timer\Support\DateHelper;
 use Timer\Support\ProjectSorter;
 use Timer\Support\TimeFormatter;
 
@@ -39,6 +40,7 @@ final class DashboardController extends BaseController
             'recent_entries' => $timeEntries->recentToday(),
             'total_today' => TimeFormatter::secondsToHuman($totalTodaySeconds),
             'total_today_seconds' => $totalTodaySeconds,
+            'today_date' => DateHelper::todayString(),
             'timer' => $timerStatus,
         ]);
     }

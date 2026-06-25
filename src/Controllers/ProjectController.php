@@ -96,6 +96,7 @@ final class ProjectController extends BaseController
                 'id' => $task->id,
                 'name' => $task->name,
                 'status' => $task->status,
+                'planio_issue_id' => $task->planioIssueId,
                 'total_seconds' => $task->totalSeconds,
                 'total_human' => \Timer\Support\TimeFormatter::secondsToHuman($task->totalSeconds),
             ], $tasks),

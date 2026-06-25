@@ -5,6 +5,7 @@
 {% set active_nav = 'dashboard' %}
 
 {% block content %}
+<div class="dashboard-page">
 <h1 class="page-title">Dashboard</h1>
 
 <div class="grid grid--2">
@@ -66,16 +67,81 @@
     {% endif %}
 </section>
 
-<section class="card" style="margin-top: 1.5rem;">
-    <h2>Today's sessions</h2>
+<section class="card manual-entry">
+    <div class="manual-entry__header">
+        <h2>Log time</h2>
+    </div>
+    <p class="muted manual-entry__intro">Forgot to start a timer? Pick the date you worked, optionally link a project and task, or log general office time with a reason.</p>
+    <form id="manual-entry-form" class="manual-entry__form" data-today="{{ today_date }}">
+        <div class="manual-entry__row">
+            <div class="form-group">
+                <label for="manual-work-date">Date</label>
+                <input type="date" id="manual-work-date" name="work_date" class="manual-entry__date" value="{{ today_date }}" max="{{ today_date }}" required>
+            </div>
+            <div class="manual-entry__duration">
+                <div class="form-group">
+                    <label for="manual-duration-hours">Hours</label>
+                    <input type="number" id="manual-duration-hours" name="duration_hours" min="0" max="24" value="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="manual-duration-minutes">Minutes</label>
+                    <input type="number" id="manual-duration-minutes" name="duration_minutes" min="0" max="59" value="0" required>
+                </div>
+            </div>
+        </div>
+        <div class="manual-entry__row">
+            <div class="form-group">
+                <label for="manual-project">Project</label>
+                <select id="manual-project" name="project_id">
+                    <option value="">No project (general time)</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="manual-task">Task</label>
+                <select id="manual-task" name="task_id" disabled>
+                    <option value="">Select a project first</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="manual-reason" id="manual-reason-label">Reason</label>
+                <input type="text" id="manual-reason" name="reason" placeholder="e.g. Office / waiting for work">
+            </div>
+            <div class="form-group manual-entry__actions">
+                <label>&nbsp;</label>
+                <button type="submit" class="btn btn--primary">Add time</button>
+            </div>
+        </div>
+        <p class="manual-entry__feedback is-hidden" id="manual-entry-feedback" role="status"></p>
+    </form>
+</section>
+
+<section class="card sessions-card">
+    <div class="sessions-card__header">
+        <h2>Today's sessions</h2>
+    </div>
+    <p class="muted sessions-card__note">Only sessions from today are listed here. Entries for other dates appear in <a href="/reports">Time log</a>.</p>
     {% if recent_entries is empty %}
-        <p class="muted">No sessions tracked today yet.</p>
-    {% else %}
-        <table class="table">
+        <p class="muted js-sessions-empty">No sessions tracked today yet.</p>
+        <table class="table is-hidden" id="sessions-table">
             <thead>
                 <tr>
                     <th>Project</th>
-                    <th>Task</th>
+                    <th>Task / reason</th>
+                    <th>Duration</th>
+                    <th>Ended</th>
+                </tr>
+            </thead>
+            <tbody id="recent-sessions-body"></tbody>
+        </table>
+    {% else %}
+        <table class="table" id="sessions-table">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Task / reason</th>
                     <th>Duration</th>
                     <th>Ended</th>
                 </tr>
@@ -84,10 +150,15 @@
                 {% for entry in recent_entries %}
                     <tr>
                         <td>
-                            <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
-                            {{ entry.projectName }}
+                            {% if entry.isGeneral %}
+                                <span class="project-dot" style="background: #64748b;"></span>
+                                General
+                            {% else %}
+                                <span class="project-dot" style="background: {{ entry.projectColor }};"></span>
+                                {{ entry.projectName }}
+                            {% endif %}
                         </td>
-                        <td>{{ entry.taskName ?? '—' }}</td>
+                        <td>{{ entry.displayLabel() }}</td>
                         <td>{{ format_time(entry.durationSeconds) }}</td>
                         <td class="muted">{{ entry.endedAt }}</td>
                     </tr>
@@ -96,10 +167,12 @@
         </table>
     {% endif %}
 </section>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
     window.__TIMER_INITIAL__ = {{ timer|json_encode|raw }};
 </script>
+<script type="module" src="/assets/js/manual-entry.js"></script>
 {% endblock %}
