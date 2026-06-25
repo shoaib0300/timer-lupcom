@@ -113,12 +113,15 @@
         width: 20px;
         height: 20px;
         pointer-events: none;
-        display: block;
         flex-shrink: 0;
     }
 
     svg path {
-        fill: currentColor;
+        fill: var(--icon-btn-color);
+    }
+
+    &__icon--dark {
+        display: block;
     }
 
     &__icon--light {
@@ -129,15 +132,21 @@
         background: var(--color-surface);
         border-color: var(--color-border-hover);
         color: var(--color-text);
+
+        svg path {
+            fill: var(--color-text);
+        }
     }
 }
 
-html[data-theme='light'] .theme-toggle__icon--dark {
-    display: none;
-}
+html[data-theme='light'] .theme-toggle {
+    &__icon--dark {
+        display: none;
+    }
 
-html[data-theme='light'] .theme-toggle__icon--light {
-    display: block;
+    &__icon--light {
+        display: block;
+    }
 }
 
 .section-header {
