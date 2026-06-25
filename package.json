@@ -1,0 +1,11 @@
+{
+    "name": "timer-lupcom",
+    "private": true,
+    "scripts": {
+        "build:css": "sass resources/scss:public/assets/css --style=compressed --no-source-map",
+        "watch:css": "sass resources/scss:public/assets/css --watch"
+    },
+    "devDependencies": {
+        "sass": "^1.83.0"
+    }
+}

@@ -1,0 +1,18 @@
+<?php
+
+declare(strict_types=1);
+
+use Timer\Core\Application;
+use Timer\Database\Migrator;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$app = new Application(dirname(__DIR__));
+$command = $argv[1] ?? 'migrate';
+$migrator = new Migrator($app->db(), dirname(__DIR__) . '/database/migrations');
+
+match ($command) {
+    'migrate' => $migrator->migrate(),
+    'migrate:rollback' => $migrator->rollback((int) ($argv[2] ?? 1)),
+    default => throw new InvalidArgumentException("Unknown command: {$command}"),
+};

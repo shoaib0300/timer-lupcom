@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Timer{% endblock %} | Lupcom Timer</title>
+    <link rel="stylesheet" href="/assets/css/main.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a href="/" class="brand">Lupcom Timer</a>
+            <nav class="nav">
+                <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">Dashboard</a>
+                <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">Projects</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <div id="timer-bar" class="timer-bar is-hidden">
+        <div class="container">
+            <div class="timer-bar__inner">
+                <div>
+                    <div class="muted" id="timer-label">Tracking</div>
+                    <div class="timer-clock" id="timer-clock">00:00:00</div>
+                </div>
+                <button type="button" class="btn btn--danger" id="timer-stop-btn">Stop</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/js/timer.js" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

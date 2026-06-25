@@ -1,0 +1,25 @@
+{
+    "name": "lupcom/timer",
+    "description": "Project and task time tracking application",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.2",
+        "vlucas/phpdotenv": "^5.6",
+        "nikic/fast-route": "^1.3",
+        "twig/twig": "^3.14"
+    },
+    "autoload": {
+        "psr-4": {
+            "Timer\\": "src/"
+        }
+    },
+    "scripts": {
+        "migrate": "php bin/console migrate",
+        "migrate:rollback": "php bin/console migrate:rollback"
+    },
+    "config": {
+        "sort-packages": true,
+        "optimize-autoloader": true
+    }
+}
