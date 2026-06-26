@@ -232,7 +232,7 @@
         height: 26px;
         margin-left: 0.15rem;
         opacity: 0.75;
-        border-color: color-mix(in srgb, var(--color-border) 80%, transparent);
+        border-color: var(--color-border-subtle);
 
         svg {
             width: 10px;
