@@ -1,31 +1,82 @@
 /**
- * 24-hour analog clock picker (hours + minutes, no seconds).
+ * 12-hour analog clock picker with AM/PM — stores/emits 24-hour HH:MM.
  */
 export class ClockPicker {
-    constructor(container, { value = '', onChange = null }) {
+    constructor(container, { value = '', onChange = null, hints = {}, labels = {} } = {}) {
         this.container = container;
         this.onChange = onChange;
+        this.hints = {
+            chooseHour: hints.chooseHour || 'Tap the clock to choose hour',
+            choosePeriod: hints.choosePeriod || 'Choose AM or PM',
+            chooseMinutes: hints.chooseMinutes || 'Tap the clock to choose minutes',
+        };
+        this.labels = {
+            hour: labels.hour || 'Hour',
+            minute: labels.minute || 'Min',
+            am: labels.am || 'AM',
+            pm: labels.pm || 'PM',
+        };
         this.mode = 'hour';
-        this.hours = 8;
+        this.hour12 = 8;
         this.minutes = 0;
+        this.period = 'AM';
+        this.defaultPeriod = 'AM';
+        this.awaitingPeriod = false;
         this.render();
         this.setValue(value || '08:00');
         this.bind();
     }
 
-    setValue(value) {
-        const normalized = this.normalize(value) || '08:00';
-        const [h, m] = normalized.split(':');
-        this.hours = Number.parseInt(h, 10);
-        this.minutes = Number.parseInt(m, 10);
-        if (this.hourHand) {
-            this.updateHands();
+    setDefaultPeriod(period) {
+        this.defaultPeriod = period === 'PM' ? 'PM' : 'AM';
+        if (this.periodButtons) {
+            this.period = this.defaultPeriod;
+            this.updatePeriodButtons();
             this.updateDigital();
         }
     }
 
+    setValue(value) {
+        const normalized = this.normalize(value) || '';
+        if (!normalized) {
+            this.period = this.defaultPeriod;
+            this.hour12 = this.defaultPeriod === 'PM' ? 12 : 8;
+            this.minutes = this.defaultPeriod === 'PM' ? 30 : 0;
+            this.awaitingPeriod = false;
+            if (this.hourHand) {
+                this.setMode('hour');
+                this.updateHands();
+                this.updateDigital();
+                this.updateHint();
+                this.updatePeriodButtons();
+            }
+            return;
+        }
+
+        const [h, m] = normalized.split(':');
+        const hours24 = Number.parseInt(h, 10);
+        this.minutes = Number.parseInt(m, 10);
+        this.period = hours24 >= 12 ? 'PM' : 'AM';
+        this.hour12 = hours24 % 12 || 12;
+        this.awaitingPeriod = false;
+        if (this.hourHand) {
+            this.setMode('hour');
+            this.updateHands();
+            this.updateDigital();
+            this.updateHint();
+            this.updatePeriodButtons();
+        }
+    }
+
     getValue() {
-        return `${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}`;
+        return `${String(this.toHours24()).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}`;
+    }
+
+    toHours24() {
+        if (this.period === 'AM') {
+            return this.hour12 === 12 ? 0 : this.hour12;
+        }
+        return this.hour12 === 12 ? 12 : this.hour12 + 12;
     }
 
     normalize(value) {
@@ -47,11 +98,18 @@ export class ClockPicker {
     render() {
         this.container.innerHTML = `
             <div class="clock-picker">
-                <div class="clock-picker__mode">
-                    <button type="button" class="clock-picker__mode-btn is-active" data-mode="hour">HH</button>
-                    <button type="button" class="clock-picker__mode-btn" data-mode="minute">MM</button>
+                <div class="clock-picker__controls">
+                    <div class="clock-picker__mode">
+                        <button type="button" class="clock-picker__mode-btn is-active" data-mode="hour">${this.labels.hour}</button>
+                        <button type="button" class="clock-picker__mode-btn" data-mode="minute">${this.labels.minute}</button>
+                    </div>
+                    <div class="clock-picker__period">
+                        <button type="button" class="clock-picker__period-btn is-active" data-period="AM">${this.labels.am}</button>
+                        <button type="button" class="clock-picker__period-btn" data-period="PM">${this.labels.pm}</button>
+                    </div>
                 </div>
-                <div class="clock-picker__digital" aria-live="polite">08:00</div>
+                <div class="clock-picker__digital" aria-live="polite">08:00 AM</div>
+                <p class="clock-picker__hint muted"></p>
                 <div class="clock-picker__face" role="application" aria-label="Clock">
                     <svg class="clock-picker__svg" viewBox="0 0 200 200" aria-hidden="true">
                         <circle class="clock-picker__ring" cx="100" cy="100" r="92"></circle>
@@ -68,16 +126,20 @@ export class ClockPicker {
         `;
 
         this.digitalEl = this.container.querySelector('.clock-picker__digital');
+        this.hintEl = this.container.querySelector('.clock-picker__hint');
         this.faceEl = this.container.querySelector('.clock-picker__face');
         this.hourHand = this.container.querySelector('.clock-picker__hand--hour');
         this.minuteHand = this.container.querySelector('.clock-picker__hand--minute');
         this.ticksGroup = this.container.querySelector('.clock-picker__ticks');
         this.labelsGroup = this.container.querySelector('.clock-picker__labels');
         this.modeButtons = this.container.querySelectorAll('.clock-picker__mode-btn');
+        this.periodButtons = this.container.querySelectorAll('.clock-picker__period-btn');
 
         this.drawFace();
         this.updateHands();
         this.updateDigital();
+        this.updateHint();
+        this.updatePeriodButtons();
     }
 
     drawFace() {
@@ -98,17 +160,16 @@ export class ClockPicker {
             this.ticksGroup.appendChild(line);
         }
 
-        for (let h = 0; h < 24; h += 3) {
-            const display = String(h).padStart(2, '0');
-            const angle = ((h / 24) * 360 - 90) * (Math.PI / 180);
-            const radius = h % 6 === 0 ? 68 : 74;
-            const x = 100 + radius * Math.cos(angle);
-            const y = 100 + radius * Math.sin(angle);
+        for (let h = 1; h <= 12; h++) {
+            const angle = ((h % 12) / 12) * 360 - 90;
+            const rad = angle * (Math.PI / 180);
+            const x = 100 + 68 * Math.cos(rad);
+            const y = 100 + 68 * Math.sin(rad);
             const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             text.setAttribute('x', String(x));
             text.setAttribute('y', String(y));
             text.setAttribute('class', 'clock-picker__label');
-            text.textContent = display;
+            text.textContent = String(h);
             this.labelsGroup.appendChild(text);
         }
     }
@@ -116,8 +177,19 @@ export class ClockPicker {
     bind() {
         this.modeButtons.forEach((btn) => {
             btn.addEventListener('click', () => {
-                this.mode = btn.dataset.mode;
-                this.modeButtons.forEach((b) => b.classList.toggle('is-active', b === btn));
+                this.setMode(btn.dataset.mode);
+            });
+        });
+
+        this.periodButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                this.period = btn.dataset.period;
+                this.awaitingPeriod = false;
+                this.updatePeriodButtons();
+                this.updateDigital();
+                this.setMode('minute');
+                this.updateHint();
+                this.emitChange();
             });
         });
 
@@ -133,26 +205,76 @@ export class ClockPicker {
             }
 
             if (this.mode === 'hour') {
-                this.hours = Math.round(angle / 15) % 24;
-            } else {
-                this.minutes = Math.round(angle / 6) % 60;
+                const picked = Math.round(angle / 30) % 12;
+                this.hour12 = picked === 0 ? 12 : picked;
+                this.period = this.defaultPeriod;
+                this.awaitingPeriod = false;
+                this.updatePeriodButtons();
+                this.setMode('minute');
+                this.updateHands();
+                this.updateDigital();
+                this.updateHint();
+                this.emitChange();
+                return;
             }
 
+            this.minutes = Math.round(angle / 6) % 60;
+            this.awaitingPeriod = false;
             this.updateHands();
             this.updateDigital();
-            this.onChange?.(this.getValue());
+            this.updateHint();
+            this.emitChange();
+        });
+    }
+
+    setMode(mode) {
+        this.mode = mode === 'minute' ? 'minute' : 'hour';
+        this.modeButtons.forEach((btn) => {
+            btn.classList.toggle('is-active', btn.dataset.mode === this.mode);
+        });
+        this.updateHint();
+    }
+
+    updatePeriodButtons() {
+        this.periodButtons.forEach((btn) => {
+            const isActive = btn.dataset.period === this.period;
+            btn.classList.toggle('is-active', isActive);
+            btn.classList.toggle('is-pending', this.awaitingPeriod && !isActive);
         });
     }
 
     updateHands() {
-        const hourAngle = ((this.hours % 24) / 24) * 360;
+        const hourAngle = ((this.hour12 % 12) / 12) * 360;
         const minuteAngle = (this.minutes / 60) * 360;
         this.hourHand.style.transform = `rotate(${hourAngle}deg)`;
         this.minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
     }
 
     updateDigital() {
-        this.digitalEl.textContent = this.getValue();
+        const minutePart = String(this.minutes).padStart(2, '0');
+        this.digitalEl.textContent = `${this.hour12}:${minutePart} ${this.period}`;
+    }
+
+    updateHint() {
+        if (!this.hintEl) {
+            return;
+        }
+
+        if (this.awaitingPeriod) {
+            this.hintEl.textContent = this.hints.choosePeriod;
+            return;
+        }
+
+        if (this.mode === 'minute') {
+            this.hintEl.textContent = this.hints.chooseMinutes;
+            return;
+        }
+
+        this.hintEl.textContent = this.hints.chooseHour;
+    }
+
+    emitChange() {
+        this.onChange?.(this.getValue());
     }
 }
 

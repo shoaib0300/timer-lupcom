@@ -19,8 +19,104 @@ const dayTimesWrap = document.getElementById('attendance-day-times');
 const holidayNote = document.getElementById('attendance-day-holiday-note');
 const timeError = document.getElementById('attendance-day-time-error');
 const timeFieldNames = ['morning_start', 'morning_end', 'afternoon_start', 'afternoon_end'];
+const FIELD_PERIOD = {
+    morning_start: 'AM',
+    morning_end: 'AM',
+    afternoon_start: 'PM',
+    afternoon_end: 'PM',
+};
+const FIELD_DEFAULTS = {
+    morning_start: '08:00',
+    morning_end: '12:00',
+    afternoon_start: '12:30',
+    afternoon_end: '17:30',
+};
+const START_TO_END = {
+    morning_start: 'morning_end',
+    afternoon_start: 'afternoon_end',
+};
 let activeTimeField = 'morning_start';
 let sharedClockPicker = null;
+
+function timeToMinutes(value) {
+    const normalized = normalizeTime24(value);
+    if (!normalized) {
+        return null;
+    }
+    const [h, m] = normalized.split(':').map((part) => Number.parseInt(part, 10));
+    return h * 60 + m;
+}
+
+function minutesToTime(totalMinutes) {
+    const wrapped = ((totalMinutes % (24 * 60)) + 24 * 60) % (24 * 60);
+    const hours = Math.floor(wrapped / 60);
+    const minutes = wrapped % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
+function suggestEndTime(startField, endField) {
+    const startValue = document.getElementById(fieldToInputId(startField))?.value;
+    if (!startValue) {
+        return FIELD_DEFAULTS[endField];
+    }
+
+    const startMinutes = timeToMinutes(startValue);
+    if (startMinutes === null) {
+        return FIELD_DEFAULTS[endField];
+    }
+
+    const offsetMinutes = 4 * 60;
+    const cap = startField === 'morning_start' ? timeToMinutes('12:00') : timeToMinutes('20:00');
+    return minutesToTime(Math.min(startMinutes + offsetMinutes, cap ?? startMinutes + offsetMinutes));
+}
+
+function getClockValueForField(field) {
+    const current = document.getElementById(fieldToInputId(field))?.value?.trim();
+    if (current) {
+        return current;
+    }
+
+    if (field === 'morning_end') {
+        return suggestEndTime('morning_start', 'morning_end');
+    }
+
+    if (field === 'afternoon_end') {
+        return suggestEndTime('afternoon_start', 'afternoon_end');
+    }
+
+    return FIELD_DEFAULTS[field] || '08:00';
+}
+
+function syncClockForField(field) {
+    if (!sharedClockPicker) {
+        return;
+    }
+
+    sharedClockPicker.setDefaultPeriod(FIELD_PERIOD[field] || 'AM');
+    sharedClockPicker.setValue(getClockValueForField(field));
+}
+
+function maybeAutoFillEndTime(startField, startValue) {
+    const endField = START_TO_END[startField];
+    if (!endField) {
+        return;
+    }
+
+    const normalizedStart = normalizeTime24(startValue);
+    if (!normalizedStart) {
+        return;
+    }
+
+    const startMinutes = timeToMinutes(normalizedStart);
+    const suggested = suggestEndTime(startField, endField);
+    const endInput = document.getElementById(fieldToInputId(endField));
+    const currentEnd = endInput?.value?.trim() || '';
+    const currentEndMinutes = timeToMinutes(currentEnd);
+
+    if (!currentEnd || currentEndMinutes === null || currentEndMinutes <= startMinutes) {
+        setTimeFieldValue(endField, suggested);
+    }
+}
 
 function fieldToInputId(field) {
     return `attendance-${field.replace(/_/g, '-')}`;
@@ -90,20 +186,42 @@ function setTimeFieldValue(field, value) {
     }
 }
 
+function activateTimeField(field) {
+    activeTimeField = field;
+    document.querySelectorAll('.attendance-time-trigger').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.field === field);
+    });
+    syncClockForField(field);
+}
+
 function initSharedClock() {
     const mount = document.getElementById('clock-shared');
     if (!mount || sharedClockPicker) {
         return;
     }
 
-    const initial = document.getElementById(fieldToInputId(activeTimeField))?.value || '08:00';
+    const initial = getClockValueForField(activeTimeField);
     sharedClockPicker = mountClockPicker(mount, {
         value: initial,
+        hints: {
+            chooseHour: t('attendance.clock_choose_hour'),
+            choosePeriod: t('attendance.clock_choose_period'),
+            chooseMinutes: t('attendance.clock_choose_minutes'),
+        },
+        labels: {
+            hour: t('attendance.clock_hour'),
+            minute: t('attendance.clock_minute'),
+            am: t('attendance.clock_am'),
+            pm: t('attendance.clock_pm'),
+        },
         onChange: (value) => {
             setTimeFieldValue(activeTimeField, value);
+            maybeAutoFillEndTime(activeTimeField, value);
             clearTimeError();
         },
     });
+    sharedClockPicker.setDefaultPeriod(FIELD_PERIOD[activeTimeField] || 'AM');
+    sharedClockPicker.setValue(initial);
 
     document.querySelectorAll('.attendance-time-trigger').forEach((trigger) => {
         if (trigger.dataset.bound === '1') {
@@ -116,13 +234,7 @@ function initSharedClock() {
                 return;
             }
 
-            activeTimeField = field;
-            document.querySelectorAll('.attendance-time-trigger').forEach((btn) => {
-                btn.classList.toggle('is-active', btn === trigger);
-            });
-
-            const current = document.getElementById(fieldToInputId(field))?.value || '08:00';
-            sharedClockPicker?.setValue(current);
+            activateTimeField(field);
         });
     });
 }
@@ -196,7 +308,7 @@ document.getElementById('attendance-weeks')?.addEventListener('click', (event) =
 
     syncDayTypeFields();
     initSharedClock();
-    sharedClockPicker?.setValue(document.getElementById('attendance-morning-start')?.value || '08:00');
+    syncClockForField('morning_start');
     openModal(dayModal);
 });
 
