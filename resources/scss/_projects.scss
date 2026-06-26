@@ -86,6 +86,11 @@
         box-shadow: 0 0 0 1px rgba($color-primary, 0.2);
     }
 
+    html[data-theme='dark'] &.is-tracking {
+        border-color: var(--color-border-highlight);
+        box-shadow: 0 0 0 1px var(--color-border-highlight);
+    }
+
     &__title {
         margin: 0;
         font-size: 0.95rem;
