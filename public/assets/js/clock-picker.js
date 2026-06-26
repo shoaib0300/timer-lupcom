@@ -147,8 +147,8 @@ export class ClockPicker {
     updateHands() {
         const hourAngle = ((this.hours % 24) / 24) * 360;
         const minuteAngle = (this.minutes / 60) * 360;
-        this.hourHand.style.transform = `translate(-50%, -100%) rotate(${hourAngle}deg)`;
-        this.minuteHand.style.transform = `translate(-50%, -100%) rotate(${minuteAngle}deg)`;
+        this.hourHand.style.transform = `rotate(${hourAngle}deg)`;
+        this.minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
     }
 
     updateDigital() {

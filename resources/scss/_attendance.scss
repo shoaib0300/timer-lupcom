@@ -553,23 +553,25 @@ $attendance-holiday: #ef4444;
 .clock-picker__hand {
     position: absolute;
     left: 50%;
-    top: 50%;
+    bottom: 50%;
     transform-origin: 50% 100%;
     border-radius: 999px;
 
     &--hour {
         width: 4px;
-        height: 2.2rem;
+        height: 2.1rem;
+        margin-left: -2px;
         background: var(--accent);
-        margin-top: -2.2rem;
+        z-index: 1;
         box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg) 40%, transparent);
     }
 
     &--minute {
         width: 2px;
-        height: 2.9rem;
+        height: 2.75rem;
+        margin-left: -1px;
         background: var(--color-text);
-        margin-top: -2.9rem;
+        z-index: 1;
         opacity: 0.9;
     }
 }
@@ -580,10 +582,11 @@ $attendance-holiday: #ef4444;
     top: 50%;
     width: 10px;
     height: 10px;
-    margin: -5px 0 0 -5px;
+    transform: translate(-50%, -50%);
     border-radius: 50%;
     background: var(--accent);
     box-shadow: 0 0 0 2px var(--color-surface);
+    z-index: 2;
 }
 
 @media (max-width: 768px) {
