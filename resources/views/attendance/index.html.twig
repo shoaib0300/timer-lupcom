@@ -1,0 +1,303 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}{{ trans('attendance.title') }}{% endblock %}
+{% set active_nav = 'attendance' %}
+
+{% block content %}
+<div class="attendance-page" id="attendance-page" data-month="{{ month }}" data-year="{{ year }}">
+    <h1 class="page-title">{{ trans('attendance.title') }}</h1>
+
+    {% if flash_success == 'settings' %}
+        <div class="alert alert--success">{{ trans('attendance.settings_saved') }}</div>
+    {% endif %}
+    {% if flash_error %}
+        <div class="alert alert--error">{{ trans('attendance.settings_error') }}</div>
+    {% endif %}
+
+    <section class="card attendance-settings">
+        <h2>{{ trans('attendance.settings_title') }}</h2>
+        <p class="muted attendance-settings__hint">{{ trans('attendance.settings_hint', {hours: daily_hours, break: break_minutes}) }}</p>
+        <form method="post" action="/attendance/settings" class="attendance-settings__form">
+            <input type="hidden" name="month" value="{{ month }}">
+            <div class="attendance-settings__row">
+                <div class="form-group">
+                    <label for="attendance-country">{{ trans('attendance.country') }}</label>
+                    <select id="attendance-country" name="country">
+                        {% for code, label in countries %}
+                            <option value="{{ code }}"{% if config.country == code %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="attendance-state">{{ trans('attendance.state') }}</label>
+                    <select id="attendance-state" name="state"{% if config.country != 'DE' %} disabled{% endif %}>
+                        {% for code, label in states %}
+                            <option value="{{ code }}"{% if config.state == code %} selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group attendance-settings__actions">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+                </div>
+            </div>
+        </form>
+    </section>
+
+    <section class="card attendance-holidays">
+        <div class="section-header">
+            <h2>{{ trans('attendance.holidays_title', {year: year}) }}</h2>
+            <button type="button" class="btn btn--ghost btn--sm" id="attendance-add-holiday">{{ trans('attendance.add_holiday') }}</button>
+        </div>
+        <p class="muted">{{ trans('attendance.holidays_hint', {hours: daily_hours}) }}</p>
+        <ul class="attendance-holidays__list" id="attendance-holidays-list">
+            {% for holiday in holidays %}
+                <li class="attendance-holidays__item" data-date="{{ holiday.date }}">
+                    <span class="attendance-holidays__date">{{ holiday.date|slice(8, 2) }}.{{ holiday.date|slice(5, 2) }}.{{ holiday.date|slice(0, 4) }}</span>
+                    <span class="attendance-holidays__name">{{ holiday.name }}</span>
+                    <span class="badge badge--{{ holiday.source }}">{{ trans('attendance.holiday_' ~ holiday.source) }}</span>
+                    <button
+                        type="button"
+                        class="card-icon-btn attendance-holidays__remove"
+                        data-date="{{ holiday.date }}"
+                        data-source="{{ holiday.source }}"
+                        aria-label="{{ trans('common.delete') }}"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </li>
+            {% else %}
+                <li class="muted" id="attendance-holidays-empty">{{ trans('attendance.no_holidays') }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="card attendance-month">
+        <div class="attendance-month__header">
+            <div class="attendance-month__nav">
+                <a href="/attendance?month={{ prev_month }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.previous_month') }}">&larr;</a>
+                <h2>{{ month_label }}</h2>
+                <a href="/attendance?month={{ next_month }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.next_month') }}">&rarr;</a>
+            </div>
+            <div class="attendance-legend" aria-label="{{ trans('attendance.legend') }}">
+                <span class="attendance-legend__item attendance-legend__item--work">{{ trans('attendance.kind.work') }}</span>
+                <span class="attendance-legend__item attendance-legend__item--vacation">{{ trans('attendance.kind.vacation') }}</span>
+                <span class="attendance-legend__item attendance-legend__item--sick">{{ trans('attendance.kind.sick') }}</span>
+                <span class="attendance-legend__item attendance-legend__item--holiday">{{ trans('attendance.kind.holiday') }}</span>
+            </div>
+        </div>
+
+        <div id="attendance-weeks">
+            {% for week in weeks %}
+                <article class="attendance-week" data-week-start="{{ week.week_start }}">
+                    <header class="attendance-week__header">
+                        <h3>{{ trans('attendance.week_range', {start: week.week_start_label, end: week.week_end_label}) }}</h3>
+                        <span class="attendance-week__total">{{ trans('attendance.week_total', {total: week.week_total_label}) }}</span>
+                    </header>
+
+                    <div class="attendance-week__grid" role="grid">
+                        <div class="attendance-week__row attendance-week__row--head" role="row">
+                            <span role="columnheader"></span>
+                            {% for day in week.days %}
+                                <span role="columnheader" class="{% if not day.in_month %} is-outside{% endif %}{% if day.is_weekend %} is-weekend{% endif %}">
+                                    {{ trans('reports.weekday.' ~ ['mon','tue','wed','thu','fri','sat','sun'][day.weekday - 1]) }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                        <div class="attendance-week__row attendance-week__row--dates" role="row">
+                            <span role="rowheader"></span>
+                            {% for day in week.days %}
+                                <span class="attendance-week__date{% if not day.in_month %} is-outside{% endif %}{% if day.is_weekend %} is-weekend{% endif %}">
+                                    {% if day.in_month %}{{ '%02d'|format(day.day) }}.{{ month|slice(5, 2) }}.{{ month|slice(0, 4) }}{% endif %}
+                                </span>
+                            {% endfor %}
+                        </div>
+
+                        {% set rows = [
+                            {label: 'attendance.row.morning_start', key: 'morning_start'},
+                            {label: 'attendance.row.morning_end', key: 'morning_end'},
+                            {label: 'attendance.row.lunch', key: null},
+                            {label: 'attendance.row.afternoon_start', key: 'afternoon_start'},
+                            {label: 'attendance.row.afternoon_end', key: 'afternoon_end'},
+                            {label: 'attendance.row.total', key: 'worked_label'}
+                        ] %}
+                        {% for row in rows %}
+                            <div class="attendance-week__row{% if row.key is null %} attendance-week__row--lunch{% endif %}" role="row"{% if row.key %} data-field="{{ row.key }}"{% endif %}>
+                                <span class="attendance-week__label" role="rowheader">{{ trans(row.label) }}</span>
+                                {% for day in week.days %}
+                                    {% if day.in_month and not day.is_weekend %}
+                                        <button
+                                            type="button"
+                                            class="attendance-cell attendance-cell--{{ day.kind }}{% if not day.in_month %} is-outside{% endif %}"
+                                            data-date="{{ day.date }}"
+                                            data-kind="{{ day.kind }}"
+                                            data-day-type="{{ day.day_type }}"
+                                            data-morning-start="{{ day.morning_start|default('') }}"
+                                            data-morning-end="{{ day.morning_end|default('') }}"
+                                            data-afternoon-start="{{ day.afternoon_start|default('') }}"
+                                            data-afternoon-end="{{ day.afternoon_end|default('') }}"
+                                            data-holiday-name="{{ day.holiday_name|default('') }}"
+                                        >
+                                            {% if row.key is null %}
+                                                <span class="muted">—</span>
+                                            {% elseif row.key == 'worked_label' %}
+                                                <strong>{{ day.worked_label }}</strong>
+                                                {% if day.kind == 'vacation' %}
+                                                    <small>{{ trans('attendance.kind.vacation') }}</small>
+                                                {% elseif day.kind == 'sick' %}
+                                                    <small>{{ trans('attendance.kind.sick') }}</small>
+                                                {% elseif day.kind == 'holiday' %}
+                                                    <small>{{ day.holiday_name }}</small>
+                                                {% endif %}
+                                            {% elseif day.kind in ['vacation', 'sick', 'holiday'] and row.key != 'worked_label' %}
+                                                <span class="muted">0:00</span>
+                                            {% else %}
+                                                {{ attribute(day, row.key)|default('—') }}
+                                            {% endif %}
+                                        </button>
+                                    {% else %}
+                                        <span class="attendance-cell attendance-cell--empty{% if day.is_weekend %} is-weekend{% endif %}{% if not day.in_month %} is-outside{% endif %}"></span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        <footer class="attendance-summary" id="attendance-summary">
+            <div class="attendance-summary__item">
+                <span class="muted">{{ trans('attendance.soll') }}</span>
+                <strong>{{ summary.soll_label }} h</strong>
+            </div>
+            <div class="attendance-summary__item">
+                <span class="muted">{{ trans('attendance.ist') }}</span>
+                <strong>{{ summary.ist_label }} h</strong>
+            </div>
+            <div class="attendance-summary__item">
+                <span class="muted">{{ trans('attendance.month_diff') }}</span>
+                <strong class="{% if summary.diff_minutes < 0 %}is-negative{% elseif summary.diff_minutes > 0 %}is-positive{% endif %}">{{ summary.diff_label }} h</strong>
+            </div>
+            <div class="attendance-summary__item">
+                <span class="muted">{{ trans('attendance.year_diff') }}</span>
+                <strong class="{% if summary.yearly_diff_minutes < 0 %}is-negative{% elseif summary.yearly_diff_minutes > 0 %}is-positive{% endif %}">{{ summary.yearly_diff_label }} h</strong>
+            </div>
+        </footer>
+    </section>
+</div>
+
+<div id="attendance-day-modal" class="modal is-hidden" aria-hidden="true">
+    <div class="modal__backdrop" data-attendance-close></div>
+    <div class="modal__dialog" role="dialog" aria-labelledby="attendance-day-modal-title">
+        <h3 id="attendance-day-modal-title" class="modal__title">{{ trans('attendance.edit_day') }}</h3>
+        <p class="muted" id="attendance-day-modal-date"></p>
+        <form id="attendance-day-form">
+            <input type="hidden" name="date" id="attendance-day-date">
+            <div class="form-group">
+                <label for="attendance-day-type">{{ trans('attendance.day_type') }}</label>
+                <select id="attendance-day-type" name="day_type">
+                    <option value="work">{{ trans('attendance.kind.work') }}</option>
+                    <option value="vacation">{{ trans('attendance.kind.vacation') }}</option>
+                    <option value="sick">{{ trans('attendance.kind.sick') }}</option>
+                </select>
+            </div>
+            <p class="muted attendance-day-form__holiday-note is-hidden" id="attendance-day-holiday-note"></p>
+            <div id="attendance-day-times">
+                <p class="muted attendance-day-form__format">{{ trans('attendance.time_format_hint') }}</p>
+                <div class="attendance-day-form__row">
+                    <div class="form-group">
+                        <label for="attendance-morning-start">{{ trans('attendance.row.morning_start') }}</label>
+                        <input
+                            type="text"
+                            class="attendance-time-input"
+                            id="attendance-morning-start"
+                            name="morning_start"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            placeholder="08:30"
+                            maxlength="5"
+                            pattern="[0-9]{1,2}:[0-9]{2}"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-morning-end">{{ trans('attendance.row.morning_end') }}</label>
+                        <input
+                            type="text"
+                            class="attendance-time-input"
+                            id="attendance-morning-end"
+                            name="morning_end"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            placeholder="12:00"
+                            maxlength="5"
+                            pattern="[0-9]{1,2}:[0-9]{2}"
+                        >
+                    </div>
+                </div>
+                <p class="muted attendance-day-form__break">{{ trans('attendance.break_note', {minutes: break_minutes}) }}</p>
+                <div class="attendance-day-form__row">
+                    <div class="form-group">
+                        <label for="attendance-afternoon-start">{{ trans('attendance.row.afternoon_start') }}</label>
+                        <input
+                            type="text"
+                            class="attendance-time-input"
+                            id="attendance-afternoon-start"
+                            name="afternoon_start"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            placeholder="12:30"
+                            maxlength="5"
+                            pattern="[0-9]{1,2}:[0-9]{2}"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-afternoon-end">{{ trans('attendance.row.afternoon_end') }}</label>
+                        <input
+                            type="text"
+                            class="attendance-time-input"
+                            id="attendance-afternoon-end"
+                            name="afternoon_end"
+                            inputmode="numeric"
+                            autocomplete="off"
+                            placeholder="17:30"
+                            maxlength="5"
+                            pattern="[0-9]{1,2}:[0-9]{2}"
+                        >
+                    </div>
+                </div>
+                <p class="alert alert--error is-hidden" id="attendance-day-time-error" role="alert"></p>
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+                <button type="button" class="btn btn--ghost" data-attendance-close>{{ trans('common.cancel') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="attendance-holiday-modal" class="modal is-hidden" aria-hidden="true">
+    <div class="modal__backdrop" data-attendance-close></div>
+    <div class="modal__dialog" role="dialog" aria-labelledby="attendance-holiday-modal-title">
+        <h3 id="attendance-holiday-modal-title" class="modal__title">{{ trans('attendance.add_holiday') }}</h3>
+        <form id="attendance-holiday-form">
+            <div class="form-group">
+                <label for="attendance-holiday-date">{{ trans('common.date') }}</label>
+                <input type="date" id="attendance-holiday-date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="attendance-holiday-name">{{ trans('common.name') }}</label>
+                <input type="text" id="attendance-holiday-name" name="name" required placeholder="{{ trans('attendance.holiday_name_placeholder') }}">
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+                <button type="button" class="btn btn--ghost" data-attendance-close>{{ trans('common.cancel') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="/assets/js/attendance.js"></script>
+{% endblock %}

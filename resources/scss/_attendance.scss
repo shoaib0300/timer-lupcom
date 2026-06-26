@@ -1,0 +1,297 @@
+.attendance-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.attendance-settings__hint {
+    margin-bottom: 1rem;
+}
+
+.attendance-settings__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 1rem;
+    align-items: end;
+}
+
+.attendance-holidays__list {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.attendance-holidays__item {
+    display: grid;
+    grid-template-columns: 7rem 1fr auto auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-elevated);
+}
+
+.attendance-holidays__date {
+    font-variant-numeric: tabular-nums;
+}
+
+.badge {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+}
+
+.badge--manual {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    color: var(--accent);
+}
+
+.attendance-month__header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.attendance-month__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    h2 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+}
+
+.attendance-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.attendance-legend__item {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+
+    &--work {
+        background: color-mix(in srgb, var(--success) 12%, var(--surface-elevated));
+        border-color: color-mix(in srgb, var(--success) 35%, transparent);
+    }
+
+    &--vacation {
+        background: color-mix(in srgb, #3b82f6 15%, var(--surface-elevated));
+        border-color: color-mix(in srgb, #3b82f6 35%, transparent);
+    }
+
+    &--sick {
+        background: color-mix(in srgb, #ef4444 12%, var(--surface-elevated));
+        border-color: color-mix(in srgb, #ef4444 35%, transparent);
+    }
+
+    &--holiday {
+        background: color-mix(in srgb, #a855f7 12%, var(--surface-elevated));
+        border-color: color-mix(in srgb, #a855f7 35%, transparent);
+    }
+}
+
+.attendance-week {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+
+    &:last-child {
+        border-bottom: 0;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+}
+
+.attendance-week__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+
+    h3 {
+        margin: 0;
+        font-size: 1rem;
+    }
+}
+
+.attendance-week__total {
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+
+.attendance-week__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    overflow-x: auto;
+}
+
+.attendance-week__row {
+    display: grid;
+    grid-template-columns: 8.5rem repeat(7, minmax(5.5rem, 1fr));
+    gap: 0.35rem;
+    align-items: stretch;
+    min-width: 48rem;
+
+    &--head span,
+    &--dates span {
+        font-size: 0.75rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    &--lunch .attendance-week__label {
+        font-style: italic;
+        color: var(--text-muted);
+    }
+}
+
+.attendance-week__label {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    padding-right: 0.5rem;
+}
+
+.attendance-week__date {
+    text-align: center;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.is-outside {
+    opacity: 0.35;
+}
+
+.is-weekend {
+    opacity: 0.55;
+}
+
+.attendance-cell {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-elevated);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+    padding: 0.35rem 0.25rem;
+    min-height: 2.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+
+    &:hover {
+        border-color: var(--accent);
+    }
+
+    small {
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        line-height: 1.2;
+        text-align: center;
+    }
+
+    &--work {
+        background: color-mix(in srgb, var(--success) 8%, var(--surface-elevated));
+    }
+
+    &--vacation {
+        background: color-mix(in srgb, #3b82f6 14%, var(--surface-elevated));
+    }
+
+    &--sick {
+        background: color-mix(in srgb, #ef4444 12%, var(--surface-elevated));
+    }
+
+    &--holiday {
+        background: color-mix(in srgb, #a855f7 12%, var(--surface-elevated));
+    }
+
+    &--empty {
+        border-style: dashed;
+        opacity: 0.35;
+        cursor: default;
+    }
+}
+
+.attendance-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+}
+
+.attendance-summary__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    strong {
+        font-size: 1.15rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .is-negative {
+        color: #ef4444;
+    }
+
+    .is-positive {
+        color: var(--success);
+    }
+}
+
+.attendance-day-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.attendance-day-form__format {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+}
+
+.attendance-time-input {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    text-align: center;
+    max-width: 6.5rem;
+}
+
+.attendance-day-form__break {
+    margin: 0.25rem 0 0.75rem;
+    font-size: 0.85rem;
+}
+
+.attendance-day-form__holiday-note {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, #a855f7 12%, var(--surface-elevated));
+}
+
+@media (max-width: 768px) {
+    .attendance-week__row {
+        min-width: 40rem;
+    }
+}
