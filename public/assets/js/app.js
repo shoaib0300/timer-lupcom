@@ -20,6 +20,7 @@ const startForm = document.getElementById('timer-start-form');
 if (listEl && emptyEl && countEl) {
     const sidebar = createTimerSidebar(listEl, emptyEl, countEl, (status) => {
         syncProjectCards(status.timers || []);
+        syncTaskQuickStart(status.timers || []);
     });
 
     const onTimerStarted = (status) => {

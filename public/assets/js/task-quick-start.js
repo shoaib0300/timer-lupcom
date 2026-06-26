@@ -3,6 +3,7 @@ import { fetchFrequentTasks, searchTasks, startTimerByTaskId } from './timer-api
 
 let runningTaskIds = new Set();
 let cachedFrequentTasks = [];
+let cachedSearchItems = [];
 let lastTimers = [];
 
 function taskLabel(task) {
@@ -24,40 +25,51 @@ function taskMeta(task) {
     return parts.join(' · ');
 }
 
-function renderSuggestionItem(task, { compact = false } = {}) {
+function isTaskRunning(taskId) {
+    return runningTaskIds.has(String(taskId));
+}
+
+function renderPlayButton(task, { running } = {}) {
+    const startLabel = t('start_timer_for', { name: task.name });
+
+    return `
+        <button
+            type="button"
+            class="task-quick__play-btn js-start-task-timer${running ? ' is-disabled' : ''}"
+            data-task-id="${task.id}"
+            title="${escapeHtml(running ? t('timer_already_running') : startLabel)}"
+            aria-label="${escapeHtml(running ? t('timer_already_running') : startLabel)}"
+            ${running ? 'disabled' : ''}
+        >${ICONS.start}</button>
+    `;
+}
+
+function renderSuggestionItem(task) {
     const sessions = task.session_count
         ? `<span class="task-quick__meta-muted">${escapeHtml(t('session_count', { count: task.session_count }))}</span>`
         : '';
     const running = isTaskRunning(task.id);
 
     return `
-        <button
-            type="button"
-            class="task-quick__item${compact ? ' task-quick__item--compact' : ''}${running ? ' is-running' : ''}"
+        <div
+            class="task-quick__item task-quick__item--search${running ? ' is-running' : ''}"
             role="option"
             data-task-id="${task.id}"
-            data-project-id="${task.project_id}"
-            ${running ? 'disabled' : ''}
         >
             <span class="project-dot task-quick__dot" style="background:${escapeHtml(task.project_color || '#3b82f6')}"></span>
             <span class="task-quick__body">
                 <span class="task-quick__label">${taskLabel(task)}</span>
                 <span class="task-quick__meta">${taskMeta(task)}${sessions ? ` · ${sessions}` : ''}${running ? ` · ${escapeHtml(t('running'))}` : ''}</span>
             </span>
-            <span class="task-quick__play" aria-hidden="true">${ICONS.start}</span>
-        </button>
+            ${renderPlayButton(task, { running })}
+        </div>
     `;
-}
-
-function isTaskRunning(taskId) {
-    return runningTaskIds.has(String(taskId));
 }
 
 function renderFrequentItem(task) {
     const sessions = task.session_count
         ? `<span class="task-quick__meta-muted">${escapeHtml(t('session_count', { count: task.session_count }))}</span>`
         : '';
-    const startLabel = t('start_timer_for', { name: task.name });
     const running = isTaskRunning(task.id);
 
     return `
@@ -67,23 +79,29 @@ function renderFrequentItem(task) {
                 <span class="task-quick__label">${taskLabel(task)}</span>
                 <span class="task-quick__meta">${taskMeta(task)}${sessions ? ` · ${sessions}` : ''}</span>
             </span>
-            <button
-                type="button"
-                class="task-quick__play-btn js-start-frequent-task${running ? ' is-disabled' : ''}"
-                data-task-id="${task.id}"
-                title="${escapeHtml(running ? t('timer_already_running') : startLabel)}"
-                aria-label="${escapeHtml(running ? t('timer_already_running') : startLabel)}"
-                ${running ? 'disabled' : ''}
-            >${ICONS.start}</button>
+            ${renderPlayButton(task, { running })}
         </div>
     `;
 }
 
 async function startFromTask(task, onStarted) {
+    if (isTaskRunning(task.id)) {
+        return;
+    }
+
     const data = await startTimerByTaskId(task.id);
     if (data?.status) {
         onStarted(data.status, data);
     }
+}
+
+function rerenderSearchResults() {
+    const listEl = document.getElementById('task-quick-search-results');
+    if (!listEl || listEl.hidden || cachedSearchItems.length === 0) {
+        return;
+    }
+
+    listEl.innerHTML = cachedSearchItems.map((task) => renderSuggestionItem(task)).join('');
 }
 
 export function syncTaskQuickStart(timers) {
@@ -99,6 +117,8 @@ export function syncTaskQuickStart(timers) {
     if (listEl && cachedFrequentTasks.length > 0) {
         listEl.innerHTML = cachedFrequentTasks.map((task) => renderFrequentItem(task)).join('');
     }
+
+    rerenderSearchResults();
 }
 
 export function initFrequentTasks(onStarted) {
@@ -132,15 +152,19 @@ export function initFrequentTasks(onStarted) {
     });
 
     listEl.addEventListener('click', (event) => {
-        const button = event.target.closest('.js-start-frequent-task');
-        if (!button || button.disabled) {
-            return;
-        }
-
-        startFromTask({
-            id: Number(button.dataset.taskId),
-        }, onStarted);
+        handleTaskTimerClick(event, onStarted);
     });
+}
+
+function handleTaskTimerClick(event, onStarted) {
+    const button = event.target.closest('.js-start-task-timer');
+    if (!button || button.disabled) {
+        return;
+    }
+
+    startFromTask({
+        id: Number(button.dataset.taskId),
+    }, onStarted);
 }
 
 export function initTaskQuickSearch(onStarted) {
@@ -154,13 +178,12 @@ export function initTaskQuickSearch(onStarted) {
     }
 
     let debounceId = null;
-    let items = [];
     let activeIndex = -1;
 
     function closeSuggestions() {
         listEl.hidden = true;
         listEl.innerHTML = '';
-        items = [];
+        cachedSearchItems = [];
         activeIndex = -1;
         if (emptyEl) {
             emptyEl.classList.add('is-hidden');
@@ -179,7 +202,7 @@ export function initTaskQuickSearch(onStarted) {
     }
 
     function renderResults(tasks) {
-        items = tasks;
+        cachedSearchItems = tasks;
 
         if (!tasks.length) {
             listEl.innerHTML = '';
@@ -223,13 +246,13 @@ export function initTaskQuickSearch(onStarted) {
             return;
         }
 
-        if (listEl.hidden || !items.length) {
+        if (listEl.hidden || !cachedSearchItems.length) {
             return;
         }
 
         if (event.key === 'ArrowDown') {
             event.preventDefault();
-            setActiveIndex(Math.min(activeIndex + 1, items.length - 1));
+            setActiveIndex(Math.min(activeIndex + 1, cachedSearchItems.length - 1));
             return;
         }
 
@@ -241,8 +264,8 @@ export function initTaskQuickSearch(onStarted) {
 
         if (event.key === 'Enter') {
             event.preventDefault();
-            const task = items[activeIndex >= 0 ? activeIndex : 0];
-            if (task) {
+            const task = cachedSearchItems[activeIndex >= 0 ? activeIndex : 0];
+            if (task && !isTaskRunning(task.id)) {
                 input.value = '';
                 closeSuggestions();
                 startFromTask(task, onStarted);
@@ -251,12 +274,12 @@ export function initTaskQuickSearch(onStarted) {
     });
 
     listEl.addEventListener('click', (event) => {
-        const button = event.target.closest('[data-task-id]');
-        if (!button || button.disabled) {
+        const playBtn = event.target.closest('.js-start-task-timer');
+        if (!playBtn || playBtn.disabled) {
             return;
         }
 
-        const task = items.find((item) => String(item.id) === button.dataset.taskId);
+        const task = cachedSearchItems.find((item) => String(item.id) === playBtn.dataset.taskId);
         if (!task || isTaskRunning(task.id)) {
             return;
         }

@@ -152,6 +152,18 @@
         padding: 0.45rem 0.4rem;
     }
 
+    &--search {
+        cursor: default;
+
+        &:hover {
+            background: transparent;
+        }
+
+        &.is-active {
+            background: color-mix(in srgb, var(--color-surface-alt) 75%, transparent);
+        }
+    }
+
     &--frequent {
         cursor: default;
 
