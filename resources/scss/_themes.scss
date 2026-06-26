@@ -28,6 +28,17 @@ html[data-theme='dark'] {
     --icon-btn-bg: #283548;
     --icon-btn-color: #f8fafc;
     --icon-btn-delete-color: #cbd5e1;
+
+    --surface: var(--color-surface);
+    --surface-elevated: var(--color-surface-alt);
+    --surface-muted: var(--color-surface-alt);
+    --text: var(--color-text);
+    --text-muted: var(--color-text-muted);
+    --border: var(--color-border);
+    --accent: #3b82f6;
+    --success: #22c55e;
+    --radius-sm: 8px;
+    --radius-md: 12px;
 }
 
 html[data-theme='light'] {
@@ -58,4 +69,15 @@ html[data-theme='light'] {
     --icon-btn-bg: #ffffff;
     --icon-btn-color: #334155;
     --icon-btn-delete-color: #475569;
+
+    --surface: var(--color-surface);
+    --surface-elevated: var(--color-surface-alt);
+    --surface-muted: var(--color-surface-alt);
+    --text: var(--color-text);
+    --text-muted: var(--color-text-muted);
+    --border: var(--color-border);
+    --accent: #3b82f6;
+    --success: #22c55e;
+    --radius-sm: 8px;
+    --radius-md: 12px;
 }

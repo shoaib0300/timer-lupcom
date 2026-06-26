@@ -1,7 +1,66 @@
+@use 'sass:color';
+
+$attendance-work: #3b82f6;
+$attendance-vacation: #f97316;
+$attendance-sick: #22c55e;
+$attendance-holiday: #ef4444;
+
+@mixin attendance-kind-bg($color) {
+    background: color-mix(in srgb, $color 42%, var(--surface-elevated));
+    border-color: color-mix(in srgb, $color 72%, transparent);
+    color: var(--text);
+}
+
 .attendance-page {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
+}
+
+.attendance-accordion {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    overflow: hidden;
+
+    &[open] .attendance-accordion__chevron {
+        transform: rotate(180deg);
+    }
+}
+
+.attendance-accordion__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 600;
+
+    &::-webkit-details-marker {
+        display: none;
+    }
+
+    h2 {
+        margin: 0;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+}
+
+.attendance-accordion__chevron {
+    width: 1.1rem;
+    height: 1.1rem;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.attendance-accordion__body {
+    padding: 0 1.1rem 1.1rem;
+    border-top: 1px solid var(--border);
 }
 
 .attendance-settings__hint {
@@ -15,9 +74,15 @@
     align-items: end;
 }
 
+.attendance-holidays__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
+}
+
 .attendance-holidays__list {
     list-style: none;
-    margin: 0.75rem 0 0;
+    margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -78,28 +143,25 @@
 
 .attendance-legend__item {
     font-size: 0.75rem;
-    padding: 0.2rem 0.55rem;
+    padding: 0.25rem 0.65rem;
     border-radius: 999px;
     border: 1px solid transparent;
+    font-weight: 600;
 
     &--work {
-        background: color-mix(in srgb, var(--success) 12%, var(--surface-elevated));
-        border-color: color-mix(in srgb, var(--success) 35%, transparent);
+        @include attendance-kind-bg($attendance-work);
     }
 
     &--vacation {
-        background: color-mix(in srgb, #3b82f6 15%, var(--surface-elevated));
-        border-color: color-mix(in srgb, #3b82f6 35%, transparent);
+        @include attendance-kind-bg($attendance-vacation);
     }
 
     &--sick {
-        background: color-mix(in srgb, #ef4444 12%, var(--surface-elevated));
-        border-color: color-mix(in srgb, #ef4444 35%, transparent);
+        @include attendance-kind-bg($attendance-sick);
     }
 
     &--holiday {
-        background: color-mix(in srgb, #a855f7 12%, var(--surface-elevated));
-        border-color: color-mix(in srgb, #a855f7 35%, transparent);
+        @include attendance-kind-bg($attendance-holiday);
     }
 }
 
@@ -196,10 +258,10 @@
     justify-content: center;
     gap: 0.1rem;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 
     &:hover {
-        border-color: var(--accent);
+        box-shadow: inset 0 0 0 1px var(--accent);
     }
 
     small {
@@ -210,25 +272,27 @@
     }
 
     &--work {
-        background: color-mix(in srgb, var(--success) 8%, var(--surface-elevated));
+        @include attendance-kind-bg($attendance-work);
     }
 
     &--vacation {
-        background: color-mix(in srgb, #3b82f6 14%, var(--surface-elevated));
+        @include attendance-kind-bg($attendance-vacation);
     }
 
     &--sick {
-        background: color-mix(in srgb, #ef4444 12%, var(--surface-elevated));
+        @include attendance-kind-bg($attendance-sick);
     }
 
     &--holiday {
-        background: color-mix(in srgb, #a855f7 12%, var(--surface-elevated));
+        @include attendance-kind-bg($attendance-holiday);
     }
 
     &--empty {
         border-style: dashed;
         opacity: 0.35;
         cursor: default;
+        background: var(--surface-elevated);
+        box-shadow: none;
     }
 }
 
@@ -260,38 +324,279 @@
     }
 }
 
-.attendance-day-form__row {
+.attendance-day-accordion {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 0.75rem;
+    background: var(--surface-elevated);
+
+    &[open] .attendance-day-accordion__chevron {
+        transform: rotate(180deg);
+    }
+}
+
+.attendance-day-accordion__summary {
+    padding: 0.75rem 0.9rem;
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &::-webkit-details-marker {
+        display: none;
+    }
+}
+
+.attendance-day-accordion__chevron {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.attendance-day-accordion__body {
+    padding: 0 0.9rem 0.9rem;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.attendance-time-block__label {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+    color: var(--text-muted);
+}
+
+.attendance-time-block {
+    display: grid;
     gap: 0.75rem;
 }
 
-.attendance-day-form__format {
-    margin: 0 0 0.75rem;
-    font-size: 0.85rem;
-}
-
-.attendance-time-input {
+.attendance-time-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
     font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-    text-align: center;
-    max-width: 6.5rem;
+    cursor: pointer;
+
+    &:hover {
+        border-color: var(--accent);
+    }
+
+    &.is-active {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 1px var(--accent);
+        background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    }
+
+    &__icon {
+        opacity: 0.7;
+    }
 }
 
 .attendance-day-form__break {
-    margin: 0.25rem 0 0.75rem;
-    font-size: 0.85rem;
+    margin: 0 0 0.65rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 .attendance-day-form__holiday-note {
     margin-bottom: 0.75rem;
     padding: 0.5rem 0.75rem;
     border-radius: var(--radius-sm);
-    background: color-mix(in srgb, #a855f7 12%, var(--surface-elevated));
+    @include attendance-kind-bg($attendance-holiday);
+}
+
+.modal__dialog--attendance {
+    width: min(42rem, 100%);
+    max-height: min(88vh, 34rem);
+    overflow-y: auto;
+    padding: 1.1rem 1.25rem;
+}
+
+.attendance-day-modal__date {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+}
+
+.attendance-day-form__type {
+    margin-bottom: 0.75rem;
+}
+
+.attendance-day-form__actions {
+    margin-top: 0.75rem;
+}
+
+.attendance-day-times__layout {
+    display: grid;
+    grid-template-columns: 1fr min(11.5rem, 38%);
+    gap: 1rem;
+    align-items: start;
+}
+
+.attendance-day-times__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+}
+
+.attendance-day-times__clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.attendance-day-form__format {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    text-align: center;
+}
+
+.attendance-clock-mount {
+    display: flex;
+    justify-content: center;
+    padding-top: 0.25rem;
+}
+
+.clock-picker {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+}
+
+.clock-picker__mode {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.clock-picker__mode-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    border-radius: 999px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &.is-active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+    }
+}
+
+.clock-picker__digital {
+    font-size: 1.15rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+}
+
+.clock-picker__face {
+    position: relative;
+    width: 10.5rem;
+    height: 10.5rem;
+    cursor: pointer;
+}
+
+.clock-picker__svg {
+    width: 100%;
+    height: 100%;
+}
+
+.clock-picker__ring {
+    fill: var(--color-bg-end);
+    stroke: var(--color-border);
+    stroke-width: 2;
+}
+
+.clock-picker__tick {
+    stroke: var(--color-text-muted);
+    stroke-width: 1;
+    opacity: 0.85;
+
+    &--major {
+        stroke-width: 2;
+        stroke: var(--color-text);
+        opacity: 1;
+    }
+}
+
+.clock-picker__label {
+    fill: var(--color-text);
+    font-size: 10px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}
+
+.clock-picker__hands {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.clock-picker__hand {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: 50% 100%;
+    border-radius: 999px;
+
+    &--hour {
+        width: 4px;
+        height: 2.2rem;
+        background: var(--accent);
+        margin-top: -2.2rem;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg) 40%, transparent);
+    }
+
+    &--minute {
+        width: 2px;
+        height: 2.9rem;
+        background: var(--color-text);
+        margin-top: -2.9rem;
+        opacity: 0.9;
+    }
+}
+
+.clock-picker__center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 10px;
+    height: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--color-surface);
 }
 
 @media (max-width: 768px) {
     .attendance-week__row {
         min-width: 40rem;
+    }
+
+    .attendance-day-times__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .clock-picker__face {
+        width: 9.5rem;
+        height: 9.5rem;
     }
 }

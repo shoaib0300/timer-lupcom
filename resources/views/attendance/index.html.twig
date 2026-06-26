@@ -14,43 +14,52 @@
         <div class="alert alert--error">{{ trans('attendance.settings_error') }}</div>
     {% endif %}
 
-    <section class="card attendance-settings">
-        <h2>{{ trans('attendance.settings_title') }}</h2>
-        <p class="muted attendance-settings__hint">{{ trans('attendance.settings_hint', {hours: daily_hours, break: break_minutes}) }}</p>
-        <form method="post" action="/attendance/settings" class="attendance-settings__form">
-            <input type="hidden" name="month" value="{{ month }}">
-            <div class="attendance-settings__row">
-                <div class="form-group">
-                    <label for="attendance-country">{{ trans('attendance.country') }}</label>
-                    <select id="attendance-country" name="country">
-                        {% for code, label in countries %}
-                            <option value="{{ code }}"{% if config.country == code %} selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
+    <details class="attendance-accordion card">
+        <summary class="attendance-accordion__summary">
+            <h2>{{ trans('attendance.settings_title') }}</h2>
+            <svg class="attendance-accordion__chevron" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </summary>
+        <div class="attendance-accordion__body attendance-settings">
+            <p class="muted attendance-settings__hint">{{ trans('attendance.settings_hint', {hours: daily_hours, break: break_minutes}) }}</p>
+            <form method="post" action="/attendance/settings" class="attendance-settings__form">
+                <input type="hidden" name="month" value="{{ month }}">
+                <div class="attendance-settings__row">
+                    <div class="form-group">
+                        <label for="attendance-country">{{ trans('attendance.country') }}</label>
+                        <select id="attendance-country" name="country">
+                            {% for code, label in countries %}
+                                <option value="{{ code }}"{% if config.country == code %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-state">{{ trans('attendance.state') }}</label>
+                        <select id="attendance-state" name="state"{% if config.country != 'DE' %} disabled{% endif %}>
+                            {% for code, label in states %}
+                                <option value="{{ code }}"{% if config.state == code %} selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group attendance-settings__actions">
+                        <label>&nbsp;</label>
+                        <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="attendance-state">{{ trans('attendance.state') }}</label>
-                    <select id="attendance-state" name="state"{% if config.country != 'DE' %} disabled{% endif %}>
-                        {% for code, label in states %}
-                            <option value="{{ code }}"{% if config.state == code %} selected{% endif %}>{{ label }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="form-group attendance-settings__actions">
-                    <label>&nbsp;</label>
-                    <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
-                </div>
-            </div>
-        </form>
-    </section>
-
-    <section class="card attendance-holidays">
-        <div class="section-header">
-            <h2>{{ trans('attendance.holidays_title', {year: year}) }}</h2>
-            <button type="button" class="btn btn--ghost btn--sm" id="attendance-add-holiday">{{ trans('attendance.add_holiday') }}</button>
+            </form>
         </div>
-        <p class="muted">{{ trans('attendance.holidays_hint', {hours: daily_hours}) }}</p>
-        <ul class="attendance-holidays__list" id="attendance-holidays-list">
+    </details>
+
+    <details class="attendance-accordion card">
+        <summary class="attendance-accordion__summary">
+            <h2>{{ trans('attendance.holidays_title', {year: year}) }}</h2>
+            <svg class="attendance-accordion__chevron" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </summary>
+        <div class="attendance-accordion__body attendance-holidays">
+            <div class="attendance-holidays__toolbar">
+                <button type="button" class="btn btn--ghost btn--sm" id="attendance-add-holiday">{{ trans('attendance.add_holiday') }}</button>
+            </div>
+            <p class="muted">{{ trans('attendance.holidays_hint', {hours: daily_hours}) }}</p>
+            <ul class="attendance-holidays__list" id="attendance-holidays-list">
             {% for holiday in holidays %}
                 <li class="attendance-holidays__item" data-date="{{ holiday.date }}">
                     <span class="attendance-holidays__date">{{ holiday.date|slice(8, 2) }}.{{ holiday.date|slice(5, 2) }}.{{ holiday.date|slice(0, 4) }}</span>
@@ -69,8 +78,9 @@
             {% else %}
                 <li class="muted" id="attendance-holidays-empty">{{ trans('attendance.no_holidays') }}</li>
             {% endfor %}
-        </ul>
-    </section>
+            </ul>
+        </div>
+    </details>
 
     <section class="card attendance-month">
         <div class="attendance-month__header">
@@ -189,12 +199,12 @@
 
 <div id="attendance-day-modal" class="modal is-hidden" aria-hidden="true">
     <div class="modal__backdrop" data-attendance-close></div>
-    <div class="modal__dialog" role="dialog" aria-labelledby="attendance-day-modal-title">
+    <div class="modal__dialog modal__dialog--attendance" role="dialog" aria-labelledby="attendance-day-modal-title">
         <h3 id="attendance-day-modal-title" class="modal__title">{{ trans('attendance.edit_day') }}</h3>
-        <p class="muted" id="attendance-day-modal-date"></p>
-        <form id="attendance-day-form">
+        <p class="muted attendance-day-modal__date" id="attendance-day-modal-date"></p>
+        <form id="attendance-day-form" class="attendance-day-form">
             <input type="hidden" name="date" id="attendance-day-date">
-            <div class="form-group">
+            <div class="form-group attendance-day-form__type">
                 <label for="attendance-day-type">{{ trans('attendance.day_type') }}</label>
                 <select id="attendance-day-type" name="day_type">
                     <option value="work">{{ trans('attendance.kind.work') }}</option>
@@ -204,71 +214,48 @@
             </div>
             <p class="muted attendance-day-form__holiday-note is-hidden" id="attendance-day-holiday-note"></p>
             <div id="attendance-day-times">
-                <p class="muted attendance-day-form__format">{{ trans('attendance.time_format_hint') }}</p>
-                <div class="attendance-day-form__row">
-                    <div class="form-group">
-                        <label for="attendance-morning-start">{{ trans('attendance.row.morning_start') }}</label>
-                        <input
-                            type="text"
-                            class="attendance-time-input"
-                            id="attendance-morning-start"
-                            name="morning_start"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            placeholder="08:30"
-                            maxlength="5"
-                            pattern="[0-9]{1,2}:[0-9]{2}"
-                        >
+                <div class="attendance-day-times__layout">
+                    <div class="attendance-day-times__fields">
+                        <p class="muted attendance-day-form__break">{{ trans('attendance.break_note', {minutes: break_minutes}) }}</p>
+                        <div class="attendance-day-times__grid">
+                            <div class="attendance-time-block">
+                                <span class="attendance-time-block__label">{{ trans('attendance.row.morning_start') }}</span>
+                                <button type="button" class="attendance-time-trigger is-active" data-field="morning_start">
+                                    <span class="attendance-time-trigger__value">08:00</span>
+                                </button>
+                                <input type="hidden" name="morning_start" id="attendance-morning-start">
+                            </div>
+                            <div class="attendance-time-block">
+                                <span class="attendance-time-block__label">{{ trans('attendance.row.morning_end') }}</span>
+                                <button type="button" class="attendance-time-trigger" data-field="morning_end">
+                                    <span class="attendance-time-trigger__value">12:00</span>
+                                </button>
+                                <input type="hidden" name="morning_end" id="attendance-morning-end">
+                            </div>
+                            <div class="attendance-time-block">
+                                <span class="attendance-time-block__label">{{ trans('attendance.row.afternoon_start') }}</span>
+                                <button type="button" class="attendance-time-trigger" data-field="afternoon_start">
+                                    <span class="attendance-time-trigger__value">12:30</span>
+                                </button>
+                                <input type="hidden" name="afternoon_start" id="attendance-afternoon-start">
+                            </div>
+                            <div class="attendance-time-block">
+                                <span class="attendance-time-block__label">{{ trans('attendance.row.afternoon_end') }}</span>
+                                <button type="button" class="attendance-time-trigger" data-field="afternoon_end">
+                                    <span class="attendance-time-trigger__value">17:30</span>
+                                </button>
+                                <input type="hidden" name="afternoon_end" id="attendance-afternoon-end">
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="attendance-morning-end">{{ trans('attendance.row.morning_end') }}</label>
-                        <input
-                            type="text"
-                            class="attendance-time-input"
-                            id="attendance-morning-end"
-                            name="morning_end"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            placeholder="12:00"
-                            maxlength="5"
-                            pattern="[0-9]{1,2}:[0-9]{2}"
-                        >
-                    </div>
-                </div>
-                <p class="muted attendance-day-form__break">{{ trans('attendance.break_note', {minutes: break_minutes}) }}</p>
-                <div class="attendance-day-form__row">
-                    <div class="form-group">
-                        <label for="attendance-afternoon-start">{{ trans('attendance.row.afternoon_start') }}</label>
-                        <input
-                            type="text"
-                            class="attendance-time-input"
-                            id="attendance-afternoon-start"
-                            name="afternoon_start"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            placeholder="12:30"
-                            maxlength="5"
-                            pattern="[0-9]{1,2}:[0-9]{2}"
-                        >
-                    </div>
-                    <div class="form-group">
-                        <label for="attendance-afternoon-end">{{ trans('attendance.row.afternoon_end') }}</label>
-                        <input
-                            type="text"
-                            class="attendance-time-input"
-                            id="attendance-afternoon-end"
-                            name="afternoon_end"
-                            inputmode="numeric"
-                            autocomplete="off"
-                            placeholder="17:30"
-                            maxlength="5"
-                            pattern="[0-9]{1,2}:[0-9]{2}"
-                        >
+                    <div class="attendance-day-times__clock">
+                        <p class="muted attendance-day-form__format">{{ trans('attendance.clock_hint') }}</p>
+                        <div id="clock-shared" class="attendance-clock-mount"></div>
                     </div>
                 </div>
                 <p class="alert alert--error is-hidden" id="attendance-day-time-error" role="alert"></p>
             </div>
-            <div class="actions">
+            <div class="actions attendance-day-form__actions">
                 <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
                 <button type="button" class="btn btn--ghost" data-attendance-close>{{ trans('common.cancel') }}</button>
             </div>

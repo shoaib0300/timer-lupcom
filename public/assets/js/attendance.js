@@ -1,3 +1,5 @@
+import { mountClockPicker } from './clock-picker.js';
+
 function t(key, params = {}) {
     const dict = window.__I18N__ || {};
     let str = dict[key] || key;
@@ -17,6 +19,12 @@ const dayTimesWrap = document.getElementById('attendance-day-times');
 const holidayNote = document.getElementById('attendance-day-holiday-note');
 const timeError = document.getElementById('attendance-day-time-error');
 const timeFieldNames = ['morning_start', 'morning_end', 'afternoon_start', 'afternoon_end'];
+let activeTimeField = 'morning_start';
+let sharedClockPicker = null;
+
+function fieldToInputId(field) {
+    return `attendance-${field.replace(/_/g, '-')}`;
+}
 
 function normalizeTime24(value) {
     if (value === null || value === undefined) {
@@ -61,41 +69,77 @@ function clearTimeError() {
     timeError.classList.add('is-hidden');
 }
 
-function bindTimeInput(input) {
-    input.addEventListener('input', () => {
-        input.value = input.value.replace(/[^\d:]/g, '').slice(0, 5);
-        clearTimeError();
-    });
+function setTimeFieldValue(field, value) {
+    const normalized = normalizeTime24(value);
+    const hidden = document.getElementById(fieldToInputId(field));
+    const trigger = document.querySelector(`.attendance-time-trigger[data-field="${field}"]`);
 
-    input.addEventListener('blur', () => {
-        const normalized = normalizeTime24(input.value);
-        if (normalized) {
-            input.value = normalized;
+    if (hidden) {
+        hidden.value = normalized || '';
+    }
+
+    if (trigger) {
+        const valueEl = trigger.querySelector('.attendance-time-trigger__value');
+        if (valueEl) {
+            valueEl.textContent = normalized || '—';
         }
-    });
+    }
+
+    if (field === activeTimeField && sharedClockPicker && normalized) {
+        sharedClockPicker.setValue(normalized);
+    }
 }
 
-document.querySelectorAll('.attendance-time-input').forEach(bindTimeInput);
-
-function setTimeFieldValue(id, value) {
-    const input = document.getElementById(id);
-    if (!input) {
+function initSharedClock() {
+    const mount = document.getElementById('clock-shared');
+    if (!mount || sharedClockPicker) {
         return;
     }
 
-    const normalized = normalizeTime24(value);
-    input.value = normalized || '';
+    const initial = document.getElementById(fieldToInputId(activeTimeField))?.value || '08:00';
+    sharedClockPicker = mountClockPicker(mount, {
+        value: initial,
+        onChange: (value) => {
+            setTimeFieldValue(activeTimeField, value);
+            clearTimeError();
+        },
+    });
+
+    document.querySelectorAll('.attendance-time-trigger').forEach((trigger) => {
+        if (trigger.dataset.bound === '1') {
+            return;
+        }
+        trigger.dataset.bound = '1';
+        trigger.addEventListener('click', () => {
+            const field = trigger.dataset.field;
+            if (!field) {
+                return;
+            }
+
+            activeTimeField = field;
+            document.querySelectorAll('.attendance-time-trigger').forEach((btn) => {
+                btn.classList.toggle('is-active', btn === trigger);
+            });
+
+            const current = document.getElementById(fieldToInputId(field))?.value || '08:00';
+            sharedClockPicker?.setValue(current);
+        });
+    });
 }
 
-const weekdayKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-
 function openModal(modal) {
+    if (!modal) {
+        return;
+    }
     modal.classList.remove('is-hidden');
     modal.setAttribute('aria-hidden', 'false');
 }
 
 function closeModals() {
     [dayModal, holidayModal].forEach((modal) => {
+        if (!modal) {
+            return;
+        }
         modal.classList.add('is-hidden');
         modal.setAttribute('aria-hidden', 'true');
     });
@@ -106,14 +150,17 @@ document.querySelectorAll('[data-attendance-close]').forEach((el) => {
 });
 
 function syncDayTypeFields() {
-    const isWork = dayTypeSelect.value === 'work';
+    const isWork = dayTypeSelect?.value === 'work';
+    if (!dayTimesWrap) {
+        return;
+    }
     dayTimesWrap.classList.toggle('is-hidden', !isWork);
-    dayTimesWrap.querySelectorAll('input').forEach((input) => {
-        input.disabled = !isWork;
+    dayTimesWrap.querySelectorAll('input, button').forEach((el) => {
+        el.disabled = !isWork;
     });
 }
 
-dayTypeSelect.addEventListener('change', syncDayTypeFields);
+dayTypeSelect?.addEventListener('change', syncDayTypeFields);
 
 document.getElementById('attendance-weeks')?.addEventListener('click', (event) => {
     const cell = event.target.closest('.attendance-cell[data-date]');
@@ -129,11 +176,16 @@ document.getElementById('attendance-weeks')?.addEventListener('click', (event) =
     const dayType = cell.dataset.dayType || 'work';
     dayTypeSelect.value = dayType === 'vacation' || dayType === 'sick' ? dayType : 'work';
 
-    setTimeFieldValue('attendance-morning-start', cell.dataset.morningStart);
-    setTimeFieldValue('attendance-morning-end', cell.dataset.morningEnd);
-    setTimeFieldValue('attendance-afternoon-start', cell.dataset.afternoonStart);
-    setTimeFieldValue('attendance-afternoon-end', cell.dataset.afternoonEnd);
+    setTimeFieldValue('morning_start', cell.dataset.morningStart);
+    setTimeFieldValue('morning_end', cell.dataset.morningEnd);
+    setTimeFieldValue('afternoon_start', cell.dataset.afternoonStart);
+    setTimeFieldValue('afternoon_end', cell.dataset.afternoonEnd);
     clearTimeError();
+
+    activeTimeField = 'morning_start';
+    document.querySelectorAll('.attendance-time-trigger').forEach((btn) => {
+        btn.classList.toggle('is-active', btn.dataset.field === 'morning_start');
+    });
 
     if (kind === 'holiday' && cell.dataset.holidayName) {
         holidayNote.textContent = t('attendance.holiday_auto_note', { name: cell.dataset.holidayName });
@@ -143,6 +195,8 @@ document.getElementById('attendance-weeks')?.addEventListener('click', (event) =
     }
 
     syncDayTypeFields();
+    initSharedClock();
+    sharedClockPicker?.setValue(document.getElementById('attendance-morning-start')?.value || '08:00');
     openModal(dayModal);
 });
 
@@ -152,7 +206,7 @@ dayForm?.addEventListener('submit', async (event) => {
 
     if (dayTypeSelect.value === 'work') {
         for (const name of timeFieldNames) {
-            const input = dayForm.elements[name];
+            const input = document.getElementById(fieldToInputId(name));
             if (!input || !input.value.trim()) {
                 continue;
             }
@@ -160,7 +214,6 @@ dayForm?.addEventListener('submit', async (event) => {
             const normalized = normalizeTime24(input.value);
             if (!normalized) {
                 showTimeError(t('attendance.time_invalid'));
-                input.focus();
                 return;
             }
 
@@ -187,7 +240,8 @@ dayForm?.addEventListener('submit', async (event) => {
     closeModals();
 });
 
-document.getElementById('attendance-add-holiday')?.addEventListener('click', () => {
+document.getElementById('attendance-add-holiday')?.addEventListener('click', (event) => {
+    event.preventDefault();
     holidayForm.reset();
     const year = page?.dataset.year;
     if (year) {
@@ -208,8 +262,6 @@ holidayForm?.addEventListener('submit', async (event) => {
         return;
     }
 
-    const data = await response.json();
-    renderHolidayList(data.holidays);
     closeModals();
     window.location.reload();
 });
@@ -323,28 +375,4 @@ function renderTotalCell(day) {
         html += `<small>${day.holiday_name}</small>`;
     }
     return html;
-}
-
-function renderHolidayList(holidays) {
-    const list = document.getElementById('attendance-holidays-list');
-    if (!list) {
-        return;
-    }
-
-    list.innerHTML = '';
-    holidays.forEach((holiday) => {
-        const li = document.createElement('li');
-        li.className = 'attendance-holidays__item';
-        li.dataset.date = holiday.date;
-        const [y, m, d] = holiday.date.split('-');
-        li.innerHTML = `
-            <span class="attendance-holidays__date">${d}.${m}.${y}</span>
-            <span class="attendance-holidays__name">${holiday.name}</span>
-            <span class="badge badge--${holiday.source}">${t(`attendance.holiday_${holiday.source}`)}</span>
-            <button type="button" class="card-icon-btn attendance-holidays__remove" data-date="${holiday.date}" data-source="${holiday.source}" aria-label="${t('delete')}">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-            </button>
-        `;
-        list.appendChild(li);
-    });
 }
