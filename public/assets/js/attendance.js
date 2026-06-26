@@ -35,6 +35,7 @@ const START_TO_END = {
     morning_start: 'morning_end',
     afternoon_start: 'afternoon_end',
 };
+const CLOCK_ICON_HTML = `<svg class="attendance-cell__clock-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.75"></circle><path fill="currentColor" d="M12 7v5.25l3.25 1.75"></path></svg>`;
 let activeTimeField = 'morning_start';
 let sharedClockPicker = null;
 
@@ -118,6 +119,40 @@ function maybeAutoFillEndTime(startField, startValue) {
     }
 }
 
+function isEmptyTime(value) {
+    if (value === null || value === undefined) {
+        return true;
+    }
+
+    const trimmed = String(value).trim();
+    if (trimmed === '' || trimmed === '—') {
+        return true;
+    }
+
+    const normalized = normalizeTime24(trimmed);
+    return !normalized || normalized === '00:00';
+}
+
+function renderTimeDisplay(value) {
+    return isEmptyTime(value) ? CLOCK_ICON_HTML : normalizeTime24(value) || String(value).trim();
+}
+
+function updateTimeTriggerDisplay(trigger, value) {
+    const valueEl = trigger?.querySelector('.attendance-time-trigger__value');
+    if (!valueEl) {
+        return;
+    }
+
+    if (isEmptyTime(value)) {
+        valueEl.innerHTML = CLOCK_ICON_HTML;
+        valueEl.classList.add('is-empty');
+        return;
+    }
+
+    valueEl.textContent = normalizeTime24(value) || '';
+    valueEl.classList.remove('is-empty');
+}
+
 function fieldToInputId(field) {
     return `attendance-${field.replace(/_/g, '-')}`;
 }
@@ -175,10 +210,7 @@ function setTimeFieldValue(field, value) {
     }
 
     if (trigger) {
-        const valueEl = trigger.querySelector('.attendance-time-trigger__value');
-        if (valueEl) {
-            valueEl.textContent = normalized || '—';
-        }
+        updateTimeTriggerDisplay(trigger, normalized || value);
     }
 
     if (field === activeTimeField && sharedClockPicker && normalized) {
@@ -466,11 +498,11 @@ function rerenderWeeks(weeks) {
                 if (field === 'worked_label') {
                     cell.innerHTML = renderTotalCell(day);
                 } else if (!field) {
-                    cell.innerHTML = '<span class="muted">—</span>';
+                    cell.innerHTML = '<span class="attendance-cell__lunch" aria-hidden="true"></span>';
                 } else if (['vacation', 'sick', 'holiday'].includes(day.kind)) {
                     cell.innerHTML = '<span class="muted">0:00</span>';
                 } else {
-                    cell.textContent = day[field] || '—';
+                    cell.innerHTML = renderTimeDisplay(day[field]);
                 }
             });
         });

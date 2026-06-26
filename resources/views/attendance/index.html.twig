@@ -149,7 +149,7 @@
                                             data-holiday-name="{{ day.holiday_name|default('') }}"
                                         >
                                             {% if row.key is null %}
-                                                <span class="muted">—</span>
+                                                <span class="attendance-cell__lunch" aria-hidden="true"></span>
                                             {% elseif row.key == 'worked_label' %}
                                                 <strong>{{ day.worked_label }}</strong>
                                                 {% if day.kind == 'vacation' %}
@@ -162,7 +162,12 @@
                                             {% elseif day.kind in ['vacation', 'sick', 'holiday'] and row.key != 'worked_label' %}
                                                 <span class="muted">0:00</span>
                                             {% else %}
-                                                {{ attribute(day, row.key)|default('—') }}
+                                                {% set time_value = attribute(day, row.key) %}
+                                                {% if time_value %}
+                                                    {{ time_value }}
+                                                {% else %}
+                                                    {% include 'partials/clock_icon.html.twig' %}
+                                                {% endif %}
                                             {% endif %}
                                         </button>
                                     {% else %}

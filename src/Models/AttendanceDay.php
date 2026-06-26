@@ -39,6 +39,8 @@ final class AttendanceDay
             return null;
         }
 
-        return substr((string) $value, 0, 5);
+        $time = substr((string) $value, 0, 5);
+
+        return $time === '00:00' ? null : $time;
     }
 }
