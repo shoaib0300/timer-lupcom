@@ -69,3 +69,44 @@ export async function startTimer(projectId, taskName) {
 
     return data;
 }
+
+export async function startTimerByTaskId(taskId) {
+    const body = new URLSearchParams({ task_id: taskId });
+
+    const response = await fetch('/api/timer/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        alert(data.error || 'Could not start timer.');
+        return null;
+    }
+
+    return data;
+}
+
+export async function searchTasks(query) {
+    const params = new URLSearchParams({ q: query });
+    const response = await fetch(`/api/tasks/search?${params}`);
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data = await response.json();
+    return data.tasks || [];
+}
+
+export async function fetchFrequentTasks() {
+    const response = await fetch('/api/tasks/frequent');
+
+    if (!response.ok) {
+        return [];
+    }
+
+    const data = await response.json();
+    return data.tasks || [];
+}

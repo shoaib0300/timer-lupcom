@@ -61,6 +61,9 @@ return [
     'timer.pause' => 'Pausieren',
     'timer.stop' => 'Stoppen',
     'timer.no_work' => 'Keine Arbeit',
+    'timer.already_running' => 'Für diese Aufgabe läuft bereits ein Timer.',
+    'timer.frequent_tasks' => 'Häufige Aufgaben',
+    'timer.no_frequent_tasks' => 'Starte Timer, um Vorschläge zu sehen.',
 
     'dashboard.title' => 'Dashboard',
     'dashboard.tracked_today' => 'Heute erfasst',
@@ -83,6 +86,11 @@ return [
     'dashboard.sessions_note_suffix' => '.',
     'dashboard.no_sessions_today' => 'Heute noch keine Sitzungen erfasst.',
     'dashboard.task_reason' => 'Aufgabe / Begründung',
+    'dashboard.quick_start' => 'Schnellstart',
+    'dashboard.quick_start_intro' => 'Suche nach Aufgabenname, Projekt, Bearbeiter oder ID — Vorschlag wählen startet den Timer sofort.',
+    'dashboard.search_tasks' => 'Aufgabe finden',
+    'dashboard.search_tasks_placeholder' => 'Aufgabenname, Projekt, Bearbeiter oder ID…',
+    'dashboard.no_task_match' => 'Keine Aufgaben passen zur Suche.',
 
     'projects.title' => 'Projekte',
     'projects.new' => 'Neues Projekt',
@@ -181,6 +189,7 @@ return [
     'js.general_time' => 'Allgemeine Zeit',
     'js.theme_light' => 'Hellmodus',
     'js.theme_dark' => 'Dunkelmodus',
+    'js.session_count' => ':count Sitzungen',
     'js.optional_note' => 'Optionale Notiz',
     'js.note_optional' => 'Notiz (optional)',
     'js.reason' => 'Begründung',
@@ -215,5 +224,8 @@ return [
     'js.edit' => 'Bearbeiten',
     'js.delete' => 'Löschen',
     'js.start' => 'Starten',
+    'js.start_timer_for' => 'Timer starten für :name',
+    'js.timer_already_running' => 'Für diese Aufgabe läuft bereits ein Timer.',
+    'js.running' => 'Läuft',
     'js.no_tasks_yet' => 'Noch keine Aufgaben für dieses Projekt.',
 ];

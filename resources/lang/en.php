@@ -61,6 +61,9 @@ return [
     'timer.pause' => 'Pause',
     'timer.stop' => 'Stop',
     'timer.no_work' => 'No work',
+    'timer.already_running' => 'Timer is already running for this task.',
+    'timer.frequent_tasks' => 'Frequent tasks',
+    'timer.no_frequent_tasks' => 'Start timers to see suggestions here.',
 
     'dashboard.title' => 'Dashboard',
     'dashboard.tracked_today' => 'Tracked today',
@@ -83,6 +86,11 @@ return [
     'dashboard.sessions_note_suffix' => '.',
     'dashboard.no_sessions_today' => 'No sessions tracked today yet.',
     'dashboard.task_reason' => 'Task / reason',
+    'dashboard.quick_start' => 'Quick start',
+    'dashboard.quick_start_intro' => 'Search by task name, project, assignee, or ID — pick a suggestion to start the timer immediately.',
+    'dashboard.search_tasks' => 'Find task',
+    'dashboard.search_tasks_placeholder' => 'Task name, project, assignee, or ID…',
+    'dashboard.no_task_match' => 'No tasks match your search.',
 
     'projects.title' => 'Projects',
     'projects.new' => 'New project',
@@ -181,6 +189,7 @@ return [
     'js.general_time' => 'General time',
     'js.theme_light' => 'Light mode',
     'js.theme_dark' => 'Dark mode',
+    'js.session_count' => ':count sessions',
     'js.optional_note' => 'Optional note',
     'js.note_optional' => 'Note (optional)',
     'js.reason' => 'Reason',
@@ -215,5 +224,8 @@ return [
     'js.edit' => 'Edit',
     'js.delete' => 'Delete',
     'js.start' => 'Start',
+    'js.start_timer_for' => 'Start timer for :name',
+    'js.timer_already_running' => 'Timer already running for this task.',
+    'js.running' => 'Running',
     'js.no_tasks_yet' => 'No tasks for this project yet.',
 ];

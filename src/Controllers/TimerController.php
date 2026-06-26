@@ -21,26 +21,47 @@ final class TimerController extends BaseController
 
     public function start(Request $request): Response
     {
-        $projectId = (int) $request->input('project_id', 0);
-        $taskName = trim((string) $request->input('task_name', 'no-work'));
-
-        if ($projectId <= 0) {
-            return $this->json(['error' => 'Project is required.'], 422);
-        }
-
-        $project = new ProjectRepository($this->app->db())->find($projectId);
-
-        if ($project === null) {
-            return $this->json(['error' => 'Project not found.'], 404);
-        }
-
+        $taskId = (int) $request->input('task_id', 0);
         $service = $this->timerService();
-        $entry = $service->start($projectId, $taskName);
+
+        try {
+            if ($taskId > 0) {
+                $alreadyRunning = $service->isTaskRunning($taskId);
+                $entry = $service->startByTaskId($taskId);
+            } else {
+                $projectId = (int) $request->input('project_id', 0);
+                $taskName = trim((string) $request->input('task_name', 'no-work'));
+
+                if ($projectId <= 0) {
+                    return $this->json(['error' => 'Project is required.'], 422);
+                }
+
+                $project = new ProjectRepository($this->app->db())->find($projectId);
+
+                if ($project === null) {
+                    return $this->json(['error' => 'Project not found.'], 404);
+                }
+
+                $taskRepo = new TaskRepository($this->app->db());
+                $resolvedTaskId = $taskRepo->findOrCreateByName(
+                    $projectId,
+                    $taskName !== '' ? $taskName : 'no-work',
+                );
+                $alreadyRunning = $service->isTaskRunning($resolvedTaskId);
+                $entry = $service->start($projectId, $taskName);
+            }
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json(['error' => $exception->getMessage()], 404);
+        }
+
         $status = $service->getStatus();
         $timer = $this->findTimerInStatus($status, $entry->id);
 
         return $this->json([
-            'message' => 'Timer started.',
+            'message' => ($alreadyRunning ?? false)
+                ? $this->trans('timer.already_running')
+                : 'Timer started.',
+            'already_running' => $alreadyRunning ?? false,
             'entry' => $timer,
             'status' => $status,
         ]);

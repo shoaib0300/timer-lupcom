@@ -123,4 +123,84 @@ final class TaskRepository
         $stmt = $this->pdo->prepare('DELETE FROM tasks WHERE id = ?');
         $stmt->execute([$id]);
     }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function search(string $query, int $limit = 12): array
+    {
+        $query = trim($query);
+        if ($query === '') {
+            return [];
+        }
+
+        $limit = max(1, min($limit, 25));
+        $like = '%' . $query . '%';
+        $isNumeric = ctype_digit($query);
+
+        $sql = 'SELECT t.id, t.project_id, t.name, t.status, t.planio_issue_id, t.planio_assignee,
+                p.name AS project_name, p.color AS project_color,
+                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
+            FROM tasks t
+            INNER JOIN projects p ON p.id = t.project_id
+            LEFT JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL
+            WHERE (
+                t.name LIKE ?
+                OR p.name LIKE ?
+                OR COALESCE(t.planio_assignee, \'\') LIKE ?';
+
+        $params = [$like, $like, $like];
+
+        if ($isNumeric) {
+            $sql .= ' OR t.id = ? OR t.planio_issue_id = ?';
+            $params[] = (int) $query;
+            $params[] = (int) $query;
+        }
+
+        $sql .= ')
+            GROUP BY t.id, t.project_id, t.name, t.status, t.planio_issue_id, t.planio_assignee, p.name, p.color
+            ORDER BY
+                CASE
+                    WHEN t.name LIKE ? THEN 0
+                    WHEN p.name LIKE ? THEN 1
+                    ELSE 2
+                END,
+                total_seconds DESC,
+                t.name ASC
+            LIMIT ?';
+
+        $params[] = $like;
+        $params[] = $like;
+        $params[] = $limit;
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function mostUsed(int $limit = 8): array
+    {
+        $limit = max(1, min($limit, 20));
+
+        $stmt = $this->pdo->prepare(
+            'SELECT t.id, t.project_id, t.name, t.status, t.planio_issue_id, t.planio_assignee,
+                p.name AS project_name, p.color AS project_color,
+                COUNT(te.id) AS session_count,
+                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
+            FROM tasks t
+            INNER JOIN projects p ON p.id = t.project_id
+            INNER JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL
+            GROUP BY t.id, t.project_id, t.name, t.status, t.planio_issue_id, t.planio_assignee, p.name, p.color
+            ORDER BY session_count DESC, total_seconds DESC, t.name ASC
+            LIMIT ?',
+        );
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt->fetchAll();
+    }
 }

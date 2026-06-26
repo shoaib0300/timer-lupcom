@@ -33,6 +33,28 @@ final class TimerService
         $taskName = trim($taskName) !== '' ? trim($taskName) : 'no-work';
         $taskId = $this->tasks->findOrCreateByName($projectId, $taskName);
 
+        return $this->startWithTaskId($projectId, $taskId);
+    }
+
+    public function startByTaskId(int $taskId): TimeEntry
+    {
+        $task = $this->tasks->find($taskId);
+
+        if ($task === null) {
+            throw new \InvalidArgumentException('Task not found.');
+        }
+
+        return $this->startWithTaskId($task->projectId, $taskId);
+    }
+
+    private function startWithTaskId(int $projectId, int $taskId): TimeEntry
+    {
+        $existing = $this->timeEntries->findRunningByTaskId($taskId);
+
+        if ($existing !== null) {
+            return $existing;
+        }
+
         $entryId = $this->timeEntries->start($projectId, $taskId);
         $entry = $this->timeEntries->findById($entryId);
 
@@ -41,6 +63,11 @@ final class TimerService
         }
 
         return $entry;
+    }
+
+    public function isTaskRunning(int $taskId): bool
+    {
+        return $this->timeEntries->findRunningByTaskId($taskId) !== null;
     }
 
     public function stop(int $entryId): ?TimeEntry

@@ -66,6 +66,35 @@
                 {% block content %}{% endblock %}
             </main>
         </div>
+
+        <aside class="quick-sidebar" id="quick-sidebar" aria-label="{{ trans('dashboard.quick_start') }}">
+            <section class="quick-sidebar__section task-quick-search">
+                <h2 class="quick-sidebar__title">{{ trans('dashboard.quick_start') }}</h2>
+                <p class="muted quick-sidebar__intro">{{ trans('dashboard.quick_start_intro') }}</p>
+                <div class="task-quick-search__wrap" id="task-quick-search-wrap">
+                    <label class="task-quick-search__label" for="task-quick-search-input">{{ trans('dashboard.search_tasks') }}</label>
+                    <input
+                        type="search"
+                        id="task-quick-search-input"
+                        class="task-quick-search__input"
+                        placeholder="{{ trans('dashboard.search_tasks_placeholder') }}"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-expanded="false"
+                        aria-controls="task-quick-search-results"
+                        aria-autocomplete="list"
+                    >
+                    <div id="task-quick-search-results" class="task-quick-search__results" role="listbox" hidden></div>
+                    <p class="muted task-quick-search__empty is-hidden" id="task-quick-search-empty">{{ trans('dashboard.no_task_match') }}</p>
+                </div>
+            </section>
+
+            <section class="quick-sidebar__section quick-sidebar__frequent" id="timer-frequent">
+                <h2 class="quick-sidebar__title">{{ trans('timer.frequent_tasks') }}</h2>
+                <p class="muted quick-sidebar__empty is-hidden" id="timer-frequent-empty">{{ trans('timer.no_frequent_tasks') }}</p>
+                <div class="quick-sidebar__frequent-list" id="timer-frequent-list"></div>
+            </section>
+        </aside>
     </div>
 
     <div id="timer-modal" class="modal is-hidden" aria-hidden="true">
@@ -93,7 +122,7 @@
     </div>
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=17"></script>
+    <script type="module" src="/assets/js/app.js?v=20"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

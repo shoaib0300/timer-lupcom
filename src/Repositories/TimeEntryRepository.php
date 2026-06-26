@@ -29,10 +29,53 @@ final class TimeEntryRepository
             ORDER BY te.started_at ASC',
         );
 
-        return array_map(
+        $entries = array_map(
             TimeEntry::fromRow(...),
             $stmt ? $stmt->fetchAll() : [],
         );
+
+        return $this->dedupeRunningByTask($entries);
+    }
+
+    public function findRunningByTaskId(int $taskId): ?TimeEntry
+    {
+        $stmt = $this->pdo->prepare(
+            self::ENTRY_SELECT . '
+            WHERE te.ended_at IS NULL AND te.task_id = ?
+            ORDER BY te.started_at ASC
+            LIMIT 1',
+        );
+        $stmt->execute([$taskId]);
+        $row = $stmt->fetch();
+
+        return $row ? TimeEntry::fromRow($row) : null;
+    }
+
+    /**
+     * @param list<TimeEntry> $entries
+     * @return list<TimeEntry>
+     */
+    private function dedupeRunningByTask(array $entries): array
+    {
+        $kept = [];
+        $seenTaskIds = [];
+
+        foreach ($entries as $entry) {
+            if ($entry->taskId === null) {
+                $kept[] = $entry;
+                continue;
+            }
+
+            if (isset($seenTaskIds[$entry->taskId])) {
+                $this->stop($entry->id);
+                continue;
+            }
+
+            $seenTaskIds[$entry->taskId] = true;
+            $kept[] = $entry;
+        }
+
+        return $kept;
     }
 
     public function findRunning(): ?TimeEntry

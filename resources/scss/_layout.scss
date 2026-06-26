@@ -12,6 +12,16 @@
 .app-main {
     flex: 1;
     min-width: 0;
+
+    @media (max-width: $bp-mobile) {
+        order: 2;
+    }
+}
+
+.timer-sidebar {
+    @media (max-width: $bp-mobile) {
+        order: 1;
+    }
 }
 
 .container {

@@ -3,6 +3,7 @@ import { createTimerSidebar } from './timer-sidebar.js';
 import { createTimerModal } from './timer-modal.js';
 import { syncProjectCards, initProjectGridExpand } from './project-cards.js';
 import { initProjectTasksRefresh } from './project-tasks.js';
+import { initTaskQuickStart, syncTaskQuickStart } from './task-quick-start.js';
 import { initPageBack } from './page-back.js';
 import { initThemeToggle } from './theme.js';
 
@@ -23,22 +24,31 @@ if (listEl && emptyEl && countEl) {
 
     const onTimerStarted = (status) => {
         sidebar.applyStatus(status);
+        syncTaskQuickStart(status.timers || []);
     };
+
+    const onTimerStartedWithRefresh = initProjectTasksRefresh(onTimerStarted);
+
+    initTaskQuickStart(onTimerStartedWithRefresh);
 
     if (modal && modalProject && startForm) {
         createTimerModal(
             modal,
             modalProject,
             startForm,
-            initProjectTasksRefresh(onTimerStarted),
+            onTimerStartedWithRefresh,
         );
     }
 
     const initial = window.__TIMER_INITIAL__;
     if (initial) {
         sidebar.applyStatus(initial);
+        syncTaskQuickStart(initial.timers || []);
     } else {
-        fetchTimerStatus().then(sidebar.applyStatus).catch(() => {});
+        fetchTimerStatus().then((status) => {
+            sidebar.applyStatus(status);
+            syncTaskQuickStart(status.timers || []);
+        }).catch(() => {});
     }
 
     initProjectGridExpand();
