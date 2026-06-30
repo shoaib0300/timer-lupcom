@@ -1,5 +1,5 @@
 import { lockScroll, unlockScroll } from './scroll-lock.js';
-import { isTablet } from './breakpoints.js';
+import { isDesktopCompact } from './breakpoints.js';
 
 export function initQuickDrawer() {
     const sidebar = document.getElementById('quick-sidebar');
@@ -16,7 +16,7 @@ export function initQuickDrawer() {
     let touchStartY = 0;
 
     function setOpen(next) {
-        if (!isTablet()) {
+        if (!isDesktopCompact()) {
             if (open) {
                 open = false;
                 unlockScroll();
@@ -58,7 +58,7 @@ export function initQuickDrawer() {
     });
 
     window.addEventListener('resize', () => {
-        if (!isTablet() && open) {
+        if (!isDesktopCompact() && open) {
             setOpen(false);
         }
     });
@@ -101,5 +101,5 @@ export function initQuickDrawer() {
         }
     }, { passive: true });
 
-    return { setOpen, isTablet };
+    return { setOpen, isDesktopCompact };
 }

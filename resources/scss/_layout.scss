@@ -1,6 +1,15 @@
 @use 'variables' as *;
 @use 'overlays' as *;
 
+@mixin content-shell {
+    width: 100%;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: clamp(1rem, 2.5vw, 2rem);
+    padding-right: clamp(1rem, 2.5vw, 2rem);
+}
+
 .app-shell-row {
     display: flex;
     min-height: 100vh;
@@ -36,9 +45,9 @@
 }
 
 .container {
-    width: min(1100px, 92vw);
-    margin: 0 auto;
-    padding: 2rem 0 4rem;
+    @include content-shell;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
 }
 
 .page-back {
@@ -85,12 +94,12 @@
     }
 
     &__inner {
-        width: min(1100px, 92vw);
-        margin: 0 auto;
+        @include content-shell;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 1rem 0;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
         gap: 1rem;
         position: relative;
     }
@@ -235,6 +244,11 @@
     gap: 1rem;
     flex-wrap: wrap;
 
+    @media (max-width: $bp-desktop-compact) {
+        gap: 0.65rem;
+        justify-content: flex-end;
+    }
+
     @media (max-width: $bp-tablet) {
         flex-direction: column;
         align-items: stretch;
@@ -246,6 +260,10 @@
     a {
         color: var(--color-text-muted);
         font-weight: 500;
+
+        @media (max-width: $bp-desktop-compact) {
+            font-size: 0.9rem;
+        }
 
         @media (max-width: $bp-tablet) {
             display: block;

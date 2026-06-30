@@ -34,9 +34,15 @@ body.overlay-scroll-lock {
     touch-action: none;
 }
 
-body.overlay-scroll-lock .timer-drawer-tab,
-body.overlay-scroll-lock .quick-drawer-tab {
+body.overlay-scroll-lock .timer-drawer-tab {
     @media (max-width: $bp-tablet) {
+        opacity: 0;
+        pointer-events: none;
+    }
+}
+
+body.overlay-scroll-lock .quick-drawer-tab {
+    @media (max-width: $bp-desktop-compact) {
         opacity: 0;
         pointer-events: none;
     }

@@ -15,12 +15,7 @@
     height: 100vh;
     overflow-y: auto;
 
-    @media (max-width: $bp-tablet) {
-        width: $quick-sidebar-width-tablet;
-        padding: 0.75rem 0.6rem;
-    }
-
-    @media (max-width: $bp-tablet) {
+    @media (max-width: $bp-desktop-compact) {
         @include overlay-panel-closed(right);
         padding: 1rem 0.85rem calc(1rem + env(safe-area-inset-bottom));
         border-left: none;
@@ -62,7 +57,7 @@
             pointer-events: none;
         }
 
-        @media (max-width: $bp-tablet) {
+        @media (max-width: $bp-desktop-compact) {
             display: inline-flex;
         }
     }
@@ -98,7 +93,7 @@
         flex: 1;
         min-height: 0;
 
-        @media (max-width: $bp-tablet) {
+        @media (max-width: $bp-desktop-compact) {
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -112,7 +107,7 @@
         overflow-y: auto;
         min-height: 0;
 
-        @media (max-width: $bp-tablet) {
+        @media (max-width: $bp-desktop-compact) {
             flex: 1;
         }
     }
@@ -121,7 +116,7 @@
 .quick-drawer-tab {
     display: none;
 
-    @media (max-width: $bp-tablet) {
+    @media (max-width: $bp-desktop-compact) {
         display: inline-flex;
         flex-direction: column;
         align-items: center;
