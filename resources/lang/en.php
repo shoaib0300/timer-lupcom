@@ -7,6 +7,9 @@ return [
     'app.title_suffix' => 'Lupcom Timer',
 
     'nav.dashboard' => 'Dashboard',
+    'nav.main' => 'Main navigation',
+    'nav.open_menu' => 'Open menu',
+    'nav.close_menu' => 'Close menu',
     'nav.time_log' => 'Time log',
     'nav.attendance' => 'Timesheet',
     'nav.projects' => 'Projects',
@@ -93,6 +96,8 @@ return [
     'dashboard.no_sessions_today' => 'No sessions tracked today yet.',
     'dashboard.task_reason' => 'Task / reason',
     'dashboard.quick_start' => 'Quick start',
+    'dashboard.open_quick_start' => 'Show quick start',
+    'dashboard.close_quick_start' => 'Close quick start',
     'dashboard.quick_start_intro' => 'Search by task name, project, assignee, or ID — pick a suggestion to start the timer immediately.',
     'dashboard.search_tasks' => 'Find task',
     'dashboard.search_tasks_placeholder' => 'Task name, project, assignee, or ID…',

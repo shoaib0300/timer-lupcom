@@ -12,26 +12,39 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=23">
+    <link rel="stylesheet" href="/assets/css/main.css?v=28">
     {% block head %}{% endblock %}
 </head>
 <body>
     <div id="theme-transition" class="theme-transition" aria-hidden="true" hidden></div>
+
+    <div class="timer-drawer-backdrop" id="timer-drawer-backdrop" hidden></div>
+    <div class="quick-drawer-backdrop" id="quick-drawer-backdrop" hidden></div>
+
+    <button
+        type="button"
+        class="timer-drawer-tab"
+        id="timer-drawer-tab"
+        aria-label="{{ trans('timer.open_drawer') }}"
+        aria-expanded="false"
+        aria-controls="timer-sidebar"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v3.59l2.3 2.3-1.42 1.42L10 11V7h3Z"/></svg>
+        <span class="timer-drawer-tab__count" id="timer-drawer-count">0</span>
+    </button>
+
+    <button
+        type="button"
+        class="quick-drawer-tab"
+        id="quick-drawer-tab"
+        aria-label="{{ trans('dashboard.open_quick_start') }}"
+        aria-expanded="false"
+        aria-controls="quick-sidebar"
+    >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5Zm-6 0C8.01 14 6 11.99 6 9.5S8.01 5 10.5 5 15 7.01 15 9.5 12.99 14 10.5 14Z"/></svg>
+    </button>
+
     <div class="app-shell">
-        <div class="timer-drawer-backdrop" id="timer-drawer-backdrop" hidden></div>
-
-        <button
-            type="button"
-            class="timer-drawer-tab"
-            id="timer-drawer-tab"
-            aria-label="{{ trans('timer.open_drawer') }}"
-            aria-expanded="false"
-            aria-controls="timer-sidebar"
-        >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v3.59l2.3 2.3-1.42 1.42L10 11V7h3Z"/></svg>
-            <span class="timer-drawer-tab__count" id="timer-drawer-count">0</span>
-        </button>
-
         <aside class="timer-sidebar" id="timer-sidebar">
             <div class="timer-sidebar__header">
                 <h2 class="timer-sidebar__title">{{ trans('timer.active_timers') }}</h2>
@@ -55,25 +68,44 @@
             <header class="site-header">
                 <div class="site-header__inner">
                     <a href="/" class="brand">{{ trans('app.name') }}</a>
-                    <nav class="nav">
-                        <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">{{ trans('nav.dashboard') }}</a>
-                        <a href="/reports" class="{% if active_nav == 'reports' %}is-active{% endif %}">{{ trans('nav.time_log') }}</a>
-                        <a href="/office" class="{% if active_nav == 'office' %}is-active{% endif %}">{{ trans('nav.office') }}</a>
-                        <a href="/attendance" class="{% if active_nav == 'attendance' %}is-active{% endif %}">{{ trans('nav.attendance') }}</a>
-                        <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">{{ trans('nav.projects') }}</a>
-                        <a href="/settings/planio" class="{% if active_nav == 'planio' %}is-active{% endif %}">{{ trans('nav.planio') }}</a>
-                        <button
-                            type="button"
-                            class="theme-toggle"
-                            id="theme-toggle"
-                            aria-label="{{ trans('theme.light') }}"
-                            title="{{ trans('theme.light') }}"
-                        >
-                            <svg class="theme-toggle__icon--dark" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 17a5 5 0 0 1 0-10 5 5 0 0 1 0 10Zm1-16a1 1 0 0 0-2 0v1.1a1 1 0 1 0 2 0V1Zm0 19a1 1 0 0 0-2 0v1.1a1 1 0 1 0 2 0V20ZM3 11a1 1 0 1 0 0 2h1.1a1 1 0 1 0 0-2H3Zm17.9 0a1 1 0 1 0 0 2H22a1 1 0 1 0 0-2h-1.1ZM5.64 5.64a1 1 0 0 0 0 1.41l.78.78a1 1 0 0 0 1.41-1.41l-.78-.78a1 1 0 0 0-1.41 0Zm12.14 12.14a1 1 0 0 0 0 1.41l.78.78a1 1 0 0 0 1.41-1.41l-.78-.78a1 1 0 0 0-1.41 0ZM5.64 18.36a1 1 0 0 0 1.41 0l.78-.78a1 1 0 0 0-1.41-1.41l-.78.78a1 1 0 0 0 0 1.41Zm12.14-12.14a1 1 0 0 0 1.41 0l.78-.78a1 1 0 0 0-1.41-1.41l-.78.78a1 1 0 0 0 0 1.41Z"/></svg>
-                            <svg class="theme-toggle__icon--light" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
-                        </button>
-                    </nav>
+                    <button
+                        type="button"
+                        class="nav-toggle"
+                        id="nav-toggle"
+                        aria-expanded="false"
+                        aria-controls="site-nav"
+                        aria-label="{{ trans('nav.open_menu') }}"
+                        data-label-open="{{ trans('nav.open_menu') }}"
+                        data-label-close="{{ trans('nav.close_menu') }}"
+                    >
+                        <span class="nav-toggle__bar" aria-hidden="true"></span>
+                        <span class="nav-toggle__bar" aria-hidden="true"></span>
+                        <span class="nav-toggle__bar" aria-hidden="true"></span>
+                    </button>
+                    <div class="site-nav" id="site-nav">
+                        <nav class="nav" aria-label="{{ trans('nav.main') }}">
+                            <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">{{ trans('nav.dashboard') }}</a>
+                            <a href="/reports" class="{% if active_nav == 'reports' %}is-active{% endif %}">{{ trans('nav.time_log') }}</a>
+                            <a href="/office" class="{% if active_nav == 'office' %}is-active{% endif %}">{{ trans('nav.office') }}</a>
+                            <a href="/attendance" class="{% if active_nav == 'attendance' %}is-active{% endif %}">{{ trans('nav.attendance') }}</a>
+                            <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">{{ trans('nav.projects') }}</a>
+                            <a href="/settings/planio" class="{% if active_nav == 'planio' %}is-active{% endif %}">{{ trans('nav.planio') }}</a>
+                        </nav>
+                        <div class="site-nav__footer">
+                            <button
+                                type="button"
+                                class="theme-toggle"
+                                id="theme-toggle"
+                                aria-label="{{ trans('theme.light') }}"
+                                title="{{ trans('theme.light') }}"
+                            >
+                                <svg class="theme-toggle__icon--dark" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 17a5 5 0 0 1 0-10 5 5 0 0 1 0 10Zm1-16a1 1 0 0 0-2 0v1.1a1 1 0 1 0 2 0V1Zm0 19a1 1 0 0 0-2 0v1.1a1 1 0 1 0 2 0V20ZM3 11a1 1 0 1 0 0 2h1.1a1 1 0 1 0 0-2H3Zm17.9 0a1 1 0 1 0 0 2H22a1 1 0 1 0 0-2h-1.1ZM5.64 5.64a1 1 0 0 0 0 1.41l.78.78a1 1 0 0 0 1.41-1.41l-.78-.78a1 1 0 0 0-1.41 0Zm12.14 12.14a1 1 0 0 0 0 1.41l.78.78a1 1 0 0 0 1.41-1.41l-.78-.78a1 1 0 0 0-1.41 0ZM5.64 18.36a1 1 0 0 0 1.41 0l.78-.78a1 1 0 0 0-1.41-1.41l-.78.78a1 1 0 0 0 0 1.41Zm12.14-12.14a1 1 0 0 0 1.41 0l.78-.78a1 1 0 0 0-1.41-1.41l-.78.78a1 1 0 0 0 0 1.41Z"/></svg>
+                                <svg class="theme-toggle__icon--light" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                <div class="site-nav-backdrop" id="site-nav-backdrop" hidden></div>
             </header>
 
             <main class="container">
@@ -94,8 +126,18 @@
         </div>
 
         <aside class="quick-sidebar" id="quick-sidebar" aria-label="{{ trans('dashboard.quick_start') }}">
+            <div class="quick-sidebar__header">
+                <h2 class="quick-sidebar__header-title">{{ trans('dashboard.quick_start') }}</h2>
+                <button
+                    type="button"
+                    class="quick-sidebar__close"
+                    id="quick-drawer-close"
+                    aria-label="{{ trans('dashboard.close_quick_start') }}"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                </button>
+            </div>
             <section class="quick-sidebar__section task-quick-search">
-                <h2 class="quick-sidebar__title">{{ trans('dashboard.quick_start') }}</h2>
                 <p class="muted quick-sidebar__intro">{{ trans('dashboard.quick_start_intro') }}</p>
                 <div class="task-quick-search__wrap" id="task-quick-search-wrap">
                     <label class="task-quick-search__label" for="task-quick-search-input">{{ trans('dashboard.search_tasks') }}</label>
@@ -148,7 +190,7 @@
     </div>
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=23"></script>
+    <script type="module" src="/assets/js/app.js?v=27"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

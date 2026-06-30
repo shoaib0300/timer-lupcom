@@ -6,10 +6,14 @@ import { initProjectTasksRefresh } from './project-tasks.js';
 import { initTaskQuickStart, syncTaskQuickStart } from './task-quick-start.js';
 import { initPageBack } from './page-back.js';
 import { initThemeToggle } from './theme.js';
+import { initNavMenu } from './nav-menu.js';
+import { initQuickDrawer } from './quick-drawer.js';
 import { initTimerDrawer } from './timer-drawer.js';
 
 initPageBack();
 initThemeToggle();
+initNavMenu();
+initQuickDrawer();
 
 const listEl = document.getElementById('timer-list');
 const emptyEl = document.getElementById('timer-empty');
