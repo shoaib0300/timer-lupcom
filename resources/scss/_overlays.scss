@@ -29,6 +29,31 @@
     }
 }
 
+@mixin overlay-panel-slide-right($width: 300px) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1300;
+    width: $width;
+    max-width: min($width, 100vw);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(100%);
+    transition: transform 0.28s ease, visibility 0.28s ease;
+
+    &.is-open {
+        transform: translateX(0);
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
 body.overlay-scroll-lock {
     overflow: hidden;
     touch-action: none;
