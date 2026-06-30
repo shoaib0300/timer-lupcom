@@ -9,15 +9,61 @@
 <div class="dashboard-page">
 <h1 class="page-title">{{ trans('dashboard.title') }}</h1>
 
-<div class="grid grid--2">
-    <div class="card">
-        <div class="muted">{{ trans('dashboard.tracked_today') }}</div>
-        <div class="stat js-total-today" data-total-seconds="{{ total_today_seconds }}">{{ total_today }}</div>
-    </div>
-    <div class="card">
-        <div class="muted">{{ trans('nav.projects') }}</div>
-        <div class="stat">{{ projects|length }}</div>
-    </div>
+<div class="dash-cards grid grid--2">
+    <section class="card dash-card">
+        <h2 class="dash-card__title">{{ trans('dashboard.today_overview') }}</h2>
+        <dl class="dash-card__stats">
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.tracked_today') }}</dt>
+                <dd class="js-total-today" data-total-seconds="{{ total_today_seconds }}">{{ total_today }}</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('office.in_office_today') }}</dt>
+                <dd class="js-office-today" data-total-seconds="{{ office_today_seconds }}">{{ office_today }}</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('nav.projects') }}</dt>
+                <dd>{{ projects|length }}</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('office.unassigned_today') }}</dt>
+                <dd class="js-unassigned-today" data-total-seconds="{{ unassigned_today_seconds }}">{{ unassigned_today }}</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section class="card dash-card office-clock" id="office-clock" data-active="{{ office.active ? '1' : '0' }}">
+        <div class="dash-card__title-row">
+            <h2 class="dash-card__title">{{ trans('office.title') }}</h2>
+            <a href="/office" class="dash-card__link">{{ trans('office.view_history') }}</a>
+        </div>
+        <p class="dash-card__hint muted">{{ trans('office.dashboard_hint') }}</p>
+
+        <div class="office-clock__live{% if office.session and office.session.is_paused %} is-paused{% endif %}" id="office-timer-display"{% if not office.active %} hidden{% endif %}>
+            <time class="office-clock__time" id="office-elapsed" data-session-id="{{ office.session.id ?? '' }}">{{ office.session ? format_clock(office.session.elapsed_seconds) : '00:00:00' }}</time>
+            <span class="office-clock__status muted" id="office-status-label">{% if office.session and office.session.is_paused %}{{ trans('office.paused_label') }}{% else %}{{ trans('office.in_office') }}{% endif %}</span>
+        </div>
+
+        <dl class="dash-card__stats">
+            <div class="dash-card__row">
+                <dt>{{ trans('office.in_office_today') }}</dt>
+                <dd class="js-office-today" data-total-seconds="{{ office_today_seconds }}">{{ office_today }}</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('office.on_projects_today') }}</dt>
+                <dd class="js-tracked-today" data-total-seconds="{{ total_today_seconds }}">{{ total_today }}</dd>
+            </div>
+        </dl>
+
+        <div class="office-clock__actions">
+            <button type="button" class="btn btn--success btn--sm js-office-start" id="office-start-btn"{% if office.active %} hidden{% endif %}>{{ trans('office.clock_in') }}</button>
+            <button type="button" class="btn btn--ghost btn--sm js-office-pause" id="office-pause-btn"{% if not office.active or (office.session and office.session.is_paused) %} hidden{% endif %}>{{ trans('timer.pause') }}</button>
+            <button type="button" class="btn btn--ghost btn--sm js-office-resume" id="office-resume-btn"{% if not office.session or not office.session.is_paused %} hidden{% endif %}>{{ trans('timer.resume') }}</button>
+            <button type="button" class="btn btn--danger btn--sm js-office-stop" id="office-stop-btn"{% if not office.active %} hidden{% endif %}>{{ trans('office.clock_out') }}</button>
+        </div>
+
+        <p class="office-clock__feedback is-hidden" id="office-feedback" role="status"></p>
+    </section>
 </div>
 
 <section class="card projects-section">
@@ -194,6 +240,8 @@
 {% block scripts %}
 <script>
     window.__TIMER_INITIAL__ = {{ timer|json_encode|raw }};
+    window.__OFFICE_INITIAL__ = {{ office|json_encode|raw }};
 </script>
 <script type="module" src="/assets/js/manual-entry.js"></script>
+<script type="module" src="/assets/js/office-clock.js"></script>
 {% endblock %}

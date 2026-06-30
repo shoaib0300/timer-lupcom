@@ -1,6 +1,88 @@
 @use 'variables' as *;
 
 .dashboard-page {
+    .dash-cards {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 1rem;
+        align-items: stretch;
+
+        > .card {
+            flex: 1 1 0;
+            min-width: 0;
+            margin-top: 0 !important;
+        }
+
+        @media (max-width: 640px) {
+            flex-direction: column;
+            flex-wrap: wrap;
+        }
+    }
+
+    .dash-card {
+        &__title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.35rem;
+        }
+
+        &__title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        &__link {
+            font-size: 0.85rem;
+            color: $color-primary;
+            text-decoration: none;
+            white-space: nowrap;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        &__hint {
+            margin: 0 0 0.75rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        &__stats {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        &__row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 1rem;
+            margin: 0;
+
+            dt {
+                margin: 0;
+                font-size: 0.9rem;
+                font-weight: 400;
+                color: var(--color-text-muted);
+            }
+
+            dd {
+                margin: 0;
+                font-size: 0.95rem;
+                font-weight: 600;
+                font-variant-numeric: tabular-nums;
+                text-align: right;
+            }
+        }
+    }
+
     .manual-entry {
         margin-top: 1.5rem;
 

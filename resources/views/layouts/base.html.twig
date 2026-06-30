@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="/assets/css/main.css?v=22">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -34,6 +34,7 @@
                     <nav class="nav">
                         <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">{{ trans('nav.dashboard') }}</a>
                         <a href="/reports" class="{% if active_nav == 'reports' %}is-active{% endif %}">{{ trans('nav.time_log') }}</a>
+                        <a href="/office" class="{% if active_nav == 'office' %}is-active{% endif %}">{{ trans('nav.office') }}</a>
                         <a href="/attendance" class="{% if active_nav == 'attendance' %}is-active{% endif %}">{{ trans('nav.attendance') }}</a>
                         <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">{{ trans('nav.projects') }}</a>
                         <a href="/settings/planio" class="{% if active_nav == 'planio' %}is-active{% endif %}">{{ trans('nav.planio') }}</a>
@@ -123,7 +124,7 @@
     </div>
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=21"></script>
+    <script type="module" src="/assets/js/app.js?v=22"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

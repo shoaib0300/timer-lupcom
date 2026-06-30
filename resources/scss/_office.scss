@@ -1,0 +1,92 @@
+@use 'variables' as *;
+
+.office-clock {
+    &__live {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+
+        &.is-paused .office-clock__time {
+            opacity: 0.65;
+        }
+
+        &[hidden] {
+            display: none !important;
+        }
+    }
+
+    &__time {
+        font-size: 1.25rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+        line-height: 1.2;
+    }
+
+    &__status {
+        font-size: 0.85rem;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-top: 0.85rem;
+    }
+
+    &__feedback {
+        margin: 0.65rem 0 0;
+        font-size: 0.82rem;
+
+        &.is-error {
+            color: $color-danger;
+        }
+    }
+}
+
+.office-page {
+    &__intro {
+        margin: -0.5rem 0 1.25rem;
+    }
+}
+
+.office-filter {
+    margin-top: 1.5rem;
+
+    &__form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 0.75rem;
+
+        .form-group {
+            margin-bottom: 0;
+            min-width: 10rem;
+        }
+    }
+
+    &__actions {
+        flex: 0 0 auto;
+    }
+
+    &__summary {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+}
+
+.grid--3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+
+    @media (max-width: 720px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stat--sm {
+    font-size: 1.35rem;
+}

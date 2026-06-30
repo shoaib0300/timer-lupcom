@@ -1,5 +1,9 @@
 import { escapeHtml, t } from './utils.js';
 import { createManualEntry, fetchProjectTasks } from './timer-api.js';
+import {
+    applyTimerStopData,
+    setTrackedCompleted,
+} from './dashboard-stats.js';
 
 const manualForm = document.getElementById('manual-entry-form');
 const projectSelect = document.getElementById('manual-project');
@@ -140,11 +144,7 @@ export function updateDashboardAfterStop(data) {
         updateProjectTotal(entry.project_id, data.project_total_human);
     }
 
-    const todayEl = document.querySelector('.js-total-today');
-    if (todayEl && data.total_today_human) {
-        todayEl.textContent = data.total_today_human;
-        todayEl.dataset.totalSeconds = String(data.total_today_seconds);
-    }
+    applyTimerStopData(data);
 
     if (entry.ended_at && isEntryToday(entry)) {
         prependSessionRow(entry);
@@ -205,11 +205,7 @@ if (manualForm) {
         }
 
         if (data.is_today) {
-            const todayEl = document.querySelector('.js-total-today');
-            if (todayEl && data.total_today_human) {
-                todayEl.textContent = data.total_today_human;
-                todayEl.dataset.totalSeconds = String(data.total_today_seconds);
-            }
+            setTrackedCompleted(data.total_today_seconds, data.total_today_human);
 
             if (data.entry) {
                 prependSessionRow(data.entry);

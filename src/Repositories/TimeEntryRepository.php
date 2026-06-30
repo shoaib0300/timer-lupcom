@@ -405,6 +405,77 @@ final class TimeEntryRepository
         ?int $projectId = null,
         ?int $taskId = null,
     ): int {
+        $fromTs = (new DateTimeImmutable($from))->getTimestamp();
+        $toTs = (new DateTimeImmutable($to))->getTimestamp();
+
+        if ($toTs <= $fromTs) {
+            return 0;
+        }
+
+        $sql = self::ENTRY_SELECT . '
+            WHERE te.started_at < ?
+              AND (te.ended_at IS NULL OR te.ended_at > ?)';
+        $params = [$to, $from];
+
+        if ($projectId !== null) {
+            $sql .= ' AND te.project_id = ?';
+            $params[] = $projectId;
+        }
+
+        if ($taskId !== null) {
+            $sql .= ' AND te.task_id = ?';
+            $params[] = $taskId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        $total = 0;
+        foreach ($stmt->fetchAll() as $row) {
+            $entry = TimeEntry::fromRow($row);
+            $entryStart = max($fromTs, (new DateTimeImmutable($entry->startedAt))->getTimestamp());
+            $entryEnd = $entry->isRunning()
+                ? $toTs
+                : min($toTs, (new DateTimeImmutable((string) $entry->endedAt))->getTimestamp());
+
+            if ($entryEnd > $entryStart) {
+                $total += $entryEnd - $entryStart;
+            }
+        }
+
+        return $total;
+    }
+
+    public function createOfficeGap(
+        int $durationSeconds,
+        DateTimeImmutable $startedAt,
+        DateTimeImmutable $endedAt,
+        string $notes,
+    ): int {
+        if ($durationSeconds <= 0) {
+            throw new \InvalidArgumentException('Duration must be greater than zero.');
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO time_entries (project_id, task_id, started_at, ended_at, duration_seconds, notes)
+            VALUES (NULL, NULL, ?, ?, ?, ?)',
+        );
+        $stmt->execute([
+            $startedAt->format('Y-m-d H:i:s'),
+            $endedAt->format('Y-m-d H:i:s'),
+            $durationSeconds,
+            $notes,
+        ]);
+
+        return (int) $this->pdo->lastInsertId();
+    }
+
+    public function totalSecondsByDateRange(
+        string $from,
+        string $to,
+        ?int $projectId = null,
+        ?int $taskId = null,
+    ): int {
         $sql = 'SELECT COALESCE(SUM(duration_seconds), 0)
             FROM time_entries
             WHERE ended_at IS NOT NULL

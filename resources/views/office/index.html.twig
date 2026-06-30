@@ -1,0 +1,94 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}{{ trans('office.title') }}{% endblock %}
+
+{% set active_nav = 'office' %}
+
+{% block content %}
+<div class="office-page">
+<h1 class="page-title">{{ trans('office.title') }}</h1>
+<p class="muted office-page__intro">{{ trans('office.page_intro') }}</p>
+
+<div class="grid grid--3">
+    <div class="card">
+        <div class="muted">{{ trans('office.in_office_today') }}</div>
+        <div class="stat js-office-today">{{ format_time(office_status.office_today_seconds) }}</div>
+    </div>
+    <div class="card">
+        <div class="muted">{{ trans('office.on_projects_today') }}</div>
+        <div class="stat">{{ format_time(office_status.tracked_today_seconds) }}</div>
+    </div>
+    <div class="card">
+        <div class="muted">{{ trans('office.unassigned_today') }}</div>
+        <div class="stat js-unassigned-today">{{ format_time(office_status.unassigned_today_seconds) }}</div>
+    </div>
+</div>
+
+<section class="card office-filter">
+    <form method="get" action="/office" class="office-filter__form">
+        <div class="form-group">
+            <label for="office-from">{{ trans('office.from') }}</label>
+            <input type="date" id="office-from" name="from" value="{{ from }}" max="{{ today_date }}">
+        </div>
+        <div class="form-group">
+            <label for="office-to">{{ trans('office.to') }}</label>
+            <input type="date" id="office-to" name="to" value="{{ to }}" max="{{ today_date }}">
+        </div>
+        <div class="form-group office-filter__actions">
+            <label>&nbsp;</label>
+            <button type="submit" class="btn btn--primary">{{ trans('common.apply_filters') }}</button>
+        </div>
+    </form>
+    <p class="muted office-filter__summary">
+        {{ trans('office.period_summary', {office: month_office_total, tracked: month_tracked_total}) }}
+    </p>
+</section>
+
+<section class="card">
+    <h2>{{ trans('office.sessions') }}</h2>
+    {% if sessions is empty %}
+        <p class="muted">{{ trans('office.no_sessions') }}</p>
+    {% else %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>{{ trans('common.date') }}</th>
+                    <th>{{ trans('common.started') }}</th>
+                    <th>{{ trans('common.ended') }}</th>
+                    <th>{{ trans('office.in_office') }}</th>
+                    <th>{{ trans('office.on_projects') }}</th>
+                    <th>{{ trans('office.unassigned') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in sessions %}
+                    {% set session = row.session %}
+                    <tr>
+                        <td>{{ session.workDate }}</td>
+                        <td class="muted">{{ session.startedAt }}</td>
+                        <td class="muted">{{ session.endedAt ?: trans('office.still_active') }}</td>
+                        <td>
+                            {% if session.durationSeconds is not null %}
+                                {{ format_time(session.durationSeconds) }}
+                            {% else %}
+                                {{ format_time(session.elapsedSeconds()) }}
+                            {% endif %}
+                        </td>
+                        <td>{{ format_time(row.tracked_seconds) }}</td>
+                        <td>
+                            {% if session.unassignedSeconds is not null %}
+                                {{ format_time(session.unassignedSeconds) }}
+                            {% elseif session.isRunning %}
+                                <span class="muted">{{ trans('office.still_active') }}</span>
+                            {% else %}
+                                {{ trans('common.none') }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</section>
+</div>
+{% endblock %}

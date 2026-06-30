@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Timer\Controllers\AttendanceController;
 use Timer\Controllers\DashboardController;
+use Timer\Controllers\OfficeController;
 use Timer\Controllers\PlanioController;
 use Timer\Controllers\ProjectController;
 use Timer\Controllers\ReportsController;
@@ -21,6 +22,14 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->post('/api/attendance/day', [AttendanceController::class, 'saveDay']);
     $r->post('/api/attendance/holidays', [AttendanceController::class, 'addHoliday']);
     $r->post('/api/attendance/holidays/remove', [AttendanceController::class, 'removeHoliday']);
+
+    $r->get('/office', [OfficeController::class, 'index']);
+
+    $r->post('/api/office/start', [OfficeController::class, 'start']);
+    $r->post('/api/office/pause', [OfficeController::class, 'pause']);
+    $r->post('/api/office/resume', [OfficeController::class, 'resume']);
+    $r->post('/api/office/stop', [OfficeController::class, 'stop']);
+    $r->get('/api/office/status', [OfficeController::class, 'status']);
 
     $r->get('/settings/planio', [PlanioController::class, 'index']);
     $r->post('/settings/planio', [PlanioController::class, 'save']);

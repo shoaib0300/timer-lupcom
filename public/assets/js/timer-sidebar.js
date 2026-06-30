@@ -1,6 +1,7 @@
 import { escapeHtml, formatClock, ICONS, t } from './utils.js';
 import { postTimerAction } from './timer-api.js';
 import { updateDashboardAfterStop } from './dashboard.js';
+import { refreshTrackedLive } from './dashboard-stats.js';
 import { syncProjectCards } from './project-cards.js';
 
 export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
@@ -11,6 +12,7 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
         const status = { timers, running: timers.length > 0 };
         onStatusChange?.(status);
         syncProjectCards(timers);
+        refreshTrackedLive(timers);
     }
 
     function renderTimerItem(timer) {
@@ -84,6 +86,8 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
                         clock.textContent = formatClock(timer.elapsed_seconds);
                     }
                 });
+
+                refreshTrackedLive(timers);
             }, 1000);
         }
 
