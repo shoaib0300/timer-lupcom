@@ -6,6 +6,7 @@ import { initProjectTasksRefresh } from './project-tasks.js';
 import { initTaskQuickStart, syncTaskQuickStart } from './task-quick-start.js';
 import { initPageBack } from './page-back.js';
 import { initThemeToggle } from './theme.js';
+import { initTimerDrawer } from './timer-drawer.js';
 
 initPageBack();
 initThemeToggle();
@@ -18,9 +19,12 @@ const modalProject = document.getElementById('timer-modal-project');
 const startForm = document.getElementById('timer-start-form');
 
 if (listEl && emptyEl && countEl) {
+    const drawer = initTimerDrawer();
+
     const sidebar = createTimerSidebar(listEl, emptyEl, countEl, (status) => {
         syncProjectCards(status.timers || []);
         syncTaskQuickStart(status.timers || []);
+        drawer?.updateCount(status.timers?.length || 0);
     });
 
     const onTimerStarted = (status) => {

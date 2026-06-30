@@ -12,16 +12,40 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=22">
+    <link rel="stylesheet" href="/assets/css/main.css?v=23">
     {% block head %}{% endblock %}
 </head>
 <body>
     <div id="theme-transition" class="theme-transition" aria-hidden="true" hidden></div>
     <div class="app-shell">
+        <div class="timer-drawer-backdrop" id="timer-drawer-backdrop" hidden></div>
+
+        <button
+            type="button"
+            class="timer-drawer-tab"
+            id="timer-drawer-tab"
+            aria-label="{{ trans('timer.open_drawer') }}"
+            aria-expanded="false"
+            aria-controls="timer-sidebar"
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v3.59l2.3 2.3-1.42 1.42L10 11V7h3Z"/></svg>
+            <span class="timer-drawer-tab__count" id="timer-drawer-count">0</span>
+        </button>
+
         <aside class="timer-sidebar" id="timer-sidebar">
             <div class="timer-sidebar__header">
                 <h2 class="timer-sidebar__title">{{ trans('timer.active_timers') }}</h2>
-                <span class="timer-sidebar__count" id="timer-count">0</span>
+                <div class="timer-sidebar__header-actions">
+                    <span class="timer-sidebar__count" id="timer-count">0</span>
+                    <button
+                        type="button"
+                        class="timer-sidebar__close"
+                        id="timer-drawer-close"
+                        aria-label="{{ trans('timer.close_drawer') }}"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="timer-sidebar__list" id="timer-list"></div>
             <p class="timer-sidebar__empty muted" id="timer-empty">{{ trans('timer.no_active') }}</p>
@@ -124,7 +148,7 @@
     </div>
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=22"></script>
+    <script type="module" src="/assets/js/app.js?v=23"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

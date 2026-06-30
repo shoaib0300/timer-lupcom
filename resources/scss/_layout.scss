@@ -14,13 +14,13 @@
     min-width: 0;
 
     @media (max-width: $bp-mobile) {
-        order: 2;
+        order: 1;
     }
 }
 
 .timer-sidebar {
     @media (max-width: $bp-mobile) {
-        order: 1;
+        order: unset;
     }
 }
 

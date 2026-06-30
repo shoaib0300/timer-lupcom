@@ -53,6 +53,8 @@ return [
     'common.unknown' => 'Unknown',
 
     'timer.active_timers' => 'Active timers',
+    'timer.open_drawer' => 'Show active timers',
+    'timer.close_drawer' => 'Close timers',
     'timer.no_active' => 'No active timers',
     'timer.start_timer' => 'Start timer',
     'timer.start_timer_for' => 'Start timer for :name',
