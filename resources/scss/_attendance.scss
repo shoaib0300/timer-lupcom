@@ -1,4 +1,5 @@
 @use 'sass:color';
+@use 'variables' as *;
 
 $attendance-work: #3b82f6;
 $attendance-vacation: #f97316;
@@ -680,7 +681,7 @@ $attendance-holiday: #ef4444;
     z-index: 2;
 }
 
-@media (max-width: 768px) {
+@media (max-width: $bp-tablet) {
     .attendance-week__row {
         min-width: 40rem;
     }

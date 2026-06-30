@@ -219,7 +219,7 @@
         }
     }
 
-    @media (max-width: $bp-mobile) {
+    @media (max-width: $bp-tablet) {
         width: 44px;
         height: 44px;
 
@@ -297,7 +297,7 @@
         align-items: flex-start;
         gap: 1.5rem;
 
-        @media (max-width: $bp-mobile) {
+        @media (max-width: $bp-tablet) {
             flex-direction: column;
         }
     }
@@ -347,7 +347,7 @@
         justify-content: flex-end;
         align-items: center;
 
-        @media (max-width: $bp-mobile) {
+        @media (max-width: $bp-tablet) {
             width: 100%;
             justify-content: flex-start;
         }

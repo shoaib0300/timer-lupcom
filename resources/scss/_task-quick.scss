@@ -1,4 +1,5 @@
 @use 'variables' as *;
+@use 'overlays' as *;
 
 .quick-sidebar {
     width: $quick-sidebar-width;
@@ -19,29 +20,11 @@
         padding: 0.75rem 0.6rem;
     }
 
-    @media (max-width: $bp-mobile) {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 100%;
-        z-index: 1100;
-        width: 100%;
-        max-width: 100vw;
-        height: 100dvh;
-        max-height: none;
+    @media (max-width: $bp-tablet) {
+        @include overlay-panel-closed(right);
         padding: 1rem 0.85rem calc(1rem + env(safe-area-inset-bottom));
         border-left: none;
-        border-top: none;
-        transition: left 0.28s ease, visibility 0.28s ease;
         box-shadow: -8px 0 32px rgba(0, 0, 0, 0.35);
-        visibility: hidden;
-        pointer-events: none;
-
-        &.is-open {
-            left: 0;
-            visibility: visible;
-            pointer-events: auto;
-        }
     }
 
     &__header {
@@ -79,7 +62,7 @@
             pointer-events: none;
         }
 
-        @media (max-width: $bp-mobile) {
+        @media (max-width: $bp-tablet) {
             display: inline-flex;
         }
     }
@@ -115,7 +98,7 @@
         flex: 1;
         min-height: 0;
 
-        @media (max-width: $bp-mobile) {
+        @media (max-width: $bp-tablet) {
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -129,7 +112,7 @@
         overflow-y: auto;
         min-height: 0;
 
-        @media (max-width: $bp-mobile) {
+        @media (max-width: $bp-tablet) {
             flex: 1;
         }
     }
@@ -138,7 +121,7 @@
 .quick-drawer-tab {
     display: none;
 
-    @media (max-width: $bp-mobile) {
+    @media (max-width: $bp-tablet) {
         display: inline-flex;
         flex-direction: column;
         align-items: center;
@@ -174,23 +157,7 @@
 }
 
 .quick-drawer-backdrop {
-    @media (max-width: $bp-mobile) {
-        position: fixed;
-        inset: 0;
-        z-index: 1090;
-        background: rgba(0, 0, 0, 0.55);
-        backdrop-filter: blur(2px);
-
-        &[hidden] {
-            display: none;
-        }
-    }
-}
-
-body.quick-drawer-open {
-    @media (max-width: $bp-mobile) {
-        overflow: hidden;
-    }
+    // uses .overlay-backdrop
 }
 
 .task-quick-search {
@@ -236,7 +203,7 @@ body.quick-drawer-open {
         box-shadow: var(--shadow);
         padding: 0.35rem;
 
-        @media (max-width: $bp-mobile) {
+        @media (max-width: $bp-tablet) {
             position: absolute;
             left: 0;
             right: 0;

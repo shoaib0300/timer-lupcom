@@ -1,12 +1,12 @@
 @use 'variables' as *;
+@use 'overlays' as *;
 
-.app-shell {
+.app-shell-row {
     display: flex;
     min-height: 100vh;
     max-width: 100vw;
-    overflow-x: clip;
 
-    @media (max-width: $bp-mobile) {
+    @media (max-width: $bp-tablet) {
         flex-direction: column;
     }
 }
@@ -16,14 +16,22 @@
     min-width: 0;
     max-width: 100%;
 
-    @media (max-width: $bp-mobile) {
+    @media (max-width: $bp-tablet) {
         order: 1;
+        width: 100%;
     }
 }
 
-.timer-sidebar {
-    @media (max-width: $bp-mobile) {
-        order: unset;
+.site-nav-slot {
+    display: flex;
+    flex: 1;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+
+    @media (max-width: $bp-tablet) {
+        display: none;
     }
 }
 
@@ -66,15 +74,14 @@
 }
 
 .site-header {
-    background: color-mix(in srgb, var(--color-surface) 90%, transparent);
+    background: var(--color-surface);
     border-bottom: 1px solid var(--color-border);
-    backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
     z-index: 10;
 
     @media (max-width: $bp-tablet) {
-        z-index: 1210;
+        z-index: 1;
     }
 
     &__inner {
@@ -145,36 +152,64 @@
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex: 1;
+    justify-content: flex-end;
 
     @media (max-width: $bp-tablet) {
-        position: fixed;
-        top: 0;
-        bottom: 0;
-        left: 100%;
-        z-index: 1200;
+        @include overlay-panel-closed(right);
         flex-direction: column;
         align-items: stretch;
+        justify-content: flex-start;
         gap: 0;
-        width: 100%;
-        max-width: 100vw;
-        height: 100dvh;
-        padding: 4.75rem 1.25rem 1.5rem;
-        padding-top: calc(4.75rem + env(safe-area-inset-top));
+        padding: 1rem 1.25rem 1.5rem;
+        padding-top: calc(1rem + env(safe-area-inset-top));
         padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
         background: var(--color-surface);
-        border: none;
-        box-shadow: none;
-        transition: left 0.28s ease, visibility 0.28s ease;
-        overflow-y: auto;
-        overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        visibility: hidden;
-        pointer-events: none;
+    }
 
-        &.is-open {
-            left: 0;
-            visibility: visible;
-            pointer-events: auto;
+    &__header {
+        display: none;
+
+        @media (max-width: $bp-tablet) {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            flex-shrink: 0;
+        }
+    }
+
+    &__label {
+        margin: 0;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--color-text-muted);
+    }
+
+    &__close {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--icon-btn-bg);
+        color: var(--icon-btn-color);
+        cursor: pointer;
+        flex-shrink: 0;
+
+        svg {
+            width: 22px;
+            height: 22px;
+            pointer-events: none;
+        }
+
+        @media (max-width: $bp-tablet) {
+            display: inline-flex;
         }
     }
 
@@ -191,23 +226,7 @@
 }
 
 .site-nav-backdrop {
-    @media (max-width: $bp-tablet) {
-        position: fixed;
-        inset: 0;
-        z-index: 1190;
-        background: rgba(0, 0, 0, 0.55);
-        backdrop-filter: blur(2px);
-
-        &[hidden] {
-            display: none;
-        }
-    }
-}
-
-body.site-nav-open {
-    @media (max-width: $bp-tablet) {
-        overflow: hidden;
-    }
+    // uses .overlay-backdrop
 }
 
 .nav {
