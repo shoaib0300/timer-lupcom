@@ -140,6 +140,7 @@ $attendance-holiday: #ef4444;
 .attendance-month__header {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1.25rem;
@@ -255,10 +256,15 @@ $attendance-holiday: #ef4444;
 .attendance-legend {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
 }
 
 .attendance-legend__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
     font-size: 0.75rem;
     padding: 0.25rem 0.65rem;
     border-radius: 999px;
