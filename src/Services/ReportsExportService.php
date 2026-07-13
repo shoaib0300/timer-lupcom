@@ -8,6 +8,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Timer\Core\View;
 use Timer\Models\TimeEntry;
+use Timer\Support\DateHelper;
 use Timer\Support\ReportsFilter;
 use Timer\Support\TimeFormatter;
 use Timer\Support\Translator;
@@ -46,12 +47,12 @@ final class ReportsExportService
 
         foreach ($entries as $entry) {
             fputcsv($handle, [
-                substr($entry->startedAt, 0, 10),
+                DateHelper::formatCompactDate($entry->startedAt),
                 $this->projectLabel($entry),
                 $this->taskLabel($entry),
                 $entry->subject() ?? '',
-                $entry->startedAt,
-                $entry->endedAt ?? '',
+                DateHelper::formatCompactDateTime($entry->startedAt),
+                $entry->endedAt !== null ? DateHelper::formatCompactDateTime($entry->endedAt) : '',
                 TimeFormatter::secondsToClock($entry->durationSeconds ?? 0),
             ], $delimiter, '"', '\\');
         }

@@ -114,7 +114,8 @@
         {% if day_entries is empty %}
             <p class="muted">{{ trans('reports.no_time_day') }}</p>
         {% else %}
-            <table class="table">
+            <div class="table-wrap">
+            <table class="table table--compact">
                 <thead>
                     <tr>
                         <th>{{ trans('common.project') }}</th>
@@ -150,12 +151,13 @@
                                     {{ trans('common.none') }}
                                 {% endif %}
                             </td>
-                            <td class="muted">{{ entry.startedAt }}</td>
+                            <td class="muted reports-date-cell">{{ format_compact_datetime(entry.startedAt) }}</td>
                             <td>{{ format_time(entry.durationSeconds) }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         {% endif %}
     </section>
 {% else %}

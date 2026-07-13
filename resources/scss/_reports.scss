@@ -28,6 +28,43 @@
 
     &__day-detail {
         margin-top: 1.5rem;
+
+        .section-header h2 {
+            font-size: 1.05rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            margin: 0 -0.15rem;
+        }
+
+        .table {
+            font-size: 0.78rem;
+            line-height: 1.35;
+
+            th,
+            td {
+                padding: 0.38rem 0.35rem;
+                vertical-align: top;
+            }
+
+            th {
+                font-size: 0.66rem;
+                letter-spacing: 0.03em;
+                white-space: nowrap;
+            }
+
+            td {
+                word-break: break-word;
+            }
+
+            .project-dot {
+                width: 8px;
+                height: 8px;
+                margin-right: 0.3rem;
+                vertical-align: middle;
+            }
+        }
     }
 
     .calendar-card {

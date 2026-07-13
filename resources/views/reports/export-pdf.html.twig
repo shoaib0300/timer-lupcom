@@ -73,7 +73,7 @@
         <tbody>
             {% for entry in entries %}
                 <tr>
-                    <td>{{ entry.startedAt|slice(0, 10) }}</td>
+                    <td>{{ format_compact_date(entry.startedAt) }}</td>
                     <td>
                         {% if entry.isGeneral %}
                             {{ trans('common.general') }}
@@ -89,8 +89,8 @@
                         {% endif %}
                     </td>
                     <td>{{ entry.subject ?? '—' }}</td>
-                    <td>{{ entry.startedAt }}</td>
-                    <td>{{ entry.endedAt }}</td>
+                    <td>{{ format_compact_datetime(entry.startedAt) }}</td>
+                    <td>{{ entry.endedAt ? format_compact_datetime(entry.endedAt) : '' }}</td>
                     <td>{{ format_clock(entry.durationSeconds) }}</td>
                 </tr>
             {% else %}

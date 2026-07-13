@@ -37,4 +37,29 @@ final class DateHelper
     {
         return $dateString > self::todayString();
     }
+
+    private const array MONTH_ABBR = [
+        'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+        'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+    ];
+
+    public static function formatCompactDate(\DateTimeInterface|string $value): string
+    {
+        $date = is_string($value)
+            ? new DateTimeImmutable($value)
+            : DateTimeImmutable::createFromInterface($value);
+
+        $month = self::MONTH_ABBR[(int) $date->format('n') - 1];
+
+        return $date->format('d') . '-' . $month . '-' . $date->format('y');
+    }
+
+    public static function formatCompactDateTime(\DateTimeInterface|string $value): string
+    {
+        $date = is_string($value)
+            ? new DateTimeImmutable($value)
+            : DateTimeImmutable::createFromInterface($value);
+
+        return self::formatCompactDate($date) . ' ' . $date->format('H:i');
+    }
 }
