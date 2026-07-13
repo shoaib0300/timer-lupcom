@@ -22,6 +22,7 @@ use Timer\Services\AttendanceService;
 use Timer\Services\OfficeSessionService;
 use Timer\Services\TimerService;
 use Timer\Services\PlanioSyncService;
+use Timer\Services\PlanioTimeImportService;
 use Timer\Support\ProfileAvatar;
 
 abstract class BaseController
@@ -42,6 +43,7 @@ abstract class BaseController
         if ($this->user !== null) {
             $settings = new UserSettingsRepository($this->app->db(), $this->user->id);
             $shared['profile_avatar_url'] = ProfileAvatar::publicUrl($settings->avatarFilename());
+            $shared['planio_configured'] = $settings->isPlanioConfigured();
         }
 
         return $this->app->view()->render($template, array_merge($shared, $data));
@@ -145,6 +147,16 @@ abstract class BaseController
             $this->userSettings(),
             $this->projects(),
             $this->tasks(),
+        );
+    }
+
+    protected function planioTimeImport(): PlanioTimeImportService
+    {
+        return new PlanioTimeImportService(
+            $this->userSettings(),
+            $this->projects(),
+            $this->tasks(),
+            $this->timeEntries(),
         );
     }
 

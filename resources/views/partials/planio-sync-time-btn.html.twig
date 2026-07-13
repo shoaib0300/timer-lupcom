@@ -1,0 +1,11 @@
+{% if planio_configured %}
+    <button
+        type="button"
+        class="btn btn--ghost btn--sm js-planio-sync-time{{ class is defined and class ? ' ' ~ class : '' }}"
+        data-month="{{ month|default('') }}"
+        data-reload="{{ reload|default('1') }}"
+        {% if feedback_id is defined %}data-feedback-id="{{ feedback_id }}"{% endif %}
+    >
+        {{ label|default(trans('planio.sync_time')) }}
+    </button>
+{% endif %}

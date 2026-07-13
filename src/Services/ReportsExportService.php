@@ -38,6 +38,7 @@ final class ReportsExportService
             $this->translator->trans('common.date'),
             $this->translator->trans('common.project'),
             $this->translator->trans('dashboard.task_reason'),
+            $this->translator->trans('reports.subject'),
             $this->translator->trans('common.started'),
             $this->translator->trans('common.ended'),
             $this->translator->trans('common.duration'),
@@ -48,6 +49,7 @@ final class ReportsExportService
                 substr($entry->startedAt, 0, 10),
                 $this->projectLabel($entry),
                 $this->taskLabel($entry),
+                $entry->subject() ?? '',
                 $entry->startedAt,
                 $entry->endedAt ?? '',
                 TimeFormatter::secondsToClock($entry->durationSeconds ?? 0),
@@ -56,6 +58,7 @@ final class ReportsExportService
 
         fputcsv($handle, [], $delimiter, '"', '\\');
         fputcsv($handle, [
+            '',
             '',
             '',
             '',

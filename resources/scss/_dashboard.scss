@@ -1,6 +1,17 @@
 @use 'variables' as *;
 
 .dashboard-page {
+    &__header {
+        margin-bottom: 1rem;
+    }
+
+    &__header-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
     .dash-cards {
         display: flex;
         flex-direction: row;

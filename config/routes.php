@@ -63,6 +63,7 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->get('/api/planio/projects', [PlanioController::class, 'projectsApi']);
     $r->post('/api/planio/sync', [PlanioController::class, 'sync']);
     $r->post('/api/planio/sync-item', [PlanioController::class, 'syncItem']);
+    $r->post('/api/planio/sync-time', [PlanioController::class, 'syncTime']);
 
     $r->get('/projects', [ProjectController::class, 'index']);
     $r->get('/projects/create', [ProjectController::class, 'create']);

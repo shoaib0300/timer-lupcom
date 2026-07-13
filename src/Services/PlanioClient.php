@@ -127,6 +127,29 @@ final class PlanioClient
         return $this->importableIssuesForProject($planioProjectId);
     }
 
+    /** @return list<array<string, mixed>> */
+    public function timeEntriesForUser(int $userId, string $from, string $to): array
+    {
+        $entries = [];
+        $offset = 0;
+
+        do {
+            $data = $this->get('/time_entries.json', [
+                'user_id' => $userId,
+                'from' => $from,
+                'to' => $to,
+                'limit' => 100,
+                'offset' => $offset,
+            ]);
+            $batch = $data['time_entries'] ?? [];
+            $entries = array_merge($entries, $batch);
+            $offset += count($batch);
+            $total = (int) ($data['total_count'] ?? count($entries));
+        } while ($offset < $total && $batch !== []);
+
+        return $entries;
+    }
+
     /** @param array<string, scalar> $query */
     /** @return array<string, mixed> */
     private function get(string $path, array $query = []): array

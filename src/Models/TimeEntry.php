@@ -68,6 +68,17 @@ final readonly class TimeEntry
         return $this->taskName ?? '—';
     }
 
+    public function subject(): ?string
+    {
+        if ($this->isGeneral()) {
+            return null;
+        }
+
+        $notes = trim((string) ($this->notes ?? ''));
+
+        return $notes !== '' ? $notes : null;
+    }
+
     /** @param array<string, mixed> $row */
     public static function fromRow(array $row): self
     {

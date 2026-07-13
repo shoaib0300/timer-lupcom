@@ -100,6 +100,24 @@
     {% if has_api_key %}
         <section class="card settings-page__import">
             <div class="settings-page__import-header">
+                <h2>{{ trans('planio.import_time') }}</h2>
+            </div>
+            <p class="muted">{{ trans('planio.import_time_intro') }}</p>
+            {% if last_time_import_at %}
+                <p class="muted">{{ trans('planio.last_time_import') }}: {{ last_time_import_at }}</p>
+            {% endif %}
+            <div class="actions">
+                {% include 'partials/planio-sync-time-btn.html.twig' with {
+                    reload: '0',
+                    feedback_id: 'planio-time-sync-feedback',
+                    class: 'btn--primary btn--sm',
+                } %}
+            </div>
+            <p class="settings-page__feedback is-hidden" id="planio-time-sync-feedback" role="status"></p>
+        </section>
+
+        <section class="card settings-page__import">
+            <div class="settings-page__import-header">
                 <h2>{{ trans('planio.import_projects') }}</h2>
                 <button type="button" class="btn btn--ghost btn--sm" id="planio-load-projects">{{ trans('planio.load_projects') }}</button>
             </div>
@@ -149,4 +167,5 @@
 
 {% block scripts %}
 <script type="module" src="/assets/js/planio-settings.js?v=3"></script>
+<script type="module" src="/assets/js/planio-time-sync.js?v=2"></script>
 {% endblock %}

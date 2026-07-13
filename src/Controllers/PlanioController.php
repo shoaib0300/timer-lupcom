@@ -19,6 +19,7 @@ final class PlanioController extends BaseController
             'planio' => $config,
             'has_api_key' => ($config['api_key'] ?? '') !== '',
             'linked_planio_ids' => $this->projects()->linkedPlanioIds(),
+            'last_time_import_at' => $settings->get('planio.last_time_import_at'),
             'flash_success' => $request->query('success'),
             'flash_error' => $request->query('error'),
             'show_welcome' => $request->query('welcome') === '1',
@@ -210,6 +211,51 @@ final class PlanioController extends BaseController
         } catch (\Throwable $exception) {
             return $this->json(['error' => $exception->getMessage()], 422);
         }
+    }
+
+    public function syncTime(Request $request): Response
+    {
+        $settings = $this->userSettings();
+
+        if (!$settings->isPlanioConfigured()) {
+            return $this->json(['error' => 'Planio is not configured.'], 422);
+        }
+
+        [$from, $to] = $this->resolveTimeImportRange($request);
+
+        try {
+            $stats = $this->planioTimeImport()->sync($from, $to);
+
+            return $this->json([
+                'message' => $this->trans('planio.time_import_summary', [
+                    'imported' => (string) $stats['imported'],
+                    'updated' => (string) $stats['updated'],
+                    'skipped' => (string) $stats['skipped'],
+                ]),
+                'stats' => $stats,
+            ]);
+        } catch (\Throwable $exception) {
+            return $this->json(['error' => $exception->getMessage()], 422);
+        }
+    }
+
+    /** @return array{0: string, 1: string} */
+    private function resolveTimeImportRange(Request $request): array
+    {
+        $today = new \DateTimeImmutable('today');
+        $month = (string) $request->input('month', '');
+
+        if (preg_match('/^\d{4}-\d{2}$/', $month) === 1) {
+            $firstDay = new \DateTimeImmutable($month . '-01');
+            $lastDay = $firstDay->modify('last day of this month');
+            $to = $lastDay > $today ? $today : $lastDay;
+
+            return [$firstDay->format('Y-m-d'), $to->format('Y-m-d')];
+        }
+
+        $from = $today->modify('-90 days');
+
+        return [$from->format('Y-m-d'), $today->format('Y-m-d')];
     }
 
     /** @param array{projects_created: int, projects_updated: int, tasks_created: int, tasks_updated: int} $stats */

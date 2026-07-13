@@ -64,6 +64,7 @@
                 <th>{{ trans('common.date') }}</th>
                 <th>{{ trans('common.project') }}</th>
                 <th>{{ trans('dashboard.task_reason') }}</th>
+                <th>{{ trans('reports.subject') }}</th>
                 <th>{{ trans('common.started') }}</th>
                 <th>{{ trans('common.ended') }}</th>
                 <th>{{ trans('common.duration') }}</th>
@@ -87,17 +88,18 @@
                             {{ entry.displayLabel() }}
                         {% endif %}
                     </td>
+                    <td>{{ entry.subject ?? '—' }}</td>
                     <td>{{ entry.startedAt }}</td>
                     <td>{{ entry.endedAt }}</td>
                     <td>{{ format_clock(entry.durationSeconds) }}</td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="6">{{ trans('reports.export_empty') }}</td>
+                    <td colspan="7">{{ trans('reports.export_empty') }}</td>
                 </tr>
             {% endfor %}
             <tr class="total-row">
-                <td colspan="5">{{ trans('common.total') }}</td>
+                <td colspan="6">{{ trans('common.total') }}</td>
                 <td>{{ total_label }} ({{ format_clock(total_seconds) }})</td>
             </tr>
         </tbody>

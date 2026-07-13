@@ -7,6 +7,10 @@
 <div class="reports-page">
 <h1 class="page-title">{{ trans('reports.title') }}</h1>
 
+{% if planio_configured %}
+    <p class="alert alert--info is-hidden reports-page__planio-feedback" id="reports-planio-sync-feedback" role="status"></p>
+{% endif %}
+
 <div class="card reports-filters">
     <form method="get" action="/reports" class="reports-filters__form" id="reports-filter-form">
         <input type="hidden" name="month" value="{{ month }}">
@@ -57,6 +61,11 @@
         <div class="calendar-header__meta">
             <p class="muted calendar-header__total">{{ trans('common.month_total', {total: month_total})|raw }}</p>
             <div class="reports-export">
+                {% include 'partials/planio-sync-time-btn.html.twig' with {
+                    month: month,
+                    reload: '1',
+                    feedback_id: 'reports-planio-sync-feedback',
+                } %}
                 <a href="/reports/export?format=csv&amp;{{ filter_query }}" class="btn btn--ghost btn--sm">{{ trans('reports.export_csv') }}</a>
                 <a href="/reports/export?format=pdf&amp;{{ filter_query }}" class="btn btn--ghost btn--sm">{{ trans('reports.export_pdf') }}</a>
             </div>
@@ -110,6 +119,7 @@
                     <tr>
                         <th>{{ trans('common.project') }}</th>
                         <th>{{ trans('dashboard.task_reason') }}</th>
+                        <th>{{ trans('reports.subject') }}</th>
                         <th>{{ trans('common.started') }}</th>
                         <th>{{ trans('common.duration') }}</th>
                     </tr>
@@ -133,6 +143,13 @@
                                     {{ entry.displayLabel() }}
                                 {% endif %}
                             </td>
+                            <td class="muted">
+                                {% if entry.subject %}
+                                    {{ entry.subject }}
+                                {% else %}
+                                    {{ trans('common.none') }}
+                                {% endif %}
+                            </td>
                             <td class="muted">{{ entry.startedAt }}</td>
                             <td>{{ format_time(entry.durationSeconds) }}</td>
                         </tr>
@@ -149,4 +166,5 @@
 
 {% block scripts %}
 <script type="module" src="/assets/js/reports.js"></script>
+<script type="module" src="/assets/js/planio-time-sync.js?v=2"></script>
 {% endblock %}

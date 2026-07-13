@@ -424,6 +424,72 @@ final class TimeEntryRepository
         return (int) $this->pdo->lastInsertId();
     }
 
+    public function findByPlanioTimeEntryId(int $planioTimeEntryId): ?TimeEntry
+    {
+        [$userSql, $userParams] = $this->userScope();
+        $stmt = $this->pdo->prepare(
+            self::ENTRY_SELECT . '
+            WHERE te.planio_time_entry_id = ?' . $userSql,
+        );
+        $stmt->execute([$planioTimeEntryId, ...$userParams]);
+        $row = $stmt->fetch();
+
+        return $row ? TimeEntry::fromRow($row) : null;
+    }
+
+    /**
+     * @return 'imported'|'updated'
+     */
+    public function upsertFromPlanio(
+        int $planioTimeEntryId,
+        int $projectId,
+        ?int $taskId,
+        int $durationSeconds,
+        DateTimeImmutable $startedAt,
+        DateTimeImmutable $endedAt,
+        ?string $notes,
+    ): string {
+        $existing = $this->findByPlanioTimeEntryId($planioTimeEntryId);
+
+        if ($existing !== null) {
+            $stmt = $this->pdo->prepare(
+                'UPDATE time_entries
+                SET project_id = ?, task_id = ?, started_at = ?, ended_at = ?, duration_seconds = ?, notes = ?
+                WHERE id = ? AND user_id = ?',
+            );
+            $stmt->execute([
+                $projectId,
+                $taskId,
+                $startedAt->format('Y-m-d H:i:s'),
+                $endedAt->format('Y-m-d H:i:s'),
+                $durationSeconds,
+                $notes,
+                $existing->id,
+                $this->requireUserId(),
+            ]);
+
+            return 'updated';
+        }
+
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO time_entries (
+                user_id, project_id, task_id, started_at, ended_at, duration_seconds, notes, planio_time_entry_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        );
+        $stmt->execute([
+            $this->requireUserId(),
+            $projectId,
+            $taskId,
+            $startedAt->format('Y-m-d H:i:s'),
+            $endedAt->format('Y-m-d H:i:s'),
+            $durationSeconds,
+            $notes,
+            $planioTimeEntryId,
+        ]);
+
+        return 'imported';
+    }
+
     /** @param list<int> $projectIds */
     public function stopRunningForProjects(array $projectIds): void
     {

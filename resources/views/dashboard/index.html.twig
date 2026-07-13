@@ -7,7 +7,19 @@
 
 {% block content %}
 <div class="dashboard-page">
-<h1 class="page-title">{{ trans('dashboard.title') }}</h1>
+<div class="page-header page-header--center dashboard-page__header">
+    <h1 class="page-title" style="margin:0;">{{ trans('dashboard.title') }}</h1>
+    <div class="dashboard-page__header-actions">
+        {% include 'partials/planio-sync-time-btn.html.twig' with {
+            reload: '1',
+            feedback_id: 'dashboard-planio-sync-feedback',
+        } %}
+    </div>
+</div>
+
+{% if planio_configured %}
+    <p class="alert alert--info is-hidden dashboard-page__planio-feedback" id="dashboard-planio-sync-feedback" role="status"></p>
+{% endif %}
 
 <div class="dash-cards grid grid--2">
     <section class="card dash-card">
@@ -250,4 +262,5 @@
 </script>
 <script type="module" src="/assets/js/manual-entry.js"></script>
 <script type="module" src="/assets/js/office-clock.js"></script>
+<script type="module" src="/assets/js/planio-time-sync.js?v=2"></script>
 {% endblock %}
