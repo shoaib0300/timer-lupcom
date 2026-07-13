@@ -105,7 +105,10 @@ export function initAttendanceImport({ onImported }) {
             }
 
             if (!response.ok) {
-                showError(t('attendance.import_error'));
+                const errorKey = data.error === 'unsupported_format'
+                    ? 'attendance.import_unsupported'
+                    : 'attendance.import_error';
+                showError(t(errorKey));
                 return;
             }
 

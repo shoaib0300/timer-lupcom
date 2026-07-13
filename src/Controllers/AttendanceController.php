@@ -14,6 +14,7 @@ use Timer\Repositories\SettingsRepository;
 use Timer\Services\AttendanceImportService;
 use Timer\Services\AttendanceService;
 use Timer\Services\LupcomTimetableParser;
+use Timer\Services\LupcomXlsxTimetableReader;
 use Timer\Support\GermanHolidays;
 use Timer\Support\Locale;
 
@@ -162,8 +163,7 @@ final class AttendanceController extends BaseController
             return $this->json(['error' => 'invalid_mode'], 422);
         }
 
-        $content = file_get_contents($file['tmp_name']);
-        if ($content === false || trim($content) === '') {
+        if (!is_readable($file['tmp_name']) || filesize($file['tmp_name']) === 0) {
             return $this->json(['error' => 'empty_file'], 422);
         }
 
@@ -171,10 +171,11 @@ final class AttendanceController extends BaseController
         $importService = new AttendanceImportService(
             new AttendanceDayRepository($db),
             new LupcomTimetableParser(),
+            new LupcomXlsxTimetableReader(),
         );
 
         try {
-            $result = $importService->import($content, $mode);
+            $result = $importService->importFile($file['tmp_name'], (string) ($file['name'] ?? ''), $mode);
         } catch (\InvalidArgumentException $exception) {
             return $this->json(['error' => $exception->getMessage()], 422);
         }

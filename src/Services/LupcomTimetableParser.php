@@ -13,19 +13,37 @@ final class LupcomTimetableParser
     {
         $content = $this->stripBom($content);
         $lines = preg_split('/\R/', $content) ?: [];
-
-        /** @var array<int, string> $weekDates column index => Y-m-d */
-        $weekDates = [];
-        /** @var array<string, ParsedDay> $days */
-        $days = [];
-        $afterLunch = false;
+        $rows = [];
 
         foreach ($lines as $line) {
             if (trim($line) === '') {
                 continue;
             }
 
-            $cells = str_getcsv($line, ';', '"', '\\');
+            $rows[] = str_getcsv($line, ';', '"', '\\');
+        }
+
+        return $this->parseRows($rows);
+    }
+
+    /**
+     * @param list<list<string>> $rows
+     * @return list<ParsedDay>
+     */
+    public function parseRows(array $rows): array
+    {
+        /** @var array<int, string> $weekDates column index => Y-m-d */
+        $weekDates = [];
+        /** @var array<string, ParsedDay> $days */
+        $days = [];
+        $afterLunch = false;
+
+        foreach ($rows as $cells) {
+            if ($this->isWeekBoundaryRow($cells)) {
+                $weekDates = [];
+                $afterLunch = false;
+            }
+
             $foundDates = $this->extractWeekDates($cells, $weekDates);
 
             if ($foundDates) {
@@ -36,6 +54,10 @@ final class LupcomTimetableParser
                         $days[$date] = $this->emptyDay($date);
                     }
                 }
+            }
+
+            if ($weekDates === []) {
+                continue;
             }
 
             $label = mb_strtolower(trim((string) ($cells[0] ?? '')));
@@ -60,7 +82,8 @@ final class LupcomTimetableParser
      */
     private function extractWeekDates(array $cells, array &$weekDates): bool
     {
-        $found = false;
+        /** @var array<int, string> $datesInRow */
+        $datesInRow = [];
 
         foreach ($cells as $index => $cell) {
             $date = $this->parseGermanDate(trim($cell));
@@ -68,11 +91,35 @@ final class LupcomTimetableParser
                 continue;
             }
 
-            $weekDates[(int) $index] = $date;
-            $found = true;
+            $datesInRow[(int) $index] = $date;
         }
 
-        return $found;
+        if (count($datesInRow) < 2) {
+            return false;
+        }
+
+        $weekDates = $datesInRow;
+
+        return true;
+    }
+
+    /** @param list<string> $cells */
+    private function isWeekBoundaryRow(array $cells): bool
+    {
+        foreach ($cells as $cell) {
+            $value = mb_strtolower(trim($cell));
+            if ($value === '') {
+                continue;
+            }
+
+            if (str_contains($value, 'woche beginnt am')
+                || str_contains($value, 'name des mitarbeiters')
+                || str_contains($value, 'lupcom media')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -88,7 +135,12 @@ final class LupcomTimetableParser
         bool $isStart,
     ): void {
         foreach ($weekDates as $column => $date) {
-            $time = $this->normalizeTime((string) ($cells[$column] ?? ''));
+            $raw = trim((string) ($cells[$column] ?? ''));
+            if ($raw === '') {
+                continue;
+            }
+
+            $time = $this->normalizeTime($raw);
             $field = $this->fieldName($afterLunch, $isStart);
 
             if (!isset($days[$date])) {

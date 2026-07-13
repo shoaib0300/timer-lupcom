@@ -15,6 +15,7 @@ final class AttendanceImportService
     public function __construct(
         private readonly AttendanceDayRepository $days,
         private readonly LupcomTimetableParser $parser,
+        private readonly LupcomXlsxTimetableReader $xlsxReader,
     ) {
     }
 
@@ -26,9 +27,9 @@ final class AttendanceImportService
      *     dates: list<string>,
      * }
      */
-    public function import(string $csvContent, string $mode): array
+    public function importFile(string $path, string $originalName, string $mode): array
     {
-        $parsedDays = $this->parser->parse($csvContent);
+        $parsedDays = $this->parseFile($path, $originalName);
 
         if ($parsedDays === []) {
             throw new \InvalidArgumentException('no_days_found');
@@ -83,5 +84,36 @@ final class AttendanceImportService
             'kept' => 0,
             'dates' => array_map(static fn (array $day): string => $day['date'], $parsedDays),
         ];
+    }
+
+    /**
+     * @return list<array{
+     *     date: string,
+     *     morning_start: ?string,
+     *     morning_end: ?string,
+     *     afternoon_start: ?string,
+     *     afternoon_end: ?string,
+     * }>
+     */
+    private function parseFile(string $path, string $originalName): array
+    {
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+        return match ($extension) {
+            'xlsx' => $this->parser->parseRows($this->xlsxReader->rows($path)),
+            'csv', 'txt' => $this->parseCsvFile($path),
+            default => throw new \InvalidArgumentException('unsupported_format'),
+        };
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function parseCsvFile(string $path): array
+    {
+        $content = file_get_contents($path);
+        if ($content === false || trim($content) === '') {
+            throw new \InvalidArgumentException('empty_file');
+        }
+
+        return $this->parser->parse($content);
     }
 }

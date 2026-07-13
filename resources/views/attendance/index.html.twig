@@ -97,7 +97,7 @@
                 <div class="attendance-import__row">
                     <div class="form-group">
                         <label for="attendance-import-file">{{ trans('attendance.import_file') }}</label>
-                        <input type="file" id="attendance-import-file" name="timetable" accept=".csv,text/csv,text/plain,application/vnd.ms-excel">
+                        <input type="file" id="attendance-import-file" name="timetable" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain">
                     </div>
                     <div class="form-group">
                         <label for="attendance-import-mode">{{ trans('attendance.import_mode') }}</label>
@@ -324,5 +324,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="/assets/js/attendance.js?v=2"></script>
+<script type="module" src="/assets/js/attendance.js?v=4"></script>
 {% endblock %}
