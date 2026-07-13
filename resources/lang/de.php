@@ -174,6 +174,13 @@ return [
     'reports.weekday.sun' => 'So',
     'reports.no_time_day' => 'Keine erfasste Zeit an diesem Tag für die aktuellen Filter.',
     'reports.click_day' => 'Klicke auf einen Tag im Kalender, um Details zu sehen.',
+    'reports.export_csv' => 'CSV exportieren',
+    'reports.export_pdf' => 'PDF exportieren',
+    'reports.export_title' => 'Zeitbericht',
+    'reports.export_generated' => 'Erstellt am :date',
+    'reports.export_empty' => 'Keine Zeiteinträge für die gewählten Filter.',
+    'reports.this_month' => 'Dieser Monat',
+    'reports.last_month' => 'Letzter Monat',
 
     'attendance.title' => 'Wochenarbeitszeitkarte',
     'attendance.settings_title' => 'Region & Arbeitszeit',

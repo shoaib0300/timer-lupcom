@@ -36,11 +36,14 @@ final class View
 
     public function render(string $template, array $data = []): Response
     {
-        $html = $this->twig->render($template, array_merge([
+        return Response::html($this->renderToString($template, $data));
+    }
+
+    public function renderToString(string $template, array $data = []): string
+    {
+        return $this->twig->render($template, array_merge([
             'locale' => $this->translator->locale(),
             'js_translations' => $this->translator->jsStrings(),
         ], $data));
-
-        return Response::html($html);
     }
 }

@@ -16,6 +16,7 @@ use Timer\Controllers\TimerController;
 return static function (FastRoute\RouteCollector $r): void {
     $r->get('/', [DashboardController::class, 'index']);
     $r->get('/reports', [ReportsController::class, 'index']);
+    $r->get('/reports/export', [ReportsController::class, 'export']);
 
     $r->get('/attendance', [AttendanceController::class, 'index']);
     $r->post('/attendance/settings', [AttendanceController::class, 'saveSettings']);

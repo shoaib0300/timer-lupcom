@@ -299,6 +299,39 @@ final class TimeEntryRepository
         );
     }
 
+    /** @return list<TimeEntry> */
+    public function forDateRange(
+        string $from,
+        string $to,
+        ?int $projectId = null,
+        ?int $taskId = null,
+    ): array {
+        $sql = self::ENTRY_SELECT . '
+            WHERE te.ended_at IS NOT NULL
+              AND DATE(te.started_at) BETWEEN ? AND ?';
+        $params = [$from, $to];
+
+        if ($projectId !== null) {
+            $sql .= ' AND te.project_id = ?';
+            $params[] = $projectId;
+        }
+
+        if ($taskId !== null) {
+            $sql .= ' AND te.task_id = ?';
+            $params[] = $taskId;
+        }
+
+        $sql .= ' ORDER BY te.started_at ASC';
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        return array_map(
+            TimeEntry::fromRow(...),
+            $stmt->fetchAll(),
+        );
+    }
+
     public function createManual(
         int $durationSeconds,
         DateTimeImmutable $workDate,

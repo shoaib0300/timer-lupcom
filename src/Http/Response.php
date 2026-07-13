@@ -32,6 +32,21 @@ final class Response
         return new self('', $status, ['Location' => $url]);
     }
 
+    public static function download(
+        string $body,
+        string $contentType,
+        string $filename,
+        int $status = 200,
+    ): self {
+        $safeName = str_replace(['"', "\r", "\n"], '', $filename);
+
+        return new self($body, $status, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => 'attachment; filename="' . $safeName . '"',
+            'Content-Length' => (string) strlen($body),
+        ]);
+    }
+
     public function send(): void
     {
         http_response_code($this->status);

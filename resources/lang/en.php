@@ -174,6 +174,13 @@ return [
     'reports.weekday.sun' => 'Sun',
     'reports.no_time_day' => 'No tracked time on this day for the current filters.',
     'reports.click_day' => 'Click a day on the calendar to see session details.',
+    'reports.export_csv' => 'Export CSV',
+    'reports.export_pdf' => 'Export PDF',
+    'reports.export_title' => 'Time report',
+    'reports.export_generated' => 'Generated on :date',
+    'reports.export_empty' => 'No time entries for the selected filters.',
+    'reports.this_month' => 'This month',
+    'reports.last_month' => 'Last month',
 
     'attendance.title' => 'Weekly timesheet',
     'attendance.settings_title' => 'Region & working time',
