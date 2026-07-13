@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=45">
+    <link rel="stylesheet" href="/assets/css/main.css?v=47">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -127,7 +127,7 @@
         <div class="app-main">
             <header class="site-header">
                 <div class="site-header__inner">
-                    <a href="/" class="brand">{{ trans('app.name') }}</a>
+                    {% include 'partials/brand-logo.html.twig' %}
                     <button
                         type="button"
                         class="nav-toggle"
