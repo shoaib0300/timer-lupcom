@@ -360,6 +360,7 @@ return [
     'js.connected_as' => 'Connected as :name. Reloading…',
     'js.imported_summary' => 'Imported from Planio: :created new and :updated updated projects locally. Tasks: :tasks_created new, :tasks_updated updated. Nothing was sent to Planio.',
     'js.import_failed' => 'Import failed.',
+    'js.session_expired_refresh' => 'Session expired. Refresh the page and try again.',
     'js.importing_name' => 'Importing :name…',
     'js.projects_failed' => ':count project(s) failed: :details',
     'js.resume' => 'Resume',

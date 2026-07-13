@@ -1,4 +1,5 @@
 import { escapeHtml, t } from './utils.js';
+import { withCsrf } from './csrf.js';
 
 const loadBtn = document.getElementById('planio-load-projects');
 const testBtn = document.getElementById('planio-test-btn');
@@ -184,7 +185,11 @@ async function testConnection() {
     testBtn?.setAttribute('disabled', 'disabled');
 
     try {
-        const response = await fetch('/api/planio/test', { method: 'POST' });
+        const response = await fetch('/api/planio/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: withCsrf(),
+        });
         const data = await response.json();
 
         if (!response.ok) {
@@ -234,7 +239,7 @@ async function syncSelected() {
                 t('projects_progress', { done: completedBefore, total: selected.length }),
             );
 
-            const body = new URLSearchParams();
+            const body = withCsrf();
             body.append('project_id', id);
             body.append('import_issues', importIssuesEnabled ? '1' : '0');
             body.append('finalize', index === selected.length - 1 ? '1' : '0');
@@ -248,7 +253,10 @@ async function syncSelected() {
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || t('import_failed'));
+                    const message = data.error === 'invalid_csrf'
+                        ? t('session_expired_refresh')
+                        : (data.error || t('import_failed'));
+                    throw new Error(message);
                 }
 
                 mergeStats(totals, data.stats || {});
