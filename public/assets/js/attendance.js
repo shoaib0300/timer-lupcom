@@ -1,4 +1,5 @@
 import { mountClockPicker } from './clock-picker.js';
+import { initAttendanceImport } from './attendance-import.js';
 
 function t(key, params = {}) {
     const dict = window.__I18N__ || {};
@@ -519,4 +520,25 @@ function renderTotalCell(day) {
         html += `<small>${day.holiday_name}</small>`;
     }
     return html;
+}
+
+function bootAttendanceImport() {
+    initAttendanceImport({
+        onImported(data) {
+            if (data.summary) {
+                updateSummary(data.summary);
+            }
+            if (data.weeks) {
+                rerenderWeeks(data.weeks);
+            } else {
+                window.location.reload();
+            }
+        },
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootAttendanceImport);
+} else {
+    bootAttendanceImport();
 }

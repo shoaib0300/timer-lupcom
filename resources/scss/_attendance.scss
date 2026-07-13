@@ -75,6 +75,26 @@ $attendance-holiday: #ef4444;
     align-items: end;
 }
 
+.attendance-import__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+    align-items: end;
+    margin-bottom: 1rem;
+}
+
+.attendance-import__actions {
+    margin-top: 0.25rem;
+}
+
+.attendance-import__status {
+    margin-top: 0.75rem;
+}
+
+.attendance-import .alert {
+    margin-top: 1rem;
+}
+
 .attendance-holidays__toolbar {
     display: flex;
     justify-content: flex-end;

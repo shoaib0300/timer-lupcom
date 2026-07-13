@@ -7,6 +7,9 @@
 <div class="attendance-page" id="attendance-page" data-month="{{ month }}" data-year="{{ year }}">
     <h1 class="page-title">{{ trans('attendance.title') }}</h1>
 
+    <div class="alert alert--success is-hidden" id="attendance-import-success" role="status" aria-live="polite"></div>
+    <div class="alert alert--error is-hidden" id="attendance-import-error" role="alert" aria-live="assertive"></div>
+
     {% if flash_success == 'settings' %}
         <div class="alert alert--success">{{ trans('attendance.settings_saved') }}</div>
     {% endif %}
@@ -79,6 +82,36 @@
                 <li class="muted" id="attendance-holidays-empty">{{ trans('attendance.no_holidays') }}</li>
             {% endfor %}
             </ul>
+        </div>
+    </details>
+
+    <details class="attendance-accordion card">
+        <summary class="attendance-accordion__summary">
+            <h2>{{ trans('attendance.import_title') }}</h2>
+            <svg class="attendance-accordion__chevron" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+        </summary>
+        <div class="attendance-accordion__body attendance-import">
+            <p class="muted">{{ trans('attendance.import_hint') }}</p>
+            <form id="attendance-import-form" class="attendance-import__form" enctype="multipart/form-data" novalidate>
+                <input type="hidden" name="month" value="{{ month }}">
+                <div class="attendance-import__row">
+                    <div class="form-group">
+                        <label for="attendance-import-file">{{ trans('attendance.import_file') }}</label>
+                        <input type="file" id="attendance-import-file" name="timetable" accept=".csv,text/csv,text/plain,application/vnd.ms-excel">
+                    </div>
+                    <div class="form-group">
+                        <label for="attendance-import-mode">{{ trans('attendance.import_mode') }}</label>
+                        <select id="attendance-import-mode" name="mode">
+                            <option value="merge">{{ trans('attendance.import_mode_merge') }}</option>
+                            <option value="replace">{{ trans('attendance.import_mode_replace') }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="actions attendance-import__actions">
+                    <button type="button" class="btn btn--primary" id="attendance-import-submit">{{ trans('attendance.import_submit') }}</button>
+                </div>
+            </form>
+            <p class="muted attendance-import__status is-hidden" id="attendance-import-status" role="status" aria-live="polite"></p>
         </div>
     </details>
 
@@ -291,5 +324,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="/assets/js/attendance.js"></script>
+<script type="module" src="/assets/js/attendance.js?v=2"></script>
 {% endblock %}

@@ -77,6 +77,11 @@ final class AttendanceDayRepository
         $stmt->execute([$date]);
     }
 
+    public function deleteAll(): void
+    {
+        $this->pdo->exec('DELETE FROM attendance_days');
+    }
+
     private static function nullableTimeForDb(?string $time): ?string
     {
         if ($time === null || $time === '' || $time === '00:00') {

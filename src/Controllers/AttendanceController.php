@@ -11,7 +11,9 @@ use Timer\Models\AttendanceDay;
 use Timer\Repositories\AttendanceDayRepository;
 use Timer\Repositories\AttendanceHolidayRepository;
 use Timer\Repositories\SettingsRepository;
+use Timer\Services\AttendanceImportService;
 use Timer\Services\AttendanceService;
+use Timer\Services\LupcomTimetableParser;
 use Timer\Support\GermanHolidays;
 use Timer\Support\Locale;
 
@@ -145,6 +147,48 @@ final class AttendanceController extends BaseController
         return $this->json([
             'ok' => true,
             'holidays' => $this->service()->holidayList((int) substr($date, 0, 4)),
+        ]);
+    }
+
+    public function importTimetable(Request $request): Response
+    {
+        $file = $request->file('timetable');
+        if ($file === null) {
+            return $this->json(['error' => 'missing_file'], 422);
+        }
+
+        $mode = (string) $request->input('mode', AttendanceImportService::MODE_MERGE);
+        if (!in_array($mode, [AttendanceImportService::MODE_MERGE, AttendanceImportService::MODE_REPLACE], true)) {
+            return $this->json(['error' => 'invalid_mode'], 422);
+        }
+
+        $content = file_get_contents($file['tmp_name']);
+        if ($content === false || trim($content) === '') {
+            return $this->json(['error' => 'empty_file'], 422);
+        }
+
+        $db = $this->app->db();
+        $importService = new AttendanceImportService(
+            new AttendanceDayRepository($db),
+            new LupcomTimetableParser(),
+        );
+
+        try {
+            $result = $importService->import($content, $mode);
+        } catch (\InvalidArgumentException $exception) {
+            return $this->json(['error' => $exception->getMessage()], 422);
+        }
+
+        $month = $this->resolveMonth((string) $request->input('month', ''));
+        $service = $this->service();
+
+        return $this->json([
+            'ok' => true,
+            'imported' => $result['imported'],
+            'cleared' => $result['cleared'],
+            'dates' => count($result['dates']),
+            'summary' => $service->monthSummary($month),
+            'weeks' => $service->weeksForMonth($month),
         ]);
     }
 

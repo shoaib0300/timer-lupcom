@@ -49,4 +49,20 @@ final class Request
     {
         return $this->body;
     }
+
+    /** @return array{name: string, type: string, tmp_name: string, error: int, size: int}|null */
+    public function file(string $key): ?array
+    {
+        $file = $_FILES[$key] ?? null;
+        if (!is_array($file)) {
+            return null;
+        }
+
+        $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+        if ($error !== UPLOAD_ERR_OK) {
+            return null;
+        }
+
+        return $file;
+    }
 }
