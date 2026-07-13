@@ -245,7 +245,7 @@
                             {% endif %}
                         </td>
                         <td>{{ format_time(entry.durationSeconds) }}</td>
-                        <td class="muted">{{ entry.endedAt }}</td>
+                        <td class="muted">{{ format_compact_datetime(entry.endedAt) }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
