@@ -32,11 +32,15 @@ function renderSessionRow(entry) {
     const label = isGeneral
         ? escapeHtml(entry.reason || t('general_time'))
         : escapeHtml(entry.task_name || entry.reason || '—');
+    const subject = entry.subject
+        ? escapeHtml(entry.subject)
+        : '<span class="muted">—</span>';
 
     return `
         <tr>
             <td>${projectCell}</td>
             <td>${label}</td>
+            <td>${subject}</td>
             <td>${escapeHtml(entry.duration_human || '')}</td>
             <td class="muted">${escapeHtml(formatCompactDateTime(entry.ended_at || ''))}</td>
         </tr>

@@ -7,6 +7,7 @@ namespace Timer\Repositories;
 use DateTimeImmutable;
 use PDO;
 use Timer\Models\TimeEntry;
+use Timer\Support\TimeFormatter;
 
 final class TimeEntryRepository
 {
@@ -138,7 +139,7 @@ final class TimeEntryRepository
         }
 
         $endedAt = new DateTimeImmutable();
-        $duration = $entry->elapsedSeconds();
+        $duration = TimeFormatter::roundToNearestMinute($entry->elapsedSeconds());
 
         $stmt = $this->pdo->prepare(
             'UPDATE time_entries SET ended_at = ?, duration_seconds = ?, paused_at = NULL WHERE id = ?',
@@ -400,7 +401,7 @@ final class TimeEntryRepository
 
         if ($startedAt < $dayStart) {
             $startedAt = $dayStart;
-            $durationSeconds = max(0, $endedAt->getTimestamp() - $startedAt->getTimestamp());
+            $endedAt = $startedAt->modify('+' . $durationSeconds . ' seconds');
         }
 
         if ($durationSeconds <= 0) {

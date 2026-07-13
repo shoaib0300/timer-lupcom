@@ -29,4 +29,26 @@ final class TimeFormatter
 
         return sprintf('%02d:%02d', $hours, $minutes);
     }
+
+    /** Planio reports hours with limited decimal precision — round to whole minutes first. */
+    public static function secondsFromPlanioHours(float $hours): int
+    {
+        $minutes = (int) round($hours * 60);
+
+        if ($minutes <= 0) {
+            return 0;
+        }
+
+        return $minutes * 60;
+    }
+
+    /** Round local timer durations to the nearest minute for storage and display. */
+    public static function roundToNearestMinute(int $seconds): int
+    {
+        if ($seconds <= 0) {
+            return 0;
+        }
+
+        return max(60, (int) round($seconds / 60) * 60);
+    }
 }

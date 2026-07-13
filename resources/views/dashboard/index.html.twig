@@ -209,6 +209,7 @@
                 <tr>
                     <th>{{ trans('common.project') }}</th>
                     <th>{{ trans('dashboard.task_reason') }}</th>
+                    <th>{{ trans('reports.subject') }}</th>
                     <th>{{ trans('common.duration') }}</th>
                     <th>{{ trans('common.ended') }}</th>
                 </tr>
@@ -221,6 +222,7 @@
                 <tr>
                     <th>{{ trans('common.project') }}</th>
                     <th>{{ trans('dashboard.task_reason') }}</th>
+                    <th>{{ trans('reports.subject') }}</th>
                     <th>{{ trans('common.duration') }}</th>
                     <th>{{ trans('common.ended') }}</th>
                 </tr>
@@ -242,6 +244,13 @@
                                 {{ entry.notes ?: trans('common.general_time') }}
                             {% else %}
                                 {{ entry.displayLabel() }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.subject %}
+                                {{ entry.subject }}
+                            {% else %}
+                                <span class="muted">—</span>
                             {% endif %}
                         </td>
                         <td>{{ format_time(entry.durationSeconds) }}</td>

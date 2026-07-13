@@ -9,6 +9,8 @@ use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\TaskRepository;
 use Timer\Repositories\TimeEntryRepository;
 use Timer\Repositories\UserSettingsRepository;
+use Timer\Support\DateHelper;
+use Timer\Support\TimeFormatter;
 
 final class PlanioTimeImportService
 {
@@ -85,7 +87,11 @@ final class PlanioTimeImportService
             return 'skipped';
         }
 
-        $durationSeconds = max(60, (int) round($hours * 3600));
+        $durationSeconds = TimeFormatter::secondsFromPlanioHours($hours);
+        if ($durationSeconds <= 0) {
+            return 'skipped';
+        }
+
         $spentOn = (string) ($remote['spent_on'] ?? '');
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $spentOn)) {
             return 'skipped';
@@ -123,13 +129,13 @@ final class PlanioTimeImportService
      */
     private function resolveTimes(string $spentOn, int $durationSeconds, ?string $createdOn): array
     {
-        $day = new DateTimeImmutable($spentOn);
-        $today = new DateTimeImmutable('today');
+        $day = new DateTimeImmutable($spentOn, DateHelper::appTimezone());
+        $today = new DateTimeImmutable('today', DateHelper::appTimezone());
         $endedAt = null;
 
         if ($createdOn !== null && $createdOn !== '') {
             try {
-                $endedAt = new DateTimeImmutable($createdOn);
+                $endedAt = DateHelper::parseDateTime($createdOn);
             } catch (\Exception) {
                 $endedAt = null;
             }
@@ -154,7 +160,7 @@ final class PlanioTimeImportService
 
         if ($startedAt < $dayStart) {
             $startedAt = $dayStart;
-            $durationSeconds = max(60, $endedAt->getTimestamp() - $startedAt->getTimestamp());
+            $endedAt = $startedAt->modify('+' . $durationSeconds . ' seconds');
         }
 
         return [$startedAt, $endedAt, $durationSeconds];

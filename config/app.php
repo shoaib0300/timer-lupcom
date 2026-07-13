@@ -8,7 +8,7 @@ return [
     'debug' => filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOL),
     'url' => rtrim($_ENV['APP_URL'] ?? '', '/'),
     'views_path' => dirname(__DIR__) . '/resources/views',
-    'timezone' => 'UTC',
+    'timezone' => $_ENV['APP_TIMEZONE'] ?? 'Europe/Berlin',
     'session' => [
         'name' => $_ENV['SESSION_NAME'] ?? 'timer_session',
         'lifetime' => (int) ($_ENV['SESSION_LIFETIME'] ?? 0),

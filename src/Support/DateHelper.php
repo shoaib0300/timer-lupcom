@@ -5,9 +5,29 @@ declare(strict_types=1);
 namespace Timer\Support;
 
 use DateTimeImmutable;
+use DateTimeZone;
 
 final class DateHelper
 {
+    public static function appTimezone(): DateTimeZone
+    {
+        return new DateTimeZone(date_default_timezone_get());
+    }
+
+    public static function parseDateTime(string $value): DateTimeImmutable
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return new DateTimeImmutable('now', self::appTimezone());
+        }
+
+        if (preg_match('/(?:Z|[+-]\d{2}:?\d{2})$/', $value) === 1) {
+            return (new DateTimeImmutable($value))->setTimezone(self::appTimezone());
+        }
+
+        return new DateTimeImmutable($value, self::appTimezone());
+    }
+
     public static function today(): DateTimeImmutable
     {
         return new DateTimeImmutable('today');
@@ -46,8 +66,8 @@ final class DateHelper
     public static function formatCompactDate(\DateTimeInterface|string $value): string
     {
         $date = is_string($value)
-            ? new DateTimeImmutable($value)
-            : DateTimeImmutable::createFromInterface($value);
+            ? self::parseDateTime($value)
+            : DateTimeImmutable::createFromInterface($value)->setTimezone(self::appTimezone());
 
         $month = self::MONTH_ABBR[(int) $date->format('n') - 1];
 
@@ -57,8 +77,8 @@ final class DateHelper
     public static function formatCompactDateTime(\DateTimeInterface|string $value): string
     {
         $date = is_string($value)
-            ? new DateTimeImmutable($value)
-            : DateTimeImmutable::createFromInterface($value);
+            ? self::parseDateTime($value)
+            : DateTimeImmutable::createFromInterface($value)->setTimezone(self::appTimezone());
 
         return self::formatCompactDate($date) . ' ' . $date->format('H:i');
     }

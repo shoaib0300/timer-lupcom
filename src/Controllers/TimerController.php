@@ -158,6 +158,7 @@ final class TimerController extends BaseController
                 'project_color' => $entry->projectColor,
                 'task_name' => $entry->taskName,
                 'reason' => $entry->notes,
+                'subject' => $entry->subject(),
                 'is_general' => $entry->isGeneral(),
                 'duration_seconds' => $entry->durationSeconds,
                 'duration_human' => TimeFormatter::secondsToHuman((int) $entry->durationSeconds),
