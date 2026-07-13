@@ -42,6 +42,60 @@ final class OfficeSessionService
         ]);
     }
 
+    /**
+     * @return list<array{date: string, work_seconds: int}>
+     */
+    public function buildDailyOverview(string $from, string $to): array
+    {
+        $officeDaily = $this->sessions->dailyTotals($from, $to);
+        $trackedDaily = $this->timeEntries->dailyTotals($from, $to);
+
+        $running = $this->sessions->findRunning();
+        if ($running !== null) {
+            $today = $running->workDate;
+            if ($today >= $from && $today <= $to) {
+                $officeDaily[$today] = ($officeDaily[$today] ?? 0) + $running->elapsedSeconds();
+            }
+        }
+
+        $dates = array_unique(array_merge(array_keys($officeDaily), array_keys($trackedDaily)));
+        rsort($dates);
+
+        $rows = [];
+        foreach ($dates as $date) {
+            $officeSeconds = $officeDaily[$date] ?? 0;
+            $trackedSeconds = $trackedDaily[$date] ?? 0;
+            $workSeconds = max($officeSeconds, $trackedSeconds);
+
+            if ($workSeconds <= 0) {
+                continue;
+            }
+
+            $rows[] = [
+                'date' => $date,
+                'work_seconds' => $workSeconds,
+            ];
+        }
+
+        return $rows;
+    }
+
+    public function workSecondsToday(): int
+    {
+        return max(
+            $this->sessions->totalSecondsToday(),
+            $this->timeEntries->totalSecondsToday(),
+        );
+    }
+
+    /**
+     * @param list<array{date: string, work_seconds: int}> $days
+     */
+    public function totalWorkSeconds(array $days): int
+    {
+        return array_sum(array_column($days, 'work_seconds'));
+    }
+
     public function start(): OfficeSession
     {
         $existing = $this->sessions->findRunning();

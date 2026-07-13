@@ -87,7 +87,7 @@ final class ReportsExportService
         $html = $this->view->renderToString('reports/export-pdf.html.twig', [
             'entries' => $entries,
             'filter' => $filter,
-            'month_label' => $filter->monthLabel($locale),
+            'period_label' => $filter->periodLabel($locale),
             'project_label' => $filter->projectName ?? $this->translator->trans('common.all_projects'),
             'task_label' => $filter->taskName ?? $this->translator->trans('common.all_tasks'),
             'total_seconds' => $totalSeconds,

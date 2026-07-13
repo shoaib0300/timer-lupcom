@@ -38,6 +38,7 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->post('/api/attendance/holidays/remove', [AttendanceController::class, 'removeHoliday']);
 
     $r->get('/office', [OfficeController::class, 'index']);
+    $r->get('/office/export', [OfficeController::class, 'export']);
 
     $r->post('/api/office/start', [OfficeController::class, 'start']);
     $r->post('/api/office/pause', [OfficeController::class, 'pause']);

@@ -6,12 +6,65 @@ namespace Timer\Controllers;
 
 use Timer\Http\Request;
 use Timer\Http\Response;
+use Timer\Services\OfficeExportService;
 use Timer\Support\DateHelper;
 use Timer\Support\TimeFormatter;
 
 final class OfficeController extends BaseController
 {
     public function index(Request $request): Response
+    {
+        [$from, $to] = $this->resolveDateRange($request);
+
+        $officeService = $this->officeService();
+        $dailyOverview = $officeService->buildDailyOverview($from, $to);
+        $periodTotalSeconds = $officeService->totalWorkSeconds($dailyOverview);
+
+        return $this->view('office/index.html.twig', [
+            'daily_overview' => $dailyOverview,
+            'from' => $from,
+            'to' => $to,
+            'work_today_seconds' => $officeService->workSecondsToday(),
+            'period_total' => TimeFormatter::secondsToHuman($periodTotalSeconds),
+            'today_date' => DateHelper::todayString(),
+            'export_query' => http_build_query(['from' => $from, 'to' => $to]),
+        ]);
+    }
+
+    public function export(Request $request): Response
+    {
+        $format = strtolower((string) $request->query('format', 'csv'));
+        if (!in_array($format, ['csv', 'pdf'], true)) {
+            return $this->redirect('/office');
+        }
+
+        [$from, $to] = $this->resolveDateRange($request);
+        $officeService = $this->officeService();
+        $dailyOverview = $officeService->buildDailyOverview($from, $to);
+        $totalSeconds = $officeService->totalWorkSeconds($dailyOverview);
+
+        $exportService = new OfficeExportService($this->app->view(), $this->app->translator());
+        $stem = $exportService->filenameStem($from, $to);
+
+        if ($format === 'pdf') {
+            $body = $exportService->toPdf(
+                $dailyOverview,
+                $from,
+                $to,
+                $totalSeconds,
+                $this->app->translator()->locale(),
+            );
+
+            return Response::download($body, 'application/pdf', $stem . '.pdf');
+        }
+
+        $body = $exportService->toCsv($dailyOverview, $from, $to, $totalSeconds);
+
+        return Response::download($body, 'text/csv; charset=utf-8', $stem . '.csv');
+    }
+
+    /** @return array{0: string, 1: string} */
+    private function resolveDateRange(Request $request): array
     {
         $from = trim((string) $request->query('from', ''));
         $to = trim((string) $request->query('to', ''));
@@ -22,38 +75,11 @@ final class OfficeController extends BaseController
             $to = $today->format('Y-m-d');
         }
 
-        $sessions = $this->officeSessions();
-        $timeEntries = $this->timeEntries();
-        $officeService = $this->officeService();
-
-        $rows = [];
-        foreach ($sessions->forDateRange($from, $to) as $session) {
-            $tracked = 0;
-            if ($session->endedAt !== null) {
-                $tracked = $timeEntries->totalSecondsInRange(
-                    $session->startedAt,
-                    $session->endedAt,
-                );
-            }
-
-            $rows[] = [
-                'session' => $session,
-                'tracked_seconds' => $tracked,
-            ];
+        if ($from > $to) {
+            [$from, $to] = [$to, $from];
         }
 
-        $monthOfficeTotal = array_sum($sessions->dailyTotals($from, $to));
-        $monthTrackedTotal = $timeEntries->totalSecondsByDateRange($from, $to);
-
-        return $this->view('office/index.html.twig', [
-            'sessions' => $rows,
-            'from' => $from,
-            'to' => $to,
-            'office_status' => $officeService->getStatusWithStats(),
-            'month_office_total' => TimeFormatter::secondsToHuman($monthOfficeTotal),
-            'month_tracked_total' => TimeFormatter::secondsToHuman($monthTrackedTotal),
-            'today_date' => DateHelper::todayString(),
-        ]);
+        return [$from, $to];
     }
 
     public function status(Request $request): Response

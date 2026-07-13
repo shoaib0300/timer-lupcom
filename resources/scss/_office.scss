@@ -49,6 +49,11 @@
     &__intro {
         margin: -0.5rem 0 1.25rem;
     }
+
+    &__today {
+        margin-bottom: 1.5rem;
+        max-width: 16rem;
+    }
 }
 
 .office-filter {
@@ -75,6 +80,25 @@
         margin: 0;
         font-size: 0.9rem;
     }
+
+    &__summary-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    &__tools {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+}
+
+.office-daily-table {
+    font-size: 0.9rem;
 }
 
 .grid--3 {

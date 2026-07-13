@@ -24,6 +24,40 @@ final readonly class ReportsFilter
         return Locale::formatMonth(new DateTimeImmutable($this->month . '-01'), $locale);
     }
 
+    public function periodLabel(string $locale): string
+    {
+        $from = new DateTimeImmutable($this->from);
+        $to = new DateTimeImmutable($this->to);
+        $firstOfMonth = new DateTimeImmutable($this->month . '-01');
+        $lastOfMonth = $firstOfMonth->modify('last day of this month');
+
+        if (
+            $this->from === $firstOfMonth->format('Y-m-d')
+            && $this->to === $lastOfMonth->format('Y-m-d')
+        ) {
+            return $this->monthLabel($locale);
+        }
+
+        if ($this->from === $this->to) {
+            return DateHelper::formatCompactDate($from);
+        }
+
+        return DateHelper::formatCompactDate($from) . ' – ' . DateHelper::formatCompactDate($to);
+    }
+
+    public static function fromDateRange(string $from, string $to): self
+    {
+        return new self(
+            substr($from, 0, 7),
+            null,
+            null,
+            $from,
+            $to,
+            null,
+            null,
+        );
+    }
+
     public function queryString(): string
     {
         $params = ['month' => $this->month];
@@ -41,6 +75,16 @@ final readonly class ReportsFilter
 
     public function exportFilenameStem(): string
     {
+        $firstOfMonth = new DateTimeImmutable($this->month . '-01');
+        $lastOfMonth = $firstOfMonth->modify('last day of this month');
+
+        if (
+            $this->from !== $firstOfMonth->format('Y-m-d')
+            || $this->to !== $lastOfMonth->format('Y-m-d')
+        ) {
+            return 'zeitbericht-' . $this->from . '-' . $this->to;
+        }
+
         $parts = ['zeitbericht', $this->month];
 
         if ($this->projectName !== null) {

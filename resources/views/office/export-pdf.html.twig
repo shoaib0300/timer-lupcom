@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}">
+<head>
+    <meta charset="utf-8">
+    <title>{{ trans('office.export_title') }}</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 11px;
+            color: #111827;
+            margin: 24px;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0 0 6px;
+        }
+
+        .meta {
+            margin: 0 0 16px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 6px 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #f3f4f6;
+            font-weight: 700;
+        }
+
+        .total-row td {
+            font-weight: 700;
+            background: #f9fafb;
+        }
+
+        .muted {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ trans('office.export_title') }}</h1>
+    <p class="meta">
+        <strong>{{ trans('common.date') }}:</strong> {{ period_label }}<br>
+        <span class="muted">{{ trans('reports.export_generated', {date: generated_at}) }}</span>
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{{ trans('common.date') }}</th>
+                <th>{{ trans('office.in_office') }}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in days %}
+                <tr>
+                    <td>{{ format_compact_date(day.date) }}</td>
+                    <td>{{ format_clock(day.work_seconds) }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="2">{{ trans('office.no_days') }}</td>
+                </tr>
+            {% endfor %}
+            <tr class="total-row">
+                <td>{{ trans('common.total') }}</td>
+                <td>{{ total_label }} ({{ format_clock(total_seconds) }})</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
