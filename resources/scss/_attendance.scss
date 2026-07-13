@@ -24,6 +24,10 @@ $attendance-holiday: #ef4444;
     background: var(--surface);
     overflow: hidden;
 
+    &.card {
+        padding: 0;
+    }
+
     &[open] .attendance-accordion__chevron {
         transform: rotate(180deg);
     }

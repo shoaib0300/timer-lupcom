@@ -52,7 +52,7 @@
         <p class="dash-card__hint muted">{{ trans('office.dashboard_hint') }}</p>
 
         <div class="office-clock__live{% if office.session and office.session.is_paused %} is-paused{% endif %}" id="office-timer-display"{% if not office.active %} hidden{% endif %}>
-            <time class="office-clock__time" id="office-elapsed" data-session-id="{{ office.session.id ?? '' }}">{{ office.session ? format_clock(office.session.elapsed_seconds) : '00:00:00' }}</time>
+            <time class="office-clock__time" id="office-elapsed" data-session-id="{{ office.session.id ?? '' }}">{{ office.session ? format_clock(office.session.elapsed_seconds) : '00:00' }}</time>
             <span class="office-clock__status muted" id="office-status-label">{% if office.session and office.session.is_paused %}{{ trans('office.paused_label') }}{% else %}{{ trans('office.in_office') }}{% endif %}</span>
         </div>
 

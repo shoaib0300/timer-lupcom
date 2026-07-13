@@ -91,7 +91,7 @@
                     {% if planio.user_login %}<div><dt>{{ trans('planio.user_login') }}</dt><dd>{{ planio.user_login }}</dd></div>{% endif %}
                     {% if planio.user_id %}<div><dt>{{ trans('planio.user_id') }}</dt><dd>{{ planio.user_id }}</dd></div>{% endif %}
                     {% if planio.user_email %}<div><dt>{{ trans('planio.user_email') }}</dt><dd>{{ planio.user_email }}</dd></div>{% endif %}
-                    {% if planio.last_sync_at %}<div><dt>{{ trans('planio.last_import') }}</dt><dd>{{ planio.last_sync_at }}</dd></div>{% endif %}
+                    {% if planio.last_sync_at %}<div><dt>{{ trans('planio.last_import') }}</dt><dd>{{ format_compact_datetime(planio.last_sync_at) }}</dd></div>{% endif %}
                 </dl>
             </div>
         {% endif %}
@@ -104,7 +104,7 @@
             </div>
             <p class="muted">{{ trans('planio.import_time_intro') }}</p>
             {% if last_time_import_at %}
-                <p class="muted">{{ trans('planio.last_time_import') }}: {{ last_time_import_at }}</p>
+                <p class="muted">{{ trans('planio.last_time_import') }}: {{ format_compact_datetime(last_time_import_at) }}</p>
             {% endif %}
             <div class="actions">
                 {% include 'partials/planio-sync-time-btn.html.twig' with {

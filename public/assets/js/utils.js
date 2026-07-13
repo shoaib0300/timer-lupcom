@@ -9,8 +9,28 @@ export const ICONS = {
 export function formatClock(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
+    return [h, m].map((v) => String(v).padStart(2, '0')).join(':');
+}
+
+const MONTH_ABBR = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+export function formatCompactDateTime(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value.replace(' ', 'T'));
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = MONTH_ABBR[date.getMonth()];
+    const year = String(date.getFullYear()).slice(-2);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${day}-${month}-${year} ${hours}:${minutes}`;
 }
 
 export function escapeHtml(text) {

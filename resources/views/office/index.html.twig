@@ -65,8 +65,8 @@
                     {% set session = row.session %}
                     <tr>
                         <td>{{ session.workDate }}</td>
-                        <td class="muted">{{ session.startedAt }}</td>
-                        <td class="muted">{{ session.endedAt ?: trans('office.still_active') }}</td>
+                        <td class="muted">{{ format_compact_datetime(session.startedAt) }}</td>
+                        <td class="muted">{{ session.endedAt ? format_compact_datetime(session.endedAt) : trans('office.still_active') }}</td>
                         <td>
                             {% if session.durationSeconds is not null %}
                                 {{ format_time(session.durationSeconds) }}

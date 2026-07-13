@@ -10,25 +10,23 @@ final class TimeFormatter
     {
         $hours = intdiv($seconds, 3600);
         $minutes = intdiv($seconds % 3600, 60);
-        $secs = $seconds % 60;
 
         if ($hours > 0) {
             return sprintf('%dh %02dm', $hours, $minutes);
         }
 
         if ($minutes > 0) {
-            return sprintf('%dm %02ds', $minutes, $secs);
+            return sprintf('%dm', $minutes);
         }
 
-        return sprintf('%ds', $secs);
+        return '0m';
     }
 
     public static function secondsToClock(int $seconds): string
     {
         $hours = intdiv($seconds, 3600);
         $minutes = intdiv($seconds % 3600, 60);
-        $secs = $seconds % 60;
 
-        return sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
+        return sprintf('%02d:%02d', $hours, $minutes);
     }
 }

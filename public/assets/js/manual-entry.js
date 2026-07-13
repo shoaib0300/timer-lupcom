@@ -1,4 +1,4 @@
-import { escapeHtml, t } from './utils.js';
+import { escapeHtml, formatCompactDateTime, t } from './utils.js';
 import { createManualEntry, fetchProjectTasks } from './timer-api.js';
 import {
     applyTimerStopData,
@@ -38,7 +38,7 @@ function renderSessionRow(entry) {
             <td>${projectCell}</td>
             <td>${label}</td>
             <td>${escapeHtml(entry.duration_human || '')}</td>
-            <td class="muted">${escapeHtml(entry.ended_at || '')}</td>
+            <td class="muted">${escapeHtml(formatCompactDateTime(entry.ended_at || ''))}</td>
         </tr>
     `;
 }
