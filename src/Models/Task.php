@@ -18,6 +18,7 @@ final readonly class Task
         public ?string $planioAssignee = null,
         public int $totalSeconds = 0,
         public ?string $projectName = null,
+        public ?string $projectColor = null,
     ) {
     }
 
@@ -40,6 +41,9 @@ final readonly class Task
                 : null,
             (int) ($row['total_seconds'] ?? 0),
             $row['project_name'] ?? null,
+            isset($row['project_color']) && $row['project_color'] !== ''
+                ? (string) $row['project_color']
+                : null,
         );
     }
 }

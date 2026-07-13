@@ -13,6 +13,11 @@ final class ProjectController extends BaseController
 {
     public function index(Request $request): Response
     {
+        $user = $this->requireUser();
+        $settings = $this->userSettings();
+        $assigneeFilter = (string) $request->query('assignee', '') === 'me';
+        $assigneeLabels = $this->assigneeLabels($user, $settings);
+
         $projects = $this->projects()->allWithStats();
         $timerService = $this->timerService();
 
@@ -23,9 +28,26 @@ final class ProjectController extends BaseController
         );
         $projects = \Timer\Support\ProjectSorter::forDashboard($projects, $runningProjectIds);
 
+        $myTasks = $assigneeFilter
+            ? $this->tasks()->assignedToLabels($assigneeLabels, $user->id)
+            : [];
+
         return $this->view('projects/index.html.twig', [
             'projects' => $projects,
+            'my_tasks' => $myTasks,
+            'assignee_filter' => $assigneeFilter,
+            'has_assignee_labels' => $assigneeLabels !== [],
         ]);
+    }
+
+    /** @return list<string> */
+    private function assigneeLabels(\Timer\Http\AuthenticatedUser $user, \Timer\Repositories\UserSettingsRepository $settings): array
+    {
+        return array_values(array_unique(array_filter([
+            $user->name,
+            $settings->get('planio.user_name'),
+            $settings->get('planio.user_login'),
+        ], static fn (?string $value): bool => $value !== null && trim($value) !== '')));
     }
 
     public function create(Request $request): Response

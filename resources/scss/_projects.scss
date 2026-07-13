@@ -266,6 +266,19 @@
 }
 
 .projects-page {
+    &__filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0 0 1.25rem;
+
+        .btn.is-active {
+            background: var(--color-surface-alt);
+            border-color: $color-primary;
+            color: $color-primary;
+        }
+    }
+
     &__actions {
         width: 1%;
         white-space: nowrap;

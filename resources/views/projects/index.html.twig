@@ -10,7 +10,95 @@
         <a href="/projects/create" class="btn btn--primary">{{ trans('projects.new') }}</a>
     </div>
 
-    {% if projects is empty %}
+    <div class="projects-page__filters">
+        <a href="/projects" class="btn btn--ghost btn--sm{% if not assignee_filter %} is-active{% endif %}">{{ trans('projects.filter_all') }}</a>
+        <a href="/projects?assignee=me" class="btn btn--ghost btn--sm{% if assignee_filter %} is-active{% endif %}">{{ trans('projects.filter_my_tasks') }}</a>
+    </div>
+
+    {% if assignee_filter %}
+        <div class="card">
+            <div class="projects-section__toolbar">
+                <label class="projects-section__search-label" for="project-search">{{ trans('common.search') }}</label>
+                <input
+                    type="search"
+                    id="project-search"
+                    class="projects-section__search"
+                    placeholder="{{ trans('projects.search_tasks_placeholder') }}"
+                    autocomplete="off"
+                >
+            </div>
+            <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">{{ trans('projects.no_task_match') }}</p>
+
+            {% if not has_assignee_labels %}
+                <p class="muted">{{ trans('projects.my_tasks_no_profile') }}</p>
+            {% elseif my_tasks is empty %}
+                <p class="muted">{{ trans('projects.my_tasks_empty') }}</p>
+            {% else %}
+                <div class="project-show__table-wrap">
+                    <table class="table project-show__table" id="my-tasks-table">
+                        <thead>
+                            <tr>
+                                <th>{{ trans('common.project') }}</th>
+                                <th>{{ trans('projects.tasks') }}</th>
+                                <th class="project-show__col-planio">{{ trans('projects.planio_number') }}</th>
+                                <th>{{ trans('common.status') }}</th>
+                                <th>{{ trans('common.time') }}</th>
+                                <th class="project-show__col-actions">{{ trans('common.actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in my_tasks %}
+                                <tr
+                                    data-task-id="{{ task.id }}"
+                                    data-project-id="{{ task.projectId }}"
+                                    data-project-name="{{ task.projectName }}"
+                                    data-task-name="{{ task.name }}"
+                                    data-search-text="{{ task.projectName }} {{ task.name }} {{ task.planioAssignee }} {{ task.planioIssueId }}"
+                                >
+                                    <td>
+                                        <span class="project-dot" style="background: {{ task.projectColor }};"></span>
+                                        <a href="/projects/{{ task.projectId }}">{{ task.projectName }}</a>
+                                    </td>
+                                    <td class="project-show__task-name">
+                                        <span class="project-show__task-title">{{ task.name }}</span>
+                                    </td>
+                                    <td class="project-show__col-planio">
+                                        {% if task.planioIssueId %}
+                                            <span class="project-show__planio-badge project-show__planio-badge--sm">#{{ task.planioIssueId }}</span>
+                                        {% else %}
+                                            <span class="muted">{{ trans('common.none') }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if task.planioIssueId %}
+                                            <span class="badge badge--planio" title="{{ trans('tasks.synced_from_planio') }}">{{ task.status }}</span>
+                                        {% else %}
+                                            <span class="badge badge--{{ task.status }}">{{ task.status|replace({'_': ' '}) }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ format_time(task.totalSeconds) }}</td>
+                                    <td class="project-show__col-actions">
+                                        <div class="project-show__row-actions">
+                                            <button
+                                                type="button"
+                                                class="btn btn--primary btn--sm js-start-timer"
+                                                data-project-id="{{ task.projectId }}"
+                                                data-project-name="{{ task.projectName }}"
+                                                data-task-name="{{ task.name }}"
+                                            >
+                                                {{ trans('common.start') }}
+                                            </button>
+                                            <a href="/projects/{{ task.projectId }}" class="btn btn--ghost btn--sm">{{ trans('projects.view_project') }}</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    {% elseif projects is empty %}
         <div class="card">
             <p class="muted">{{ trans('dashboard.no_projects') }}</p>
         </div>
@@ -83,7 +171,12 @@
 
 {% block scripts %}
 <script type="module">
-    import { initProjectsTableSearch } from '/assets/js/project-cards.js';
+    import { initProjectsTableSearch, initMyTasksTableSearch } from '/assets/js/project-cards.js';
+
+    {% if assignee_filter %}
+    initMyTasksTableSearch();
+    {% else %}
     initProjectsTableSearch();
+    {% endif %}
 </script>
 {% endblock %}

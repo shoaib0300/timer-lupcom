@@ -139,6 +139,41 @@ final class TaskRepository
         $stmt->execute([$name, $description, $status, $planioAssignee, $id]);
     }
 
+    /**
+     * @param list<string> $assigneeLabels
+     * @return list<Task>
+     */
+    public function assignedToLabels(array $assigneeLabels, int $projectUserId): array
+    {
+        $labels = array_values(array_unique(array_filter(array_map(
+            static fn (string $label): string => mb_strtolower(trim($label)),
+            $assigneeLabels,
+        ))));
+
+        if ($labels === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($labels), '?'));
+
+        $stmt = $this->pdo->prepare(
+            'SELECT t.*, p.name AS project_name, p.color AS project_color,
+                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
+            FROM tasks t
+            INNER JOIN projects p ON p.id = t.project_id AND p.user_id = ?
+            ' . $this->timeEntryJoin() . '
+            WHERE LOWER(COALESCE(t.planio_assignee, \'\')) IN (' . $placeholders . ')
+            GROUP BY t.id
+            ORDER BY p.name ASC, t.name ASC',
+        );
+        $stmt->execute([$projectUserId, ...$labels]);
+
+        return array_map(
+            Task::fromRow(...),
+            $stmt->fetchAll(),
+        );
+    }
+
     public function delete(int $id): void
     {
         $stmt = $this->pdo->prepare('DELETE FROM tasks WHERE id = ?');

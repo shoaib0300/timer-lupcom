@@ -117,6 +117,32 @@ export function initProjectGridExpand() {
     input?.addEventListener('input', updateButton);
 }
 
+export function initMyTasksTableSearch() {
+    const input = document.getElementById('project-search');
+    const tbody = document.querySelector('#my-tasks-table tbody');
+
+    if (!input || !tbody) {
+        return;
+    }
+
+    attachProjectSearch(
+        input,
+        () => [...tbody.querySelectorAll('tr[data-task-id]')].map((row) => ({
+            id: row.dataset.taskId || '',
+            searchText: row.dataset.searchText || '',
+            show: () => {
+                row.hidden = false;
+            },
+            hide: () => {
+                row.hidden = true;
+            },
+        })),
+        {
+            emptyEl: document.getElementById('project-search-empty'),
+        },
+    );
+}
+
 export function initProjectsTableSearch() {
     const input = document.getElementById('project-search');
     const tbody = document.querySelector('#projects-table tbody');
