@@ -7,6 +7,7 @@ use Timer\Controllers\AuthController;
 use Timer\Controllers\DashboardController;
 use Timer\Controllers\OfficeController;
 use Timer\Controllers\PlanioController;
+use Timer\Controllers\ProfileController;
 use Timer\Controllers\ProjectController;
 use Timer\Controllers\ReportsController;
 use Timer\Controllers\TaskApiController;
@@ -43,6 +44,12 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->post('/api/office/resume', [OfficeController::class, 'resume']);
     $r->post('/api/office/stop', [OfficeController::class, 'stop']);
     $r->get('/api/office/status', [OfficeController::class, 'status']);
+
+    $r->get('/settings/profile', [ProfileController::class, 'index']);
+    $r->post('/settings/profile', [ProfileController::class, 'update']);
+    $r->post('/settings/profile/password', [ProfileController::class, 'updatePassword']);
+    $r->post('/settings/profile/avatar', [ProfileController::class, 'updateAvatar']);
+    $r->post('/settings/profile/avatar/remove', [ProfileController::class, 'removeAvatar']);
 
     $r->get('/settings/planio', [PlanioController::class, 'index']);
     $r->post('/settings/planio', [PlanioController::class, 'save']);

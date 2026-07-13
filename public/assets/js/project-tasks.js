@@ -1,4 +1,17 @@
 import { escapeHtml, t } from './utils.js';
+import { initProjectTaskDetails } from './project-task-details.js';
+
+function formatRichText(text) {
+    if (!text) {
+        return '';
+    }
+
+    const escaped = escapeHtml(text);
+    return escaped.replace(
+        /\b((?:https?):\/\/[^\s<]+)/gi,
+        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
+    );
+}
 
 function planioIdCell(planioIssueId) {
     if (!planioIssueId) {
@@ -18,16 +31,34 @@ function statusCell(task) {
 }
 
 function taskNameCell(task) {
+    const toggle = task.description
+        ? `<button type="button" class="project-show__task-toggle" data-task-id="${task.id}" aria-expanded="false" aria-controls="task-desc-${task.id}" title="${escapeHtml(t('toggle_description'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg></button>`
+        : '';
+
     const assignee = task.planio_assignee
         ? `<span class="project-show__assignee">${escapeHtml(task.planio_assignee)}</span><span class="project-show__assignee-sep muted" aria-hidden="true">·</span>`
         : '';
 
-    return `${assignee}<span class="project-show__task-title">${escapeHtml(task.name)}</span>`;
+    return `${toggle}${assignee}<span class="project-show__task-title">${escapeHtml(task.name)}</span>`;
+}
+
+function taskDetailRow(task) {
+    if (!task.description) {
+        return '';
+    }
+
+    return `
+        <tr class="project-show__task-detail is-hidden" id="task-desc-${task.id}">
+            <td colspan="5">
+                <div class="project-show__task-description muted">${formatRichText(task.description)}</div>
+            </td>
+        </tr>
+    `;
 }
 
 function renderTaskRow(task, project) {
     return `
-        <tr data-task-id="${task.id}">
+        <tr class="project-show__task-row" data-task-id="${task.id}">
             <td class="project-show__task-name">${taskNameCell(task)}</td>
             <td class="project-show__col-planio">${planioIdCell(task.planio_issue_id)}</td>
             <td>${statusCell(task)}</td>
@@ -48,6 +79,7 @@ function renderTaskRow(task, project) {
                 </div>
             </td>
         </tr>
+        ${taskDetailRow(task)}
     `;
 }
 
@@ -94,6 +126,8 @@ export async function refreshProjectTasks(projectId, projectName) {
             </table>
         </div>
     `;
+
+    initProjectTaskDetails(content);
 }
 
 export function initProjectTasksRefresh(onTimerStarted) {

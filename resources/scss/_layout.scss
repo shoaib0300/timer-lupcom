@@ -253,6 +253,12 @@
         align-items: center;
         gap: 0.2rem;
         min-width: 0;
+        color: inherit;
+        text-decoration: none;
+
+        &:hover .site-nav__account-name {
+            color: var(--color-text);
+        }
     }
 
     &__account-name {
@@ -266,21 +272,6 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         text-align: center;
-    }
-
-    &__account-avatar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        font-size: 0.7rem;
-        font-weight: 600;
-        letter-spacing: 0.02em;
-        background: color-mix(in srgb, $color-primary 22%, var(--color-surface-alt));
-        color: $color-primary;
-        flex-shrink: 0;
     }
 
     &__logout {

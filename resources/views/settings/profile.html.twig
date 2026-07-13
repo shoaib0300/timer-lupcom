@@ -1,0 +1,88 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}{{ trans('profile.title') }}{% endblock %}
+{% set active_nav = 'profile' %}
+
+{% block content %}
+<div class="settings-page profile-page">
+    <h1 class="page-title">{{ trans('profile.title') }}</h1>
+    <p class="muted settings-page__intro">{{ trans('profile.subtitle') }}</p>
+
+    {% if flash_success %}
+        <div class="alert alert--success">{{ flash_success }}</div>
+    {% endif %}
+    {% if flash_error %}
+        <div class="alert alert--error">{{ flash_error }}</div>
+    {% endif %}
+
+    <section class="card profile-page__avatar-card">
+        <h2>{{ trans('profile.avatar') }}</h2>
+        <div class="profile-page__avatar-row">
+            {% include 'partials/user-avatar.html.twig' with {
+                name: profile_user.name,
+                avatar_url: avatar_url,
+                class: 'user-avatar--lg',
+                title: profile_user.name,
+            } %}
+            <div class="profile-page__avatar-actions">
+                <form method="post" action="/settings/profile/avatar" enctype="multipart/form-data" class="profile-page__avatar-form">
+                    {% include 'partials/csrf-field.html.twig' %}
+                    <div class="form-group">
+                        <label for="profile-avatar">{{ trans('profile.avatar_upload') }}</label>
+                        <input type="file" id="profile-avatar" name="avatar" accept="image/jpeg,image/png,image/webp">
+                    </div>
+                    <div class="actions">
+                        <button type="submit" class="btn btn--primary btn--sm">{{ trans('profile.avatar_save') }}</button>
+                    </div>
+                </form>
+                {% if avatar_url %}
+                    <form method="post" action="/settings/profile/avatar/remove" class="profile-page__avatar-remove">
+                        {% include 'partials/csrf-field.html.twig' %}
+                        <button type="submit" class="btn btn--ghost btn--sm">{{ trans('profile.avatar_remove') }}</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>{{ trans('profile.details') }}</h2>
+        <form method="post" action="/settings/profile" class="settings-page__form">
+            {% include 'partials/csrf-field.html.twig' %}
+            <div class="form-group">
+                <label for="profile-name">{{ trans('auth.name') }}</label>
+                <input type="text" id="profile-name" name="name" value="{{ profile_user.name }}" required autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label for="profile-email">{{ trans('auth.email') }}</label>
+                <input type="email" id="profile-email" name="email" value="{{ profile_user.email }}" required autocomplete="email">
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">{{ trans('profile.save_details') }}</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>{{ trans('profile.change_password') }}</h2>
+        <form method="post" action="/settings/profile/password" class="settings-page__form">
+            {% include 'partials/csrf-field.html.twig' %}
+            <div class="form-group">
+                <label for="profile-current-password">{{ trans('profile.current_password') }}</label>
+                <input type="password" id="profile-current-password" name="current_password" required autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label for="profile-password">{{ trans('profile.new_password') }}</label>
+                <input type="password" id="profile-password" name="password" required autocomplete="new-password" minlength="8">
+            </div>
+            <div class="form-group">
+                <label for="profile-password-confirm">{{ trans('auth.password_confirm') }}</label>
+                <input type="password" id="profile-password-confirm" name="password_confirmation" required autocomplete="new-password" minlength="8">
+            </div>
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">{{ trans('profile.save_password') }}</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

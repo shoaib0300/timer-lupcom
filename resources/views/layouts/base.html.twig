@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=41">
+    <link rel="stylesheet" href="/assets/css/main.css?v=42">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -46,14 +46,15 @@
         </nav>
         <div class="site-nav__footer">
             {% if current_user %}
-                {% set name_parts = current_user.name|split(' ') %}
-                {% set first_initial = name_parts[0]|default('?')|slice(0, 1) %}
-                {% set last_initial = name_parts|length > 1 ? name_parts|last|slice(0, 1) : '' %}
                 <div class="site-nav__account">
-                    <div class="site-nav__account-profile">
-                        <p class="site-nav__account-name" title="{{ current_user.name }}">{{ current_user.name }}</p>
-                        <div class="site-nav__account-avatar" aria-hidden="true">{{ (first_initial ~ last_initial)|upper }}</div>
-                    </div>
+                    <a href="/settings/profile" class="site-nav__account-profile" title="{{ trans('profile.title') }}">
+                        <p class="site-nav__account-name">{{ current_user.name }}</p>
+                        {% include 'partials/user-avatar.html.twig' with {
+                            name: current_user.name,
+                            avatar_url: profile_avatar_url|default(null),
+                            class: 'user-avatar--nav',
+                        } %}
+                    </a>
                     <form method="post" action="/logout" class="site-nav__logout">
                         <input type="hidden" name="_token" value="{{ csrf_token }}">
                         <button
@@ -62,7 +63,7 @@
                             aria-label="{{ trans('auth.sign_out') }}"
                             title="{{ trans('auth.sign_out') }}"
                         >
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5zM4 5h8V3H4a1.99 1.99 0 0 0-1 1v16a1.99 1.99 0 0 0 1 1h8v-2H4V5z"/></svg>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a1 1 0 0 0-1 1v7a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1zm6.36 3.64a8 8 0 1 1-12.73 0 1 1 0 0 0-1.62 1.18 10 10 0 1 0 15.97 0 1 1 0 1 0-1.62-1.18z"/></svg>
                         </button>
                     </form>
                 </div>

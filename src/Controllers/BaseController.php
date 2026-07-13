@@ -22,6 +22,7 @@ use Timer\Services\AttendanceService;
 use Timer\Services\OfficeSessionService;
 use Timer\Services\TimerService;
 use Timer\Services\PlanioSyncService;
+use Timer\Support\ProfileAvatar;
 
 abstract class BaseController
 {
@@ -33,10 +34,17 @@ abstract class BaseController
 
     protected function view(string $template, array $data = []): Response
     {
-        return $this->app->view()->render($template, array_merge([
+        $shared = [
             'current_user' => $this->user,
             'csrf_token' => Csrf::token(),
-        ], $data));
+        ];
+
+        if ($this->user !== null) {
+            $settings = new UserSettingsRepository($this->app->db(), $this->user->id);
+            $shared['profile_avatar_url'] = ProfileAvatar::publicUrl($settings->avatarFilename());
+        }
+
+        return $this->app->view()->render($template, array_merge($shared, $data));
     }
 
     /** @param array<string, scalar> $params */

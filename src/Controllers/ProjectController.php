@@ -91,6 +91,7 @@ final class ProjectController extends BaseController
             'tasks' => array_map(static fn ($task) => [
                 'id' => $task->id,
                 'name' => $task->name,
+                'description' => $task->description,
                 'status' => $task->status,
                 'planio_issue_id' => $task->planioIssueId,
                 'planio_assignee' => $task->planioAssignee,

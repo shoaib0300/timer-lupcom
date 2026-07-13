@@ -89,4 +89,25 @@ final class UserSettingsRepository
         );
         $stmt->execute([$this->userId, 'planio.%']);
     }
+
+    public function avatarFilename(): ?string
+    {
+        $value = $this->get('profile.avatar');
+
+        return $value !== null && $value !== '' ? $value : null;
+    }
+
+    public function setAvatarFilename(?string $filename): void
+    {
+        if ($filename === null || $filename === '') {
+            $stmt = $this->pdo->prepare(
+                'DELETE FROM user_settings WHERE user_id = ? AND setting_key = ?',
+            );
+            $stmt->execute([$this->userId, 'profile.avatar']);
+
+            return;
+        }
+
+        $this->set('profile.avatar', $filename);
+    }
 }

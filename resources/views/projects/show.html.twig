@@ -18,7 +18,7 @@
                 <span class="muted js-project-total" data-project-id="{{ project.id }}" data-total-seconds="{{ project.totalSeconds }}">{{ trans('projects.tracked', {time: format_time(project.totalSeconds)}) }}</span>
             </div>
             {% if project.description %}
-                <p class="project-show__description muted">{{ project.description }}</p>
+                <div class="project-show__description muted">{{ format_rich_text(project.description) }}</div>
             {% endif %}
         </div>
         <div class="actions project-show__actions">
@@ -58,8 +58,20 @@
                         </thead>
                         <tbody id="project-tasks-body">
                             {% for task in tasks %}
-                                <tr data-task-id="{{ task.id }}">
+                                <tr class="project-show__task-row" data-task-id="{{ task.id }}">
                                     <td class="project-show__task-name">
+                                        {% if task.description %}
+                                            <button
+                                                type="button"
+                                                class="project-show__task-toggle"
+                                                data-task-id="{{ task.id }}"
+                                                aria-expanded="false"
+                                                aria-controls="task-desc-{{ task.id }}"
+                                                title="{{ trans('tasks.toggle_description') }}"
+                                            >
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                                            </button>
+                                        {% endif %}
                                         {% if task.planioAssignee %}
                                             <span class="project-show__assignee">{{ task.planioAssignee }}</span>
                                             <span class="project-show__assignee-sep muted" aria-hidden="true">·</span>
@@ -100,6 +112,13 @@
                                         </div>
                                     </td>
                                 </tr>
+                                {% if task.description %}
+                                    <tr class="project-show__task-detail is-hidden" id="task-desc-{{ task.id }}">
+                                        <td colspan="5">
+                                            <div class="project-show__task-description muted">{{ format_rich_text(task.description) }}</div>
+                                        </td>
+                                    </tr>
+                                {% endif %}
                             {% endfor %}
                         </tbody>
                     </table>
@@ -108,4 +127,11 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module">
+    import { initProjectTaskDetails } from '/assets/js/project-task-details.js';
+    initProjectTaskDetails();
+</script>
 {% endblock %}

@@ -101,6 +101,24 @@ final class UserRepository
         $stmt->execute([password_hash($password, PASSWORD_DEFAULT), $id]);
     }
 
+    public function updateProfile(int $id, string $name, string $email): void
+    {
+        $email = strtolower(trim($email));
+        $name = trim($name);
+
+        if ($email === '' || $name === '') {
+            throw new \InvalidArgumentException('Email and name are required.');
+        }
+
+        $existing = $this->findByEmail($email);
+        if ($existing !== null && $existing->id !== $id) {
+            throw new \InvalidArgumentException('Email is already registered.');
+        }
+
+        $stmt = $this->pdo->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?');
+        $stmt->execute([$name, $email, $id]);
+    }
+
     public function verifyPassword(User $user, string $password): bool
     {
         return password_verify($password, $user->passwordHash);
