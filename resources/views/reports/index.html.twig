@@ -51,14 +51,7 @@
     <div class="calendar-header">
         <div class="calendar-header__nav">
             <a href="/reports?{{ prev_month_query }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.previous_month') }}">&larr;</a>
-            <div class="calendar-header__month">
-                <h2 class="calendar-header__title">{{ month_label }}</h2>
-                <div class="calendar-header__quick-months">
-                    <a href="/reports?{{ current_month_query }}" class="calendar-header__quick-month{% if is_current_month %} is-active{% endif %}">{{ trans('reports.this_month') }}</a>
-                    <span class="calendar-header__quick-sep" aria-hidden="true">·</span>
-                    <a href="/reports?{{ last_month_query }}" class="calendar-header__quick-month{% if is_last_month %} is-active{% endif %}">{{ trans('reports.last_month') }}</a>
-                </div>
-            </div>
+            <h2 class="calendar-header__title">{{ month_label }}</h2>
             <a href="/reports?{{ next_month_query }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.next_month') }}">&rarr;</a>
         </div>
         <div class="calendar-header__meta">

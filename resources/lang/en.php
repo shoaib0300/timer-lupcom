@@ -179,8 +179,6 @@ return [
     'reports.export_title' => 'Time report',
     'reports.export_generated' => 'Generated on :date',
     'reports.export_empty' => 'No time entries for the selected filters.',
-    'reports.this_month' => 'This month',
-    'reports.last_month' => 'Last month',
 
     'attendance.title' => 'Weekly timesheet',
     'attendance.settings_title' => 'Region & working time',

@@ -179,8 +179,6 @@ return [
     'reports.export_title' => 'Zeitbericht',
     'reports.export_generated' => 'Erstellt am :date',
     'reports.export_empty' => 'Keine Zeiteinträge für die gewählten Filter.',
-    'reports.this_month' => 'Dieser Monat',
-    'reports.last_month' => 'Letzter Monat',
 
     'attendance.title' => 'Wochenarbeitszeitkarte',
     'attendance.settings_title' => 'Region & Arbeitszeit',

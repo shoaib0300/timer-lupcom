@@ -56,8 +56,6 @@ final class ReportsController extends BaseController
         $firstDay = new DateTimeImmutable($filter->month . '-01');
         $prevMonth = $firstDay->modify('-1 month')->format('Y-m');
         $nextMonth = $firstDay->modify('+1 month')->format('Y-m');
-        $currentMonth = (new DateTimeImmutable())->format('Y-m');
-        $lastMonth = (new DateTimeImmutable('first day of last month'))->format('Y-m');
 
         $locale = $this->app->translator()->locale();
 
@@ -66,10 +64,6 @@ final class ReportsController extends BaseController
             'month_label' => $filter->monthLabel($locale),
             'prev_month_query' => $this->filterQuery($prevMonth, $filter->projectId, $filter->taskId),
             'next_month_query' => $this->filterQuery($nextMonth, $filter->projectId, $filter->taskId),
-            'current_month_query' => $this->filterQuery($currentMonth, $filter->projectId, $filter->taskId),
-            'last_month_query' => $this->filterQuery($lastMonth, $filter->projectId, $filter->taskId),
-            'is_current_month' => $filter->month === $currentMonth,
-            'is_last_month' => $filter->month === $lastMonth,
             'project_id' => $filter->projectId,
             'task_id' => $filter->taskId,
             'selected_day' => $selectedDay,
