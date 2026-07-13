@@ -20,6 +20,7 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->get('/attendance', [AttendanceController::class, 'index']);
     $r->post('/attendance/settings', [AttendanceController::class, 'saveSettings']);
     $r->post('/api/attendance/day', [AttendanceController::class, 'saveDay']);
+    $r->post('/api/attendance/bulk-days', [AttendanceController::class, 'saveBulkDays']);
     $r->post('/api/attendance/import', [AttendanceController::class, 'importTimetable']);
     $r->post('/api/attendance/holidays', [AttendanceController::class, 'addHoliday']);
     $r->post('/api/attendance/holidays/remove', [AttendanceController::class, 'removeHoliday']);

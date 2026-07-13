@@ -1,5 +1,6 @@
 import { mountClockPicker } from './clock-picker.js';
 import { initAttendanceImport } from './attendance-import.js';
+import { initAttendanceBulkEntry } from './attendance-bulk-entry.js';
 
 function t(key, params = {}) {
     const dict = window.__I18N__ || {};
@@ -13,6 +14,7 @@ function t(key, params = {}) {
 const page = document.getElementById('attendance-page');
 const dayModal = document.getElementById('attendance-day-modal');
 const holidayModal = document.getElementById('attendance-holiday-modal');
+const bulkModal = document.getElementById('attendance-bulk-modal');
 const dayForm = document.getElementById('attendance-day-form');
 const holidayForm = document.getElementById('attendance-holiday-form');
 const dayTypeSelect = document.getElementById('attendance-day-type');
@@ -281,7 +283,7 @@ function openModal(modal) {
 }
 
 function closeModals() {
-    [dayModal, holidayModal].forEach((modal) => {
+    [dayModal, holidayModal, bulkModal].forEach((modal) => {
         if (!modal) {
             return;
         }
@@ -542,3 +544,27 @@ if (document.readyState === 'loading') {
 } else {
     bootAttendanceImport();
 }
+
+initAttendanceBulkEntry({
+    openModal,
+    closeModal: closeModals,
+    onSaved(data, selection = {}) {
+        const pageMonth = document.getElementById('attendance-page')?.dataset.month;
+        const from = selection.from || '';
+        const to = selection.to || from;
+
+        if (pageMonth && from && (from.slice(0, 7) !== pageMonth || to.slice(0, 7) !== pageMonth)) {
+            window.location.reload();
+            return;
+        }
+
+        if (data.summary) {
+            updateSummary(data.summary);
+        }
+        if (data.weeks) {
+            rerenderWeeks(data.weeks);
+        } else {
+            window.location.reload();
+        }
+    },
+});

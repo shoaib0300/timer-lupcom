@@ -122,6 +122,9 @@
                 <h2>{{ month_label }}</h2>
                 <a href="/attendance?month={{ next_month }}" class="btn btn--ghost btn--sm" aria-label="{{ trans('common.next_month') }}">&rarr;</a>
             </div>
+            <div class="attendance-month__actions">
+                <button type="button" class="btn btn--ghost btn--sm" id="attendance-bulk-entry-btn">{{ trans('attendance.bulk_entry') }}</button>
+            </div>
             <div class="attendance-legend" aria-label="{{ trans('attendance.legend') }}">
                 <span class="attendance-legend__item attendance-legend__item--work">{{ trans('attendance.kind.work') }}</span>
                 <span class="attendance-legend__item attendance-legend__item--vacation">{{ trans('attendance.kind.vacation') }}</span>
@@ -301,6 +304,45 @@
     </div>
 </div>
 
+<div id="attendance-bulk-modal" class="modal is-hidden" aria-hidden="true">
+    <div class="modal__backdrop" data-attendance-close></div>
+    <div class="modal__dialog modal__dialog--attendance-bulk" role="dialog" aria-labelledby="attendance-bulk-modal-title">
+        <h3 id="attendance-bulk-modal-title" class="modal__title">{{ trans('attendance.bulk_title') }}</h3>
+        <p class="muted">{{ trans('attendance.bulk_hint') }}</p>
+
+        <div class="attendance-bulk-mode" role="tablist" aria-label="{{ trans('attendance.bulk_title') }}">
+            <button type="button" class="attendance-bulk-mode__btn is-active" data-bulk-mode="single">{{ trans('attendance.bulk_mode_single') }}</button>
+            <button type="button" class="attendance-bulk-mode__btn" data-bulk-mode="range">{{ trans('attendance.bulk_mode_range') }}</button>
+        </div>
+
+        <div class="attendance-bulk-calendar">
+            <div class="attendance-bulk-calendar__nav">
+                <button type="button" class="btn btn--ghost btn--sm" id="attendance-bulk-prev-month" aria-label="{{ trans('common.previous_month') }}">&larr;</button>
+                <strong id="attendance-bulk-month-label"></strong>
+                <button type="button" class="btn btn--ghost btn--sm" id="attendance-bulk-next-month" aria-label="{{ trans('common.next_month') }}">&rarr;</button>
+            </div>
+            <div id="attendance-bulk-calendar-grid" class="attendance-bulk-calendar__grid"></div>
+        </div>
+
+        <p class="attendance-bulk-preview" id="attendance-bulk-preview">{{ trans('attendance.bulk_preview_none') }}</p>
+
+        <div class="form-group">
+            <label for="attendance-bulk-day-type">{{ trans('attendance.bulk_day_type') }}</label>
+            <select id="attendance-bulk-day-type">
+                <option value="vacation">{{ trans('attendance.kind.vacation') }}</option>
+                <option value="sick">{{ trans('attendance.kind.sick') }}</option>
+            </select>
+        </div>
+
+        <p class="alert alert--error is-hidden" id="attendance-bulk-error" role="alert"></p>
+
+        <div class="actions attendance-bulk-actions">
+            <button type="button" class="btn btn--primary" id="attendance-bulk-apply">{{ trans('attendance.bulk_apply') }}</button>
+            <button type="button" class="btn btn--ghost" data-attendance-close>{{ trans('common.cancel') }}</button>
+        </div>
+    </div>
+</div>
+
 <div id="attendance-holiday-modal" class="modal is-hidden" aria-hidden="true">
     <div class="modal__backdrop" data-attendance-close></div>
     <div class="modal__dialog" role="dialog" aria-labelledby="attendance-holiday-modal-title">
@@ -324,5 +366,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="/assets/js/attendance.js?v=4"></script>
+<script type="module" src="/assets/js/attendance.js?v=5"></script>
 {% endblock %}

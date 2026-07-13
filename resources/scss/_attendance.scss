@@ -145,6 +145,102 @@ $attendance-holiday: #ef4444;
     margin-bottom: 1.25rem;
 }
 
+.attendance-month__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.attendance-bulk-mode {
+    display: inline-flex;
+    gap: 0.35rem;
+    margin: 0.75rem 0 1rem;
+    padding: 0.2rem;
+    border-radius: 999px;
+    background: var(--surface-elevated);
+    border: 1px solid var(--color-border);
+}
+
+.attendance-bulk-mode__btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.is-active {
+        background: var(--accent);
+        color: #fff;
+    }
+}
+
+.modal__dialog--attendance-bulk {
+    width: min(28rem, 100vw - 2rem);
+}
+
+.attendance-bulk-calendar__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.attendance-bulk-calendar__weekdays,
+.attendance-bulk-calendar__days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.35rem;
+}
+
+.attendance-bulk-calendar__weekdays {
+    margin-bottom: 0.35rem;
+
+    span {
+        text-align: center;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+}
+
+.attendance-bulk-calendar__day {
+    aspect-ratio: 1;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-elevated);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &.is-outside {
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    &.is-weekend {
+        opacity: 0.45;
+    }
+
+    &.is-selected {
+        background: color-mix(in srgb, var(--accent) 18%, var(--surface-elevated));
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 1px var(--accent);
+    }
+}
+
+.attendance-bulk-preview {
+    margin: 0.85rem 0 1rem;
+    font-size: 0.9rem;
+}
+
+.attendance-bulk-actions {
+    margin-top: 0.5rem;
+}
+
 .attendance-month__nav {
     display: flex;
     align-items: center;

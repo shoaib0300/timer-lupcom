@@ -128,6 +128,60 @@ final class AttendanceController extends BaseController
         ]);
     }
 
+    public function saveBulkDays(Request $request): Response
+    {
+        $dayType = (string) $request->input('day_type', '');
+        if (!in_array($dayType, [AttendanceDay::TYPE_VACATION, AttendanceDay::TYPE_SICK], true)) {
+            return $this->json(['error' => 'invalid_type'], 422);
+        }
+
+        $from = (string) $request->input('from', '');
+        $to = (string) $request->input('to', '');
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) !== 1 || preg_match('/^\d{4}-\d{2}-\d{2}$/', $to) !== 1) {
+            return $this->json(['error' => 'invalid_date'], 422);
+        }
+
+        $start = new DateTimeImmutable($from);
+        $end = new DateTimeImmutable($to);
+        if ($end < $start) {
+            [$start, $end] = [$end, $start];
+        }
+
+        $repo = new AttendanceDayRepository($this->app->db());
+        $saved = 0;
+
+        for ($cursor = $start; $cursor <= $end; $cursor = $cursor->modify('+1 day')) {
+            if ((int) $cursor->format('N') >= 6) {
+                continue;
+            }
+
+            $repo->save(
+                $cursor->format('Y-m-d'),
+                $dayType,
+                null,
+                null,
+                null,
+                null,
+            );
+            ++$saved;
+        }
+
+        if ($saved === 0) {
+            return $this->json(['error' => 'no_weekdays'], 422);
+        }
+
+        $month = $this->resolveMonth((string) $request->input('month', ''));
+        $service = $this->service();
+
+        return $this->json([
+            'ok' => true,
+            'saved' => $saved,
+            'summary' => $service->monthSummary($month),
+            'weeks' => $service->weeksForMonth($month),
+        ]);
+    }
+
     public function addHoliday(Request $request): Response
     {
         $date = (string) $request->input('date', '');
