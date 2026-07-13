@@ -6,10 +6,6 @@ namespace Timer\Controllers;
 
 use Timer\Http\Request;
 use Timer\Http\Response;
-use Timer\Repositories\ProjectRepository;
-use Timer\Repositories\TaskRepository;
-use Timer\Repositories\TimeEntryRepository;
-use Timer\Services\TimerService;
 use Timer\Support\TimeFormatter;
 
 final class TimerController extends BaseController
@@ -21,6 +17,10 @@ final class TimerController extends BaseController
 
     public function start(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $taskId = (int) $request->input('task_id', 0);
         $service = $this->timerService();
 
@@ -36,14 +36,13 @@ final class TimerController extends BaseController
                     return $this->json(['error' => 'Project is required.'], 422);
                 }
 
-                $project = new ProjectRepository($this->app->db())->find($projectId);
+                $project = $this->projects()->find($projectId);
 
                 if ($project === null) {
                     return $this->json(['error' => 'Project not found.'], 404);
                 }
 
-                $taskRepo = new TaskRepository($this->app->db());
-                $resolvedTaskId = $taskRepo->findOrCreateByName(
+                $resolvedTaskId = $this->tasks()->findOrCreateByName(
                     $projectId,
                     $taskName !== '' ? $taskName : 'no-work',
                 );
@@ -69,6 +68,10 @@ final class TimerController extends BaseController
 
     public function stop(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $entryId = (int) $request->input('entry_id', 0);
 
         if ($entryId <= 0) {
@@ -90,6 +93,10 @@ final class TimerController extends BaseController
 
     public function pause(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $entryId = (int) $request->input('entry_id', 0);
 
         if ($entryId <= 0) {
@@ -111,6 +118,10 @@ final class TimerController extends BaseController
 
     public function resume(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $entryId = (int) $request->input('entry_id', 0);
 
         if ($entryId <= 0) {
@@ -133,10 +144,9 @@ final class TimerController extends BaseController
     /** @return array<string, mixed> */
     private function stoppedEntryPayload(\Timer\Models\TimeEntry $entry): array
     {
-        $projectRepo = new ProjectRepository($this->app->db());
-        $timeEntries = new TimeEntryRepository($this->app->db());
+        $timeEntries = $this->timeEntries();
         $project = $entry->projectId !== null
-            ? $projectRepo->find($entry->projectId)
+            ? $this->projects()->find($entry->projectId)
             : null;
         $totalToday = $timeEntries->totalSecondsToday();
 
@@ -158,16 +168,6 @@ final class TimerController extends BaseController
             'total_today_seconds' => $totalToday,
             'total_today_human' => TimeFormatter::secondsToHuman($totalToday),
         ];
-    }
-
-    private function timerService(): TimerService
-    {
-        $db = $this->app->db();
-
-        return new TimerService(
-            new TimeEntryRepository($db),
-            new TaskRepository($db),
-        );
     }
 
     /** @param array{timers: list<array<string, mixed>>} $status */

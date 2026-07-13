@@ -1,10 +1,12 @@
+import { withCsrf } from './csrf.js';
+
 export async function fetchOfficeStatus() {
     const response = await fetch('/api/office/status');
     return response.json();
 }
 
 export async function postOfficeAction(url, sessionId) {
-    const body = new URLSearchParams({ session_id: sessionId });
+    const body = withCsrf(new URLSearchParams({ session_id: sessionId }));
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -24,6 +26,7 @@ export async function startOffice() {
     const response = await fetch('/api/office/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: withCsrf(),
     });
     const data = await response.json();
 

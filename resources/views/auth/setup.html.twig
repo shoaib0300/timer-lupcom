@@ -1,0 +1,51 @@
+{% extends 'layouts/auth.html.twig' %}
+
+{% block title %}{{ trans('auth.setup_title') }}{% endblock %}
+
+{% block content %}
+<section class="card auth-card auth-card--wide">
+    <h1 class="page-title">{{ trans('auth.setup_title') }}</h1>
+    <p class="muted">{{ trans('auth.setup_subtitle') }}</p>
+
+    {% if error is defined and error %}
+        <p class="alert alert--error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/setup" class="auth-form" enctype="multipart/form-data">
+        <input type="hidden" name="_token" value="{{ csrf_token }}">
+
+        <div class="form-group">
+            <label for="setup-name">{{ trans('auth.name') }}</label>
+            <input type="text" id="setup-name" name="name" value="{{ name|default('') }}" required autocomplete="name">
+        </div>
+
+        <div class="form-group">
+            <label for="setup-email">{{ trans('auth.email') }}</label>
+            <input type="email" id="setup-email" name="email" value="{{ email|default('') }}" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+            <label for="setup-password">{{ trans('auth.password') }}</label>
+            <input type="password" id="setup-password" name="password" required autocomplete="new-password" minlength="8">
+        </div>
+
+        <div class="form-group">
+            <label for="setup-password-confirm">{{ trans('auth.password_confirm') }}</label>
+            <input type="password" id="setup-password-confirm" name="password_confirmation" required autocomplete="new-password" minlength="8">
+        </div>
+
+        <div class="auth-form__section">
+            <h2 class="auth-form__section-title">{{ trans('auth.setup_optional_import') }}</h2>
+            <p class="muted">{{ trans('auth.setup_import_hint') }}</p>
+            <div class="form-group">
+                <label for="setup-timetable">{{ trans('attendance.import_file') }}</label>
+                <input type="file" id="setup-timetable" name="timetable" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/plain">
+            </div>
+        </div>
+
+        <div class="actions">
+            <button type="submit" class="btn btn--primary btn--block">{{ trans('auth.setup_start') }}</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

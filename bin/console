@@ -6,8 +6,8 @@ use Timer\Core\Application;
 use Timer\Database\Migrator;
 use Timer\Database\Seeder;
 use Timer\Repositories\ProjectRepository;
-use Timer\Repositories\SettingsRepository;
 use Timer\Repositories\TaskRepository;
+use Timer\Repositories\UserRepository;
 use Timer\Services\PlanioSyncService;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
@@ -19,18 +19,48 @@ $migrator = new Migrator($app->db(), dirname(__DIR__) . '/database/migrations');
 match ($command) {
     'migrate' => $migrator->migrate(),
     'migrate:rollback' => $migrator->rollback((int) ($argv[2] ?? 1)),
-    'seed' => (new Seeder($app->db()))->run(),
-    'planio:refresh' => (static function () use ($app): void {
+        'seed' => (new Seeder($app->db()))->run(),
+        'user:create' => (static function () use ($app, $argv): void {
+            $email = $argv[2] ?? '';
+            $password = $argv[3] ?? '';
+            $name = $argv[4] ?? '';
+            $role = $argv[5] ?? 'user';
+
+            if ($email === '' || $password === '' || $name === '') {
+                fwrite(STDERR, "Usage: php bin/console user:create <email> <password> <name> [admin|user]\n");
+                exit(1);
+            }
+
+            $repo = new Timer\Repositories\UserRepository($app->db());
+            $userId = $repo->create($email, $password, $name, $role);
+            (new Timer\Repositories\UserSettingsRepository($app->db(), $userId))->seedAttendanceDefaults();
+            echo "Created user #{$userId} ({$email}).\n";
+        })(),
+    'planio:refresh' => (static function () use ($app, $argv): void {
+        $email = $argv[2] ?? '';
+        if ($email === '') {
+            fwrite(STDERR, "Usage: php bin/console planio:refresh <user-email>\n");
+            exit(1);
+        }
+
         $db = $app->db();
+        $userRepo = new Timer\Repositories\UserRepository($db);
+        $user = $userRepo->findByEmail($email);
+        if ($user === null) {
+            fwrite(STDERR, "User not found: {$email}\n");
+            exit(1);
+        }
+
         $service = new PlanioSyncService(
-            new SettingsRepository($db),
-            new ProjectRepository($db),
+            new Timer\Repositories\UserSettingsRepository($db, $user->id),
+            new ProjectRepository($db, $user->id),
             new TaskRepository($db),
         );
         $stats = $service->refreshAllLinkedProjects();
         echo sprintf(
-            "Refreshed %d Planio project(s): %d projects updated, %d tasks updated, %d tasks created.\n",
+            "Refreshed %d Planio project(s) for %s: %d projects updated, %d tasks updated, %d tasks created.\n",
             $stats['projects'],
+            $email,
             $stats['projects_updated'],
             $stats['tasks_updated'],
             $stats['tasks_created'],

@@ -1,3 +1,5 @@
+import { csrfField } from './csrf.js';
+
 function t(key, params = {}) {
     const dict = window.__I18N__ || {};
     let str = dict[key] || key;
@@ -260,6 +262,7 @@ export function initAttendanceBulkEntry({ onSaved, openModal, closeModal }) {
         formData.append('to', selectedTo);
         formData.append('day_type', typeSelect?.value || 'vacation');
         formData.append('month', page?.dataset.month || selectedFrom.slice(0, 7));
+        formData.append('_token', csrfField());
 
         applyBtn.setAttribute('disabled', 'disabled');
         const defaultLabel = applyBtn.dataset.defaultLabel || applyBtn.textContent;

@@ -6,9 +6,6 @@ namespace Timer\Controllers;
 
 use Timer\Http\Request;
 use Timer\Http\Response;
-use Timer\Repositories\OfficeSessionRepository;
-use Timer\Repositories\TimeEntryRepository;
-use Timer\Services\OfficeSessionService;
 use Timer\Support\DateHelper;
 use Timer\Support\TimeFormatter;
 
@@ -25,8 +22,8 @@ final class OfficeController extends BaseController
             $to = $today->format('Y-m-d');
         }
 
-        $sessions = new OfficeSessionRepository($this->app->db());
-        $timeEntries = new TimeEntryRepository($this->app->db());
+        $sessions = $this->officeSessions();
+        $timeEntries = $this->timeEntries();
         $officeService = $this->officeService();
 
         $rows = [];
@@ -66,11 +63,15 @@ final class OfficeController extends BaseController
 
     public function start(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $service = $this->officeService();
         $alreadyActive = $service->getStatus()['active'];
 
         try {
-            $session = $service->start();
+            $service->start();
         } catch (\RuntimeException $exception) {
             return $this->json(['error' => $exception->getMessage()], 500);
         }
@@ -89,6 +90,10 @@ final class OfficeController extends BaseController
 
     public function pause(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $sessionId = (int) $request->input('session_id', 0);
 
         if ($sessionId <= 0) {
@@ -110,6 +115,10 @@ final class OfficeController extends BaseController
 
     public function resume(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $sessionId = (int) $request->input('session_id', 0);
 
         if ($sessionId <= 0) {
@@ -131,6 +140,10 @@ final class OfficeController extends BaseController
 
     public function stop(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $sessionId = (int) $request->input('session_id', 0);
 
         if ($sessionId <= 0) {
@@ -169,15 +182,5 @@ final class OfficeController extends BaseController
             'total_today_seconds' => $status['tracked_today_seconds'],
             'total_today_human' => TimeFormatter::secondsToHuman($status['tracked_today_seconds']),
         ]);
-    }
-
-    private function officeService(): OfficeSessionService
-    {
-        $db = $this->app->db();
-
-        return new OfficeSessionService(
-            new OfficeSessionRepository($db),
-            new TimeEntryRepository($db),
-        );
     }
 }

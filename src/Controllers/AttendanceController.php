@@ -8,11 +8,8 @@ use DateTimeImmutable;
 use Timer\Http\Request;
 use Timer\Http\Response;
 use Timer\Models\AttendanceDay;
-use Timer\Repositories\AttendanceDayRepository;
 use Timer\Repositories\AttendanceHolidayRepository;
-use Timer\Repositories\SettingsRepository;
 use Timer\Services\AttendanceImportService;
-use Timer\Services\AttendanceService;
 use Timer\Services\LupcomTimetableParser;
 use Timer\Services\LupcomXlsxTimetableReader;
 use Timer\Support\GermanHolidays;
@@ -23,7 +20,7 @@ final class AttendanceController extends BaseController
     public function index(Request $request): Response
     {
         $month = $this->resolveMonth((string) $request->query('month', ''));
-        $service = $this->service();
+        $service = $this->attendanceService();
 
         $firstDay = new DateTimeImmutable($month . '-01');
         $prevMonth = $firstDay->modify('-1 month')->format('Y-m');
@@ -51,6 +48,10 @@ final class AttendanceController extends BaseController
 
     public function saveSettings(Request $request): Response
     {
+        if ($response = $this->validateCsrfOrRedirect($request, '/attendance')) {
+            return $response;
+        }
+
         $country = strtoupper(trim((string) $request->input('country', 'DE')));
         $state = strtoupper(trim((string) $request->input('state', 'MV')));
         $month = $this->resolveMonth((string) $request->input('month', ''));
@@ -63,13 +64,17 @@ final class AttendanceController extends BaseController
             return $this->redirect('/attendance?month=' . $month . '&error=state');
         }
 
-        $this->service()->saveConfig($country, $state);
+        $this->attendanceService()->saveConfig($country, $state);
 
         return $this->redirect('/attendance?month=' . $month . '&success=settings');
     }
 
     public function saveDay(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $date = (string) $request->input('date', '');
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) !== 1) {
             return $this->json(['error' => 'invalid_date'], 422);
@@ -98,7 +103,7 @@ final class AttendanceController extends BaseController
             }
         }
 
-        $repo = new AttendanceDayRepository($this->app->db());
+        $repo = $this->attendanceDays();
 
         if ($dayType === AttendanceDay::TYPE_WORK
             && $morningStart === null
@@ -118,7 +123,7 @@ final class AttendanceController extends BaseController
             $repo->save($date, $dayType, $morningStart, $morningEnd, $afternoonStart, $afternoonEnd);
         }
 
-        $service = $this->service();
+        $service = $this->attendanceService();
         $month = substr($date, 0, 7);
 
         return $this->json([
@@ -130,6 +135,10 @@ final class AttendanceController extends BaseController
 
     public function saveBulkDays(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $dayType = (string) $request->input('day_type', '');
         if (!in_array($dayType, [AttendanceDay::TYPE_VACATION, AttendanceDay::TYPE_SICK], true)) {
             return $this->json(['error' => 'invalid_type'], 422);
@@ -148,7 +157,7 @@ final class AttendanceController extends BaseController
             [$start, $end] = [$end, $start];
         }
 
-        $repo = new AttendanceDayRepository($this->app->db());
+        $repo = $this->attendanceDays();
         $saved = 0;
 
         for ($cursor = $start; $cursor <= $end; $cursor = $cursor->modify('+1 day')) {
@@ -172,7 +181,7 @@ final class AttendanceController extends BaseController
         }
 
         $month = $this->resolveMonth((string) $request->input('month', ''));
-        $service = $this->service();
+        $service = $this->attendanceService();
 
         return $this->json([
             'ok' => true,
@@ -184,6 +193,10 @@ final class AttendanceController extends BaseController
 
     public function addHoliday(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $date = (string) $request->input('date', '');
         $name = trim((string) $request->input('name', ''));
 
@@ -191,7 +204,7 @@ final class AttendanceController extends BaseController
             return $this->json(['error' => 'invalid'], 422);
         }
 
-        $config = $this->service()->config();
+        $config = $this->attendanceService()->config();
         new AttendanceHolidayRepository($this->app->db())->addManual(
             $date,
             $config['country'],
@@ -201,12 +214,16 @@ final class AttendanceController extends BaseController
 
         return $this->json([
             'ok' => true,
-            'holidays' => $this->service()->holidayList((int) substr($date, 0, 4)),
+            'holidays' => $this->attendanceService()->holidayList((int) substr($date, 0, 4)),
         ]);
     }
 
     public function importTimetable(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $file = $request->file('timetable');
         if ($file === null) {
             return $this->json(['error' => 'missing_file'], 422);
@@ -221,9 +238,8 @@ final class AttendanceController extends BaseController
             return $this->json(['error' => 'empty_file'], 422);
         }
 
-        $db = $this->app->db();
         $importService = new AttendanceImportService(
-            new AttendanceDayRepository($db),
+            $this->attendanceDays(),
             new LupcomTimetableParser(),
             new LupcomXlsxTimetableReader(),
         );
@@ -235,7 +251,7 @@ final class AttendanceController extends BaseController
         }
 
         $month = $this->resolveMonth((string) $request->input('month', ''));
-        $service = $this->service();
+        $service = $this->attendanceService();
 
         return $this->json([
             'ok' => true,
@@ -249,6 +265,10 @@ final class AttendanceController extends BaseController
 
     public function removeHoliday(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $date = (string) $request->input('date', '');
         $action = (string) $request->input('action', 'delete');
 
@@ -256,7 +276,7 @@ final class AttendanceController extends BaseController
             return $this->json(['error' => 'invalid_date'], 422);
         }
 
-        $config = $this->service()->config();
+        $config = $this->attendanceService()->config();
         $repo = new AttendanceHolidayRepository($this->app->db());
 
         if ($action === 'restore') {
@@ -269,19 +289,8 @@ final class AttendanceController extends BaseController
 
         return $this->json([
             'ok' => true,
-            'holidays' => $this->service()->holidayList((int) substr($date, 0, 4)),
+            'holidays' => $this->attendanceService()->holidayList((int) substr($date, 0, 4)),
         ]);
-    }
-
-    private function service(): AttendanceService
-    {
-        $db = $this->app->db();
-
-        return new AttendanceService(
-            new SettingsRepository($db),
-            new AttendanceDayRepository($db),
-            new AttendanceHolidayRepository($db),
-        );
     }
 
     private function resolveMonth(string $month): string

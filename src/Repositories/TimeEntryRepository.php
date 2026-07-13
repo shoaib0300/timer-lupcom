@@ -17,21 +17,53 @@ final class TimeEntryRepository
 
     public function __construct(
         private readonly PDO $pdo,
+        private readonly ?int $userId = null,
     ) {
+    }
+
+    /** @return array{0: string, 1: list<int|float|string>} */
+    private function userScope(string $alias = 'te'): array
+    {
+        if ($this->userId === null) {
+            return ['', []];
+        }
+
+        return [" AND {$alias}.user_id = ?", [$this->userId]];
+    }
+
+    /** @return array{0: string, 1: list<int|float|string>} */
+    private function tableUserScope(): array
+    {
+        if ($this->userId === null) {
+            return ['', []];
+        }
+
+        return [' AND user_id = ?', [$this->userId]];
+    }
+
+    private function requireUserId(): int
+    {
+        if ($this->userId === null) {
+            throw new \RuntimeException('User scope is required for this operation.');
+        }
+
+        return $this->userId;
     }
 
     /** @return list<TimeEntry> */
     public function findAllRunning(): array
     {
-        $stmt = $this->pdo->query(
+        [$userSql, $userParams] = $this->userScope();
+        $stmt = $this->pdo->prepare(
             self::ENTRY_SELECT . '
-            WHERE te.ended_at IS NULL
+            WHERE te.ended_at IS NULL' . $userSql . '
             ORDER BY te.started_at ASC',
         );
+        $stmt->execute($userParams);
 
         $entries = array_map(
             TimeEntry::fromRow(...),
-            $stmt ? $stmt->fetchAll() : [],
+            $stmt->fetchAll(),
         );
 
         return $this->dedupeRunningByTask($entries);
@@ -39,13 +71,14 @@ final class TimeEntryRepository
 
     public function findRunningByTaskId(int $taskId): ?TimeEntry
     {
+        [$userSql, $userParams] = $this->userScope();
         $stmt = $this->pdo->prepare(
             self::ENTRY_SELECT . '
-            WHERE te.ended_at IS NULL AND te.task_id = ?
+            WHERE te.ended_at IS NULL AND te.task_id = ?' . $userSql . '
             ORDER BY te.started_at ASC
             LIMIT 1',
         );
-        $stmt->execute([$taskId]);
+        $stmt->execute([$taskId, ...$userParams]);
         $row = $stmt->fetch();
 
         return $row ? TimeEntry::fromRow($row) : null;
@@ -89,9 +122,9 @@ final class TimeEntryRepository
     {
         $now = (new DateTimeImmutable())->format('Y-m-d H:i:s');
         $stmt = $this->pdo->prepare(
-            'INSERT INTO time_entries (project_id, task_id, started_at) VALUES (?, ?, ?)',
+            'INSERT INTO time_entries (user_id, project_id, task_id, started_at) VALUES (?, ?, ?, ?)',
         );
-        $stmt->execute([$projectId, $taskId, $now]);
+        $stmt->execute([$this->requireUserId(), $projectId, $taskId, $now]);
 
         return (int) $this->pdo->lastInsertId();
     }
@@ -160,11 +193,12 @@ final class TimeEntryRepository
 
     public function findById(int $id): ?TimeEntry
     {
+        [$userSql, $userParams] = $this->userScope();
         $stmt = $this->pdo->prepare(
             self::ENTRY_SELECT . '
-            WHERE te.id = ?',
+            WHERE te.id = ?' . $userSql,
         );
-        $stmt->execute([$id]);
+        $stmt->execute([$id, ...$userParams]);
         $row = $stmt->fetch();
 
         return $row ? TimeEntry::fromRow($row) : null;
@@ -173,15 +207,15 @@ final class TimeEntryRepository
     /** @return list<TimeEntry> */
     public function recentToday(int $limit = 50): array
     {
+        [$userSql, $userParams] = $this->userScope();
         $stmt = $this->pdo->prepare(
             self::ENTRY_SELECT . '
             WHERE te.ended_at IS NOT NULL
-              AND DATE(te.started_at) = CURDATE()
+              AND DATE(te.started_at) = CURDATE()' . $userSql . '
             ORDER BY te.ended_at DESC
             LIMIT ?',
         );
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([...$userParams, $limit]);
 
         return array_map(
             TimeEntry::fromRow(...),
@@ -192,14 +226,14 @@ final class TimeEntryRepository
     /** @return list<TimeEntry> */
     public function recent(int $limit = 20): array
     {
+        [$userSql, $userParams] = $this->userScope();
         $stmt = $this->pdo->prepare(
             self::ENTRY_SELECT . '
-            WHERE te.ended_at IS NOT NULL
+            WHERE te.ended_at IS NOT NULL' . $userSql . '
             ORDER BY te.ended_at DESC
             LIMIT ?',
         );
-        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([...$userParams, $limit]);
 
         return array_map(
             TimeEntry::fromRow(...),
@@ -209,14 +243,16 @@ final class TimeEntryRepository
 
     public function totalSecondsToday(): int
     {
-        $stmt = $this->pdo->query(
+        [$userSql, $userParams] = $this->tableUserScope();
+        $stmt = $this->pdo->prepare(
             "SELECT COALESCE(SUM(duration_seconds), 0)
             FROM time_entries
             WHERE ended_at IS NOT NULL
-              AND DATE(started_at) = CURDATE()",
+              AND DATE(started_at) = CURDATE()" . $userSql,
         );
+        $stmt->execute($userParams);
 
-        return (int) ($stmt ? $stmt->fetchColumn() : 0);
+        return (int) $stmt->fetchColumn();
     }
 
     /**
@@ -233,6 +269,10 @@ final class TimeEntryRepository
             WHERE ended_at IS NOT NULL
               AND DATE(started_at) BETWEEN ? AND ?';
         $params = [$from, $to];
+
+        [$userSql, $userParams] = $this->tableUserScope();
+        $sql .= $userSql;
+        $params = array_merge($params, $userParams);
 
         if ($projectId !== null) {
             $sql .= ' AND project_id = ?';
@@ -269,6 +309,10 @@ final class TimeEntryRepository
               AND DATE(te.started_at) = ?';
         $params = [$date];
 
+        [$userSql, $userParams] = $this->userScope();
+        $sql .= $userSql;
+        $params = array_merge($params, $userParams);
+
         if ($projectId !== null) {
             $sql .= ' AND te.project_id = ?';
             $params[] = $projectId;
@@ -280,18 +324,10 @@ final class TimeEntryRepository
         }
 
         $sql .= ' ORDER BY te.started_at DESC LIMIT ?';
+        $params[] = $limit;
 
         $stmt = $this->pdo->prepare($sql);
-        $bindIndex = 1;
-        $stmt->bindValue($bindIndex++, $date);
-        if ($projectId !== null) {
-            $stmt->bindValue($bindIndex++, $projectId, PDO::PARAM_INT);
-        }
-        if ($taskId !== null) {
-            $stmt->bindValue($bindIndex++, $taskId, PDO::PARAM_INT);
-        }
-        $stmt->bindValue($bindIndex, $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute($params);
 
         return array_map(
             TimeEntry::fromRow(...),
@@ -310,6 +346,10 @@ final class TimeEntryRepository
             WHERE te.ended_at IS NOT NULL
               AND DATE(te.started_at) BETWEEN ? AND ?';
         $params = [$from, $to];
+
+        [$userSql, $userParams] = $this->userScope();
+        $sql .= $userSql;
+        $params = array_merge($params, $userParams);
 
         if ($projectId !== null) {
             $sql .= ' AND te.project_id = ?';
@@ -368,10 +408,11 @@ final class TimeEntryRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'INSERT INTO time_entries (project_id, task_id, started_at, ended_at, duration_seconds, notes)
-            VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO time_entries (user_id, project_id, task_id, started_at, ended_at, duration_seconds, notes)
+            VALUES (?, ?, ?, ?, ?, ?, ?)',
         );
         $stmt->execute([
+            $this->requireUserId(),
             $projectId,
             $taskId,
             $startedAt->format('Y-m-d H:i:s'),
@@ -450,6 +491,10 @@ final class TimeEntryRepository
               AND (te.ended_at IS NULL OR te.ended_at > ?)';
         $params = [$to, $from];
 
+        [$userSql, $userParams] = $this->userScope();
+        $sql .= $userSql;
+        $params = array_merge($params, $userParams);
+
         if ($projectId !== null) {
             $sql .= ' AND te.project_id = ?';
             $params[] = $projectId;
@@ -490,10 +535,11 @@ final class TimeEntryRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'INSERT INTO time_entries (project_id, task_id, started_at, ended_at, duration_seconds, notes)
-            VALUES (NULL, NULL, ?, ?, ?, ?)',
+            'INSERT INTO time_entries (user_id, project_id, task_id, started_at, ended_at, duration_seconds, notes)
+            VALUES (?, NULL, NULL, ?, ?, ?, ?)',
         );
         $stmt->execute([
+            $this->requireUserId(),
             $startedAt->format('Y-m-d H:i:s'),
             $endedAt->format('Y-m-d H:i:s'),
             $durationSeconds,
@@ -514,6 +560,10 @@ final class TimeEntryRepository
             WHERE ended_at IS NOT NULL
               AND DATE(started_at) BETWEEN ? AND ?';
         $params = [$from, $to];
+
+        [$userSql, $userParams] = $this->tableUserScope();
+        $sql .= $userSql;
+        $params = array_merge($params, $userParams);
 
         if ($projectId !== null) {
             $sql .= ' AND project_id = ?';

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Timer\Services;
 
 use Timer\Repositories\ProjectRepository;
-use Timer\Repositories\SettingsRepository;
 use Timer\Repositories\TaskRepository;
+use Timer\Repositories\UserSettingsRepository;
 use Timer\Repositories\TimeEntryRepository;
 
 final class PlanioSyncService
@@ -17,7 +17,7 @@ final class PlanioSyncService
     ];
 
     public function __construct(
-        private readonly SettingsRepository $settings,
+        private readonly UserSettingsRepository $settings,
         private readonly ProjectRepository $projects,
         private readonly TaskRepository $tasks,
     ) {

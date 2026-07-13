@@ -9,4 +9,8 @@ return [
     'url' => rtrim($_ENV['APP_URL'] ?? '', '/'),
     'views_path' => dirname(__DIR__) . '/resources/views',
     'timezone' => 'UTC',
+    'session' => [
+        'name' => $_ENV['SESSION_NAME'] ?? 'timer_session',
+        'lifetime' => (int) ($_ENV['SESSION_LIFETIME'] ?? 0),
+    ],
 ];

@@ -1,5 +1,7 @@
+import { withCsrf } from './csrf.js';
+
 export async function createManualEntry(formData) {
-    const body = new URLSearchParams(formData);
+    const body = withCsrf(new URLSearchParams(formData));
     const response = await fetch('/api/time-entries/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -33,7 +35,7 @@ export async function fetchTimerStatus() {
 }
 
 export async function postTimerAction(url, entryId) {
-    const body = new URLSearchParams({ entry_id: entryId });
+    const body = withCsrf(new URLSearchParams({ entry_id: entryId }));
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -50,10 +52,10 @@ export async function postTimerAction(url, entryId) {
 }
 
 export async function startTimer(projectId, taskName) {
-    const body = new URLSearchParams({
+    const body = withCsrf(new URLSearchParams({
         project_id: projectId,
         task_name: taskName || 'no-work',
-    });
+    }));
 
     const response = await fetch('/api/timer/start', {
         method: 'POST',
@@ -71,7 +73,7 @@ export async function startTimer(projectId, taskName) {
 }
 
 export async function startTimerByTaskId(taskId) {
-    const body = new URLSearchParams({ task_id: taskId });
+    const body = withCsrf(new URLSearchParams({ task_id: taskId }));
 
     const response = await fetch('/api/timer/start', {
         method: 'POST',

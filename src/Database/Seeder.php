@@ -17,7 +17,14 @@ final class Seeder
 
     public function run(): void
     {
-        $this->pdo->exec('DELETE FROM projects');
+        $userId = (int) $this->pdo->query('SELECT id FROM users ORDER BY id ASC LIMIT 1')->fetchColumn();
+        if ($userId <= 0) {
+            throw new \RuntimeException('No users exist. Create an account before seeding demo data.');
+        }
+
+        $this->pdo->exec('DELETE FROM time_entries WHERE user_id = ' . $userId);
+        $this->pdo->exec('DELETE FROM tasks WHERE project_id IN (SELECT id FROM projects WHERE user_id = ' . $userId . ')');
+        $this->pdo->exec('DELETE FROM projects WHERE user_id = ' . $userId);
 
         $projects = [
             ['Website Redesign', 'Homepage and component library refresh', '#3b82f6'],
@@ -39,14 +46,14 @@ final class Seeder
         $tasksByProject = [];
 
         $projectStmt = $this->pdo->prepare(
-            'INSERT INTO projects (name, description, color) VALUES (?, ?, ?)',
+            'INSERT INTO projects (user_id, name, description, color) VALUES (?, ?, ?, ?)',
         );
         $taskStmt = $this->pdo->prepare(
             'INSERT INTO tasks (project_id, name, status) VALUES (?, ?, ?)',
         );
 
         foreach ($projects as [$name, $description, $color]) {
-            $projectStmt->execute([$name, $description, $color]);
+            $projectStmt->execute([$userId, $name, $description, $color]);
             $projectId = (int) $this->pdo->lastInsertId();
             $projectIds[$name] = $projectId;
             $tasksByProject[$projectId] = [];
@@ -63,8 +70,8 @@ final class Seeder
         }
 
         $entryStmt = $this->pdo->prepare(
-            'INSERT INTO time_entries (project_id, task_id, started_at, ended_at, duration_seconds)
-            VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO time_entries (user_id, project_id, task_id, started_at, ended_at, duration_seconds)
+            VALUES (?, ?, ?, ?, ?, ?)',
         );
 
         $today = new DateTimeImmutable('today');
@@ -92,6 +99,7 @@ final class Seeder
                 $endedAt = $startedAt->add(new DateInterval('PT' . $durationSeconds . 'S'));
 
                 $entryStmt->execute([
+                    $userId,
                     $projectId,
                     $taskId,
                     $startedAt->format('Y-m-d H:i:s'),
@@ -101,6 +109,6 @@ final class Seeder
             }
         }
 
-        echo "Seeded " . count($projectIds) . " projects with tasks and sessions for the last 36 days.\n";
+        echo "Seeded demo data for user #{$userId}: " . count($projectIds) . " projects with tasks and sessions for the last 36 days.\n";
     }
 }

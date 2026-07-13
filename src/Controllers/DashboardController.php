@@ -6,11 +6,6 @@ namespace Timer\Controllers;
 
 use Timer\Http\Request;
 use Timer\Http\Response;
-use Timer\Repositories\OfficeSessionRepository;
-use Timer\Repositories\ProjectRepository;
-use Timer\Repositories\TaskRepository;
-use Timer\Repositories\TimeEntryRepository;
-use Timer\Services\OfficeSessionService;
 use Timer\Support\DateHelper;
 use Timer\Support\ProjectSorter;
 use Timer\Support\TimeFormatter;
@@ -19,12 +14,9 @@ final class DashboardController extends BaseController
 {
     public function index(Request $request): Response
     {
-        $projects = new ProjectRepository($this->app->db())->allWithStats();
-        $timeEntries = new TimeEntryRepository($this->app->db());
-        $timerService = new \Timer\Services\TimerService(
-            $timeEntries,
-            new TaskRepository($this->app->db()),
-        );
+        $projects = $this->projects()->allWithStats();
+        $timeEntries = $this->timeEntries();
+        $timerService = $this->timerService();
 
         $timerStatus = $timerService->getStatus();
         $runningProjectIds = array_map(
@@ -34,9 +26,7 @@ final class DashboardController extends BaseController
         $projects = ProjectSorter::forDashboard($projects, $runningProjectIds);
 
         $totalTodaySeconds = $timeEntries->totalSecondsToday();
-        $officeSessions = new OfficeSessionRepository($this->app->db());
-        $officeService = new OfficeSessionService($officeSessions, $timeEntries);
-        $officeStatus = $officeService->getStatusWithStats();
+        $officeStatus = $this->officeService()->getStatusWithStats();
 
         return $this->view('dashboard/index.html.twig', [
             'projects' => $projects,

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Timer\Controllers\AttendanceController;
+use Timer\Controllers\AuthController;
 use Timer\Controllers\DashboardController;
 use Timer\Controllers\OfficeController;
 use Timer\Controllers\PlanioController;
@@ -12,8 +13,17 @@ use Timer\Controllers\TaskApiController;
 use Timer\Controllers\TaskController;
 use Timer\Controllers\TimeEntryController;
 use Timer\Controllers\TimerController;
+use Timer\Controllers\UserController;
 
 return static function (FastRoute\RouteCollector $r): void {
+    $r->get('/login', [AuthController::class, 'showLogin']);
+    $r->post('/login', [AuthController::class, 'login']);
+    $r->get('/register', [AuthController::class, 'showRegister']);
+    $r->post('/register', [AuthController::class, 'register']);
+    $r->post('/logout', [AuthController::class, 'logout']);
+    $r->get('/setup', [AuthController::class, 'showSetup']);
+    $r->post('/setup', [AuthController::class, 'setup']);
+
     $r->get('/', [DashboardController::class, 'index']);
     $r->get('/reports', [ReportsController::class, 'index']);
     $r->get('/reports/export', [ReportsController::class, 'export']);
@@ -37,6 +47,11 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->get('/settings/planio', [PlanioController::class, 'index']);
     $r->post('/settings/planio', [PlanioController::class, 'save']);
     $r->post('/settings/planio/disconnect', [PlanioController::class, 'disconnect']);
+
+    $r->get('/settings/users', [UserController::class, 'index']);
+    $r->post('/settings/users', [UserController::class, 'store']);
+    $r->post('/settings/users/deactivate', [UserController::class, 'deactivate']);
+    $r->post('/settings/users/activate', [UserController::class, 'activate']);
     $r->post('/api/planio/test', [PlanioController::class, 'testApi']);
     $r->get('/api/planio/projects', [PlanioController::class, 'projectsApi']);
     $r->post('/api/planio/sync', [PlanioController::class, 'sync']);

@@ -7,9 +7,6 @@ namespace Timer\Controllers;
 use DateTimeImmutable;
 use Timer\Http\Request;
 use Timer\Http\Response;
-use Timer\Repositories\ProjectRepository;
-use Timer\Repositories\TaskRepository;
-use Timer\Repositories\TimeEntryRepository;
 use Timer\Support\DateHelper;
 use Timer\Support\TimeFormatter;
 
@@ -17,6 +14,10 @@ final class TimeEntryController extends BaseController
 {
     public function storeManual(Request $request): Response
     {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
         $notes = trim((string) $request->input('reason', ''));
         $hours = max(0, (int) $request->input('duration_hours', 0));
         $minutes = max(0, min(59, (int) $request->input('duration_minutes', 0)));
@@ -45,7 +46,7 @@ final class TimeEntryController extends BaseController
             }
             $taskId = null;
         } else {
-            $project = new ProjectRepository($this->app->db())->find($projectId);
+            $project = $this->projects()->find($projectId);
             if ($project === null) {
                 return $this->json(['error' => 'Project not found.'], 404);
             }
@@ -54,13 +55,13 @@ final class TimeEntryController extends BaseController
                 return $this->json(['error' => 'Select a task for this project.'], 422);
             }
 
-            $task = new TaskRepository($this->app->db())->find($taskId);
+            $task = $this->tasks()->find($taskId);
             if ($task === null || $task->projectId !== $projectId) {
                 return $this->json(['error' => 'Task not found for this project.'], 422);
             }
         }
 
-        $repo = new TimeEntryRepository($this->app->db());
+        $repo = $this->timeEntries();
 
         try {
             $entryId = $repo->createManual(
@@ -82,9 +83,7 @@ final class TimeEntryController extends BaseController
 
         $totalToday = $repo->totalSecondsToday();
         $isToday = $workDate->format('Y-m-d') === DateHelper::todayString();
-        $project = $projectId !== null
-            ? new ProjectRepository($this->app->db())->find($projectId)
-            : null;
+        $project = $projectId !== null ? $this->projects()->find($projectId) : null;
 
         return $this->json([
             'message' => $isToday

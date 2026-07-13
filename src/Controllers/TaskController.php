@@ -13,7 +13,7 @@ final class TaskController extends BaseController
 {
     public function create(Request $request, int $projectId): Response
     {
-        $project = new ProjectRepository($this->app->db())->find($projectId);
+        $project = $this->projects()->find($projectId);
 
         if ($project === null) {
             return Response::html('Project not found', 404);
@@ -29,7 +29,7 @@ final class TaskController extends BaseController
 
     public function store(Request $request, int $projectId): Response
     {
-        $projectRepo = new ProjectRepository($this->app->db());
+        $projectRepo = $this->projects();
         $project = $projectRepo->find($projectId);
 
         if ($project === null) {
@@ -48,7 +48,7 @@ final class TaskController extends BaseController
             ]);
         }
 
-        new TaskRepository($this->app->db())->create(
+        $this->tasks()->create(
             $projectId,
             $name,
             $this->nullableString($request->input('description')),
@@ -60,14 +60,14 @@ final class TaskController extends BaseController
 
     public function edit(Request $request, int $id): Response
     {
-        $repo = new TaskRepository($this->app->db());
+        $repo = $this->tasks();
         $task = $repo->find($id);
 
         if ($task === null) {
             return Response::html('Task not found', 404);
         }
 
-        $project = new ProjectRepository($this->app->db())->find($task->projectId);
+        $project = $this->projects()->find($task->projectId);
 
         return $this->view('tasks/form.html.twig', [
             'task' => $task,
@@ -79,7 +79,7 @@ final class TaskController extends BaseController
 
     public function update(Request $request, int $id): Response
     {
-        $repo = new TaskRepository($this->app->db());
+        $repo = $this->tasks();
         $task = $repo->find($id);
 
         if ($task === null) {
@@ -89,7 +89,7 @@ final class TaskController extends BaseController
         $name = trim((string) $request->input('name', ''));
 
         if ($name === '') {
-            $project = new ProjectRepository($this->app->db())->find($task->projectId);
+            $project = $this->projects()->find($task->projectId);
 
             return $this->view('tasks/form.html.twig', [
                 'task' => $task,
@@ -116,7 +116,7 @@ final class TaskController extends BaseController
 
     public function destroy(Request $request, int $id): Response
     {
-        $repo = new TaskRepository($this->app->db());
+        $repo = $this->tasks();
         $task = $repo->find($id);
 
         if ($task === null) {

@@ -9,6 +9,7 @@ use FastRoute\RouteCollector;
 use FastRoute\RouteParser\Std;
 use FastRoute\DataGenerator\GroupCountBased;
 use FastRoute\Dispatcher\GroupCountBased as GroupCountBasedDispatcher;
+use Timer\Http\AuthenticatedUser;
 use Timer\Http\Request;
 use Timer\Http\Response;
 
@@ -19,8 +20,11 @@ final class Router
     ) {
     }
 
-    public function dispatch(Request $request, Application $app): Response
-    {
+    public function dispatch(
+        Request $request,
+        Application $app,
+        ?AuthenticatedUser $user,
+    ): Response {
         $dispatcher = $this->createDispatcher();
         $routeInfo = $dispatcher->dispatch($request->method(), $request->path());
 
@@ -35,7 +39,7 @@ final class Router
                 [$handler, $vars] = [$routeInfo[1], $routeInfo[2]];
                 [$class, $method] = $handler;
 
-                $controller = new $class($app);
+                $controller = new $class($app, $user);
                 $result = $controller->$method($request, ...$this->coerceRouteArgs($vars));
 
                 if ($result instanceof Response) {

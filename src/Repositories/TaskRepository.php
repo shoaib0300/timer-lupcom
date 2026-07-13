@@ -11,7 +11,28 @@ final class TaskRepository
 {
     public function __construct(
         private readonly PDO $pdo,
+        private readonly ?int $statsUserId = null,
     ) {
+    }
+
+    private function timeEntryJoin(): string
+    {
+        if ($this->statsUserId === null) {
+            return 'LEFT JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL';
+        }
+
+        return 'LEFT JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL AND te.user_id = '
+            . (int) $this->statsUserId;
+    }
+
+    private function innerTimeEntryJoin(): string
+    {
+        if ($this->statsUserId === null) {
+            return 'INNER JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL';
+        }
+
+        return 'INNER JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL AND te.user_id = '
+            . (int) $this->statsUserId;
     }
 
     /** @return list<Task> */
@@ -21,7 +42,7 @@ final class TaskRepository
             'SELECT t.*,
                 COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
             FROM tasks t
-            LEFT JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL
+            ' . $this->timeEntryJoin() . '
             WHERE t.project_id = ?
             GROUP BY t.id
             ORDER BY t.name ASC',
@@ -41,7 +62,7 @@ final class TaskRepository
                 COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
             FROM tasks t
             JOIN projects p ON p.id = t.project_id
-            LEFT JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL
+            ' . $this->timeEntryJoin() . '
             WHERE t.id = ?
             GROUP BY t.id',
         );
@@ -143,7 +164,7 @@ final class TaskRepository
                 COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
             FROM tasks t
             INNER JOIN projects p ON p.id = t.project_id
-            LEFT JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL
+            ' . $this->timeEntryJoin() . '
             WHERE (
                 t.name LIKE ?
                 OR p.name LIKE ?
@@ -193,7 +214,7 @@ final class TaskRepository
                 COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
             FROM tasks t
             INNER JOIN projects p ON p.id = t.project_id
-            INNER JOIN time_entries te ON te.task_id = t.id AND te.ended_at IS NOT NULL
+            ' . $this->innerTimeEntryJoin() . '
             GROUP BY t.id, t.project_id, t.name, t.status, t.planio_issue_id, t.planio_assignee, p.name, p.color
             ORDER BY session_count DESC, total_seconds DESC, t.name ASC
             LIMIT ?',

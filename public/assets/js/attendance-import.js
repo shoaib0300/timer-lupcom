@@ -1,3 +1,5 @@
+import { csrfField } from './csrf.js';
+
 function t(key, params = {}) {
     const dict = window.__I18N__ || {};
     let str = dict[key] || key;
@@ -83,6 +85,7 @@ export function initAttendanceImport({ onImported }) {
         const formData = new FormData(form);
         formData.set('mode', mode);
         formData.set('timetable', file);
+        formData.set('_token', csrfField());
 
         submitBtn.setAttribute('disabled', 'disabled');
         submitBtn.textContent = t('attendance.importing');

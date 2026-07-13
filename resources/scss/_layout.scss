@@ -227,9 +227,99 @@
 
         @media (max-width: $bp-tablet) {
             display: flex;
+            align-items: center;
+            gap: 0.75rem;
             margin-top: auto;
             padding-top: 1rem;
             border-top: 1px solid var(--color-border);
+        }
+    }
+
+    &__account {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-shrink: 0;
+
+        @media (max-width: $bp-tablet) {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+
+    &__account-profile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        min-width: 0;
+    }
+
+    &__account-name {
+        margin: 0;
+        font-size: 0.68rem;
+        line-height: 1.15;
+        font-weight: 500;
+        color: var(--color-text-muted);
+        max-width: 5.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    &__account-avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        background: color-mix(in srgb, $color-primary 22%, var(--color-surface-alt));
+        color: $color-primary;
+        flex-shrink: 0;
+    }
+
+    &__logout {
+        margin: 0;
+    }
+
+    &__logout-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid var(--color-border);
+        border-radius: 10px;
+        background: var(--icon-btn-bg);
+        color: var(--icon-btn-color);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+        svg {
+            width: 20px;
+            height: 20px;
+            pointer-events: none;
+        }
+
+        svg path {
+            fill: var(--icon-btn-color);
+        }
+
+        &:hover {
+            background: var(--color-surface);
+            border-color: var(--color-border-hover);
+            color: var(--color-text);
+
+            svg path {
+                fill: var(--color-text);
+            }
         }
     }
 }

@@ -9,7 +9,6 @@ use Timer\Http\Request;
 use Timer\Http\Response;
 use Timer\Repositories\ProjectRepository;
 use Timer\Repositories\TaskRepository;
-use Timer\Repositories\TimeEntryRepository;
 use Timer\Services\ReportsExportService;
 use Timer\Support\CalendarGrid;
 use Timer\Support\Locale;
@@ -29,7 +28,7 @@ final class ReportsController extends BaseController
             );
         }
 
-        $timeEntries = new TimeEntryRepository($this->app->db());
+        $timeEntries = $this->timeEntries();
         $dailyTotals = $timeEntries->dailyTotals($filter->from, $filter->to, $filter->projectId, $filter->taskId);
         $monthTotalSeconds = $timeEntries->totalSecondsInRange(
             $filter->from,
@@ -48,9 +47,9 @@ final class ReportsController extends BaseController
             );
         }
 
-        $projects = new ProjectRepository($this->app->db())->allWithStats();
+        $projects = $this->projects()->allWithStats();
         $tasks = $filter->projectId !== null
-            ? new TaskRepository($this->app->db())->forProject($filter->projectId)
+            ? $this->tasks()->forProject($filter->projectId)
             : [];
 
         $firstDay = new DateTimeImmutable($filter->month . '-01');
@@ -89,7 +88,7 @@ final class ReportsController extends BaseController
         }
 
         $filter = $this->resolveFilter($request);
-        $timeEntries = new TimeEntryRepository($this->app->db());
+        $timeEntries = $this->timeEntries();
         $entries = $timeEntries->forDateRange(
             $filter->from,
             $filter->to,
@@ -136,7 +135,7 @@ final class ReportsController extends BaseController
         $taskName = null;
 
         if ($projectId !== null) {
-            $project = new ProjectRepository($this->app->db())->find($projectId);
+            $project = $this->projects()->find($projectId);
             if ($project === null) {
                 $projectId = null;
             } else {
@@ -145,7 +144,7 @@ final class ReportsController extends BaseController
         }
 
         if ($taskId !== null) {
-            $task = new TaskRepository($this->app->db())->find($taskId);
+            $task = $this->tasks()->find($taskId);
             if ($task === null || $task->projectId !== $projectId) {
                 $taskId = null;
             } else {

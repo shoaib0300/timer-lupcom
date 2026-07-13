@@ -1,6 +1,7 @@
 import { mountClockPicker } from './clock-picker.js';
 import { initAttendanceImport } from './attendance-import.js';
 import { initAttendanceBulkEntry } from './attendance-bulk-entry.js';
+import { csrfField } from './csrf.js';
 
 function t(key, params = {}) {
     const dict = window.__I18N__ || {};
@@ -369,6 +370,7 @@ dayForm?.addEventListener('submit', async (event) => {
     }
 
     const formData = new FormData(dayForm);
+    formData.append('_token', csrfField());
     const response = await fetch('/api/attendance/day', {
         method: 'POST',
         body: formData,
@@ -400,6 +402,7 @@ document.getElementById('attendance-add-holiday')?.addEventListener('click', (ev
 holidayForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(holidayForm);
+    formData.append('_token', csrfField());
     const response = await fetch('/api/attendance/holidays', {
         method: 'POST',
         body: formData,
@@ -425,6 +428,7 @@ document.getElementById('attendance-holidays-list')?.addEventListener('click', a
     const formData = new FormData();
     formData.append('date', date);
     formData.append('action', action);
+    formData.append('_token', csrfField());
 
     const response = await fetch('/api/attendance/holidays/remove', {
         method: 'POST',

@@ -33,6 +33,7 @@
             <a href="/projects/{{ project.id }}/edit" class="btn btn--ghost">{{ trans('common.edit') }}</a>
             <a href="/projects/{{ project.id }}/tasks/create" class="btn btn--primary">{{ trans('projects.add_task') }}</a>
             <form class="inline-form" method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('{{ trans('projects.delete_confirm_short')|e('js') }}');">
+                {% include 'partials/csrf-field.html.twig' %}
                 <button type="submit" class="btn btn--danger">{{ trans('common.delete') }}</button>
             </form>
         </div>
@@ -93,6 +94,7 @@
                                             </button>
                                             <a href="/tasks/{{ task.id }}/edit" class="btn btn--ghost btn--sm">{{ trans('common.edit') }}</a>
                                             <form class="inline-form" method="post" action="/tasks/{{ task.id }}/delete" onsubmit="return confirm('{{ trans('tasks.delete_confirm')|e('js') }}');">
+                                                {% include 'partials/csrf-field.html.twig' %}
                                                 <button type="submit" class="btn btn--danger btn--sm">{{ trans('common.delete') }}</button>
                                             </form>
                                         </div>

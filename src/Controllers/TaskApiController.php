@@ -6,7 +6,6 @@ namespace Timer\Controllers;
 
 use Timer\Http\Request;
 use Timer\Http\Response;
-use Timer\Repositories\TaskRepository;
 use Timer\Support\TimeFormatter;
 
 final class TaskApiController extends BaseController
@@ -14,7 +13,7 @@ final class TaskApiController extends BaseController
     public function search(Request $request): Response
     {
         $query = trim((string) $request->query('q', ''));
-        $tasks = new TaskRepository($this->app->db())->search($query);
+        $tasks = $this->tasks()->search($query);
 
         return $this->json([
             'tasks' => array_map($this->formatTask(...), $tasks),
@@ -24,7 +23,7 @@ final class TaskApiController extends BaseController
 
     public function frequent(Request $request): Response
     {
-        $tasks = new TaskRepository($this->app->db())->mostUsed(8);
+        $tasks = $this->tasks()->mostUsed(8);
 
         return $this->json([
             'tasks' => array_map($this->formatTask(...), $tasks),

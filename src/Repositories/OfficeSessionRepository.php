@@ -12,23 +12,25 @@ final class OfficeSessionRepository
 {
     public function __construct(
         private readonly PDO $pdo,
+        private readonly int $userId,
     ) {
     }
 
     public function findRunning(): ?OfficeSession
     {
-        $stmt = $this->pdo->query(
-            'SELECT * FROM office_sessions WHERE ended_at IS NULL ORDER BY started_at DESC LIMIT 1',
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM office_sessions WHERE ended_at IS NULL AND user_id = ? ORDER BY started_at DESC LIMIT 1',
         );
-        $row = $stmt ? $stmt->fetch() : false;
+        $stmt->execute([$this->userId]);
+        $row = $stmt->fetch();
 
         return $row ? OfficeSession::fromRow($row) : null;
     }
 
     public function findById(int $id): ?OfficeSession
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM office_sessions WHERE id = ?');
-        $stmt->execute([$id]);
+        $stmt = $this->pdo->prepare('SELECT * FROM office_sessions WHERE id = ? AND user_id = ?');
+        $stmt->execute([$id, $this->userId]);
         $row = $stmt->fetch();
 
         return $row ? OfficeSession::fromRow($row) : null;
@@ -38,9 +40,10 @@ final class OfficeSessionRepository
     {
         $now = new DateTimeImmutable();
         $stmt = $this->pdo->prepare(
-            'INSERT INTO office_sessions (work_date, started_at) VALUES (?, ?)',
+            'INSERT INTO office_sessions (user_id, work_date, started_at) VALUES (?, ?, ?)',
         );
         $stmt->execute([
+            $this->userId,
             $now->format('Y-m-d'),
             $now->format('Y-m-d H:i:s'),
         ]);
@@ -57,12 +60,13 @@ final class OfficeSessionRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'UPDATE office_sessions SET elapsed_offset = ?, paused_at = ? WHERE id = ?',
+            'UPDATE office_sessions SET elapsed_offset = ?, paused_at = ? WHERE id = ? AND user_id = ?',
         );
         $stmt->execute([
             $session->elapsedSeconds(),
             (new DateTimeImmutable())->format('Y-m-d H:i:s'),
             $sessionId,
+            $this->userId,
         ]);
 
         return $this->findById($sessionId);
@@ -77,9 +81,13 @@ final class OfficeSessionRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'UPDATE office_sessions SET started_at = ?, paused_at = NULL WHERE id = ?',
+            'UPDATE office_sessions SET started_at = ?, paused_at = NULL WHERE id = ? AND user_id = ?',
         );
-        $stmt->execute([(new DateTimeImmutable())->format('Y-m-d H:i:s'), $sessionId]);
+        $stmt->execute([
+            (new DateTimeImmutable())->format('Y-m-d H:i:s'),
+            $sessionId,
+            $this->userId,
+        ]);
 
         return $this->findById($sessionId);
     }
@@ -101,7 +109,7 @@ final class OfficeSessionRepository
             'UPDATE office_sessions
             SET ended_at = ?, duration_seconds = ?, paused_at = NULL,
                 unassigned_seconds = ?, gap_entry_id = ?
-            WHERE id = ?',
+            WHERE id = ? AND user_id = ?',
         );
         $stmt->execute([
             $endedAt->format('Y-m-d H:i:s'),
@@ -109,6 +117,7 @@ final class OfficeSessionRepository
             $unassignedSeconds > 0 ? $unassignedSeconds : null,
             $gapEntryId,
             $sessionId,
+            $this->userId,
         ]);
 
         return $this->findById($sessionId);
@@ -117,44 +126,39 @@ final class OfficeSessionRepository
     public function totalSecondsToday(): int
     {
         $running = $this->findRunning();
-        $completed = 0;
-
-        $stmt = $this->pdo->query(
+        $stmt = $this->pdo->prepare(
             "SELECT COALESCE(SUM(duration_seconds), 0)
             FROM office_sessions
-            WHERE ended_at IS NOT NULL AND work_date = CURDATE()",
+            WHERE ended_at IS NOT NULL AND work_date = CURDATE() AND user_id = ?",
         );
-        $completed = (int) ($stmt ? $stmt->fetchColumn() : 0);
+        $stmt->execute([$this->userId]);
+        $completed = (int) $stmt->fetchColumn();
 
         return $completed + ($running?->elapsedSeconds() ?? 0);
     }
 
     public function totalUnassignedToday(): int
     {
-        $stmt = $this->pdo->query(
+        $stmt = $this->pdo->prepare(
             "SELECT COALESCE(SUM(unassigned_seconds), 0)
             FROM office_sessions
-            WHERE work_date = CURDATE()",
+            WHERE work_date = CURDATE() AND user_id = ?",
         );
+        $stmt->execute([$this->userId]);
 
-        return (int) ($stmt ? $stmt->fetchColumn() : 0);
+        return (int) $stmt->fetchColumn();
     }
 
-    /**
-     * @return list<OfficeSession>
-     */
+    /** @return list<OfficeSession> */
     public function forDateRange(string $from, string $to, int $limit = 100): array
     {
         $stmt = $this->pdo->prepare(
             'SELECT * FROM office_sessions
-            WHERE work_date BETWEEN ? AND ?
+            WHERE work_date BETWEEN ? AND ? AND user_id = ?
             ORDER BY started_at DESC
             LIMIT ?',
         );
-        $stmt->bindValue(1, $from);
-        $stmt->bindValue(2, $to);
-        $stmt->bindValue(3, $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([$from, $to, $this->userId, $limit]);
 
         return array_map(
             OfficeSession::fromRow(...),
@@ -162,18 +166,16 @@ final class OfficeSessionRepository
         );
     }
 
-    /**
-     * @return array<string, int> date => total office seconds
-     */
+    /** @return array<string, int> */
     public function dailyTotals(string $from, string $to): array
     {
         $stmt = $this->pdo->prepare(
             'SELECT work_date, COALESCE(SUM(duration_seconds), 0) AS total_seconds
             FROM office_sessions
-            WHERE ended_at IS NOT NULL AND work_date BETWEEN ? AND ?
+            WHERE ended_at IS NOT NULL AND work_date BETWEEN ? AND ? AND user_id = ?
             GROUP BY work_date',
         );
-        $stmt->execute([$from, $to]);
+        $stmt->execute([$from, $to, $this->userId]);
 
         $totals = [];
         foreach ($stmt->fetchAll() as $row) {

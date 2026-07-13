@@ -1,0 +1,92 @@
+{% extends 'layouts/base.html.twig' %}
+
+{% block title %}{{ trans('users.title') }}{% endblock %}
+{% set active_nav = 'users' %}
+
+{% block content %}
+<div class="users-page">
+    <h1 class="page-title">{{ trans('users.title') }}</h1>
+    <p class="muted">{{ trans('users.subtitle') }}</p>
+
+    {% if error is defined and error %}
+        <p class="alert alert--error">{{ error }}</p>
+    {% endif %}
+
+    <section class="card">
+        <h2>{{ trans('users.add_user') }}</h2>
+        <form method="post" action="/settings/users" class="users-form">
+            <input type="hidden" name="_token" value="{{ csrf_token }}">
+
+            <div class="users-form__row">
+                <div class="form-group">
+                    <label for="user-name">{{ trans('auth.name') }}</label>
+                    <input type="text" id="user-name" name="name" value="{{ form.name|default('') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-email">{{ trans('auth.email') }}</label>
+                    <input type="email" id="user-email" name="email" value="{{ form.email|default('') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-password">{{ trans('auth.password') }}</label>
+                    <input type="password" id="user-password" name="password" required minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="user-role">{{ trans('users.role') }}</label>
+                    <select id="user-role" name="role">
+                        <option value="user"{% if (form.role|default('user')) == 'user' %} selected{% endif %}>{{ trans('users.role_user') }}</option>
+                        <option value="admin"{% if (form.role|default('')) == 'admin' %} selected{% endif %}>{{ trans('users.role_admin') }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn btn--primary">{{ trans('users.create_user') }}</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card users-page__list">
+        <h2>{{ trans('users.existing_users') }}</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>{{ trans('auth.name') }}</th>
+                    <th>{{ trans('auth.email') }}</th>
+                    <th>{{ trans('users.role') }}</th>
+                    <th>{{ trans('common.status') }}</th>
+                    <th>{{ trans('common.actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.name }}{% if current_user and user.id == current_user.id %} <span class="muted">({{ trans('users.you') }})</span>{% endif %}</td>
+                        <td class="muted">{{ user.email }}</td>
+                        <td>{{ user.isAdmin ? trans('users.role_admin') : trans('users.role_user') }}</td>
+                        <td>{{ user.isActive ? trans('users.active') : trans('users.inactive') }}</td>
+                        <td>
+                            {% if current_user and user.id != current_user.id %}
+                                {% if user.isActive %}
+                                    <form method="post" action="/settings/users/deactivate" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" class="btn btn--ghost btn--sm">{{ trans('users.deactivate') }}</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="/settings/users/activate" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token }}">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <button type="submit" class="btn btn--ghost btn--sm">{{ trans('users.activate') }}</button>
+                                    </form>
+                                {% endif %}
+                            {% else %}
+                                <span class="muted">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+{% endblock %}

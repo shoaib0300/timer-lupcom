@@ -11,6 +11,17 @@
         <strong>{{ trans('planio.readonly_banner') }}</strong> — {{ trans('planio.readonly_body', {host: 'support.lupcom.de'})|raw }}
     </div>
 
+    {% if show_welcome %}
+        <div class="alert alert--info" role="status">
+            {{ trans('planio.welcome') }}
+        </div>
+    {% endif %}
+    {% if setup_import_error %}
+        <div class="alert alert--warning" role="status">
+            {{ trans('planio.setup_import_error') }}
+        </div>
+    {% endif %}
+
     {% if flash_success %}
         <div class="alert alert--success">{{ flash_success }}</div>
     {% endif %}
@@ -29,6 +40,7 @@
         {% endif %}
 
         <form method="post" action="/settings/planio" class="settings-page__form">
+            {% include 'partials/csrf-field.html.twig' %}
             <div class="settings-page__row">
                 <div class="form-group">
                     <label for="planio-base-url">{{ trans('planio.url') }}</label>
@@ -65,6 +77,7 @@
 
         {% if has_api_key %}
             <form method="post" action="/settings/planio/disconnect" class="settings-page__disconnect" onsubmit="return confirm('{{ trans('planio.disconnect_confirm')|e('js') }}');">
+                {% include 'partials/csrf-field.html.twig' %}
                 <button type="submit" class="btn btn--ghost btn--sm">{{ trans('planio.disconnect') }}</button>
             </form>
         {% endif %}

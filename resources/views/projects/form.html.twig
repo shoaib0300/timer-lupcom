@@ -12,6 +12,7 @@
     {% endif %}
 
     <form method="post" action="{{ action }}">
+        {% include 'partials/csrf-field.html.twig' %}
         <div class="form-group">
             <label for="name">{{ trans('projects.form.name') }}</label>
             <input type="text" id="name" name="name" value="{{ project.name ?? '' }}" required>
@@ -38,6 +39,7 @@
             <h2>{{ trans('projects.form.danger_zone') }}</h2>
             <p class="muted">{{ trans('projects.form.delete_note') }}</p>
             <form method="post" action="/projects/{{ project.id }}/delete" onsubmit="return confirm('{{ trans('projects.form.delete_confirm_undo', {name: project.name})|e('js') }}');">
+                {% include 'partials/csrf-field.html.twig' %}
                 <button type="submit" class="btn btn--danger btn--sm">{{ trans('dashboard.delete_project') }}</button>
             </form>
         </div>

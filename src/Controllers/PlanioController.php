@@ -6,33 +6,30 @@ namespace Timer\Controllers;
 
 use Timer\Http\Request;
 use Timer\Http\Response;
-use Timer\Repositories\ProjectRepository;
-use Timer\Repositories\SettingsRepository;
-use Timer\Repositories\TaskRepository;
-use Timer\Repositories\TimeEntryRepository;
 use Timer\Services\PlanioClient;
-use Timer\Services\PlanioSyncService;
 
 final class PlanioController extends BaseController
 {
     public function index(Request $request): Response
     {
-        $settings = new SettingsRepository($this->app->db());
+        $settings = $this->userSettings();
         $config = $settings->planioConfig();
-        $linkedPlanioIds = new ProjectRepository($this->app->db())->linkedPlanioIds();
 
         return $this->view('settings/planio.html.twig', [
             'planio' => $config,
             'has_api_key' => ($config['api_key'] ?? '') !== '',
-            'linked_planio_ids' => $linkedPlanioIds,
+            'linked_planio_ids' => $this->projects()->linkedPlanioIds(),
             'flash_success' => $request->query('success'),
             'flash_error' => $request->query('error'),
+            'show_welcome' => $request->query('welcome') === '1',
+            'setup_import_error' => $request->query('setup_import_error') === '1',
+            'active_nav' => 'planio',
         ]);
     }
 
     public function save(Request $request): Response
     {
-        $settings = new SettingsRepository($this->app->db());
+        $settings = $this->userSettings();
         $baseUrl = PlanioClient::normalizeBaseUrl((string) $request->input('base_url', ''));
         $apiKey = trim((string) $request->input('api_key', ''));
 
@@ -48,11 +45,7 @@ final class PlanioController extends BaseController
             return $this->redirectWith('/settings/planio', 'error', 'API key is required.');
         }
 
-        $sync = new PlanioSyncService(
-            $settings,
-            new ProjectRepository($this->app->db()),
-            new TaskRepository($this->app->db()),
-        );
+        $sync = $this->planioSync();
 
         try {
             $config = $settings->planioConfig();
@@ -72,20 +65,14 @@ final class PlanioController extends BaseController
 
     public function disconnect(Request $request): Response
     {
+        $settings = $this->userSettings();
+        $sync = $this->planioSync();
         $db = $this->app->db();
-        $settings = new SettingsRepository($db);
-        $projects = new ProjectRepository($db);
-        $timeEntries = new TimeEntryRepository($db);
-        $sync = new PlanioSyncService(
-            $settings,
-            $projects,
-            new TaskRepository($db),
-        );
 
         $db->beginTransaction();
 
         try {
-            $removed = $sync->purgeImportedProjects($timeEntries);
+            $removed = $sync->purgeImportedProjects($this->timeEntries());
             $settings->clearPlanio();
             $db->commit();
         } catch (\Throwable $exception) {
@@ -103,13 +90,13 @@ final class PlanioController extends BaseController
 
     public function testApi(Request $request): Response
     {
-        $settings = new SettingsRepository($this->app->db());
+        $settings = $this->userSettings();
 
         if (!$settings->isPlanioConfigured()) {
             return $this->json(['error' => 'Save your Planio URL and API key first.'], 422);
         }
 
-        $sync = $this->syncService();
+        $sync = $this->planioSync();
 
         try {
             $config = $settings->planioConfig();
@@ -132,15 +119,15 @@ final class PlanioController extends BaseController
 
     public function projectsApi(Request $request): Response
     {
-        $settings = new SettingsRepository($this->app->db());
+        $settings = $this->userSettings();
 
         if (!$settings->isPlanioConfigured()) {
             return $this->json(['error' => 'Planio is not configured.'], 422);
         }
 
         try {
-            $projects = $this->syncService()->clientFromSettings()->allProjects();
-            $linked = new ProjectRepository($this->app->db())->linkedPlanioIds();
+            $projects = $this->planioSync()->clientFromSettings()->allProjects();
+            $linked = $this->projects()->linkedPlanioIds();
 
             $items = array_map(static function (array $project) use ($linked): array {
                 $id = (int) $project['id'];
@@ -167,7 +154,7 @@ final class PlanioController extends BaseController
 
     public function sync(Request $request): Response
     {
-        $settings = new SettingsRepository($this->app->db());
+        $settings = $this->userSettings();
 
         if (!$settings->isPlanioConfigured()) {
             return $this->json(['error' => 'Planio is not configured.'], 422);
@@ -186,7 +173,7 @@ final class PlanioController extends BaseController
         $importIssues = filter_var($request->input('import_issues', false), FILTER_VALIDATE_BOOL);
 
         try {
-            $stats = $this->syncService()->sync($projectIds, $importIssues);
+            $stats = $this->planioSync()->sync($projectIds, $importIssues);
 
             return $this->json([
                 'message' => $this->syncMessage($stats),
@@ -199,7 +186,7 @@ final class PlanioController extends BaseController
 
     public function syncItem(Request $request): Response
     {
-        $settings = new SettingsRepository($this->app->db());
+        $settings = $this->userSettings();
 
         if (!$settings->isPlanioConfigured()) {
             return $this->json(['error' => 'Planio is not configured.'], 422);
@@ -210,10 +197,10 @@ final class PlanioController extends BaseController
         $finalize = filter_var($request->input('finalize', false), FILTER_VALIDATE_BOOL);
 
         try {
-            $stats = $this->syncService()->syncProject($projectId, $importIssues);
+            $stats = $this->planioSync()->syncProject($projectId, $importIssues);
 
             if ($finalize) {
-                $this->syncService()->markSyncComplete();
+                $this->planioSync()->markSyncComplete();
             }
 
             return $this->json([
@@ -234,17 +221,6 @@ final class PlanioController extends BaseController
             $stats['projects_updated'],
             $stats['tasks_created'],
             $stats['tasks_updated'],
-        );
-    }
-
-    private function syncService(): PlanioSyncService
-    {
-        $db = $this->app->db();
-
-        return new PlanioSyncService(
-            new SettingsRepository($db),
-            new ProjectRepository($db),
-            new TaskRepository($db),
         );
     }
 

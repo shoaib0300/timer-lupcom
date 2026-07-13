@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=40">
+    <link rel="stylesheet" href="/assets/css/main.css?v=41">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -35,14 +35,38 @@
             </button>
         </div>
         <nav class="nav" aria-label="{{ trans('nav.main') }}">
-            <a href="/" class="{% if active_nav == 'dashboard' %}is-active{% endif %}">{{ trans('nav.dashboard') }}</a>
             <a href="/reports" class="{% if active_nav == 'reports' %}is-active{% endif %}">{{ trans('nav.time_log') }}</a>
             <a href="/office" class="{% if active_nav == 'office' %}is-active{% endif %}">{{ trans('nav.office') }}</a>
             <a href="/attendance" class="{% if active_nav == 'attendance' %}is-active{% endif %}">{{ trans('nav.attendance') }}</a>
             <a href="/projects" class="{% if active_nav == 'projects' %}is-active{% endif %}">{{ trans('nav.projects') }}</a>
             <a href="/settings/planio" class="{% if active_nav == 'planio' %}is-active{% endif %}">{{ trans('nav.planio') }}</a>
+            {% if current_user and current_user.isAdmin %}
+                <a href="/settings/users" class="{% if active_nav == 'users' %}is-active{% endif %}">{{ trans('nav.users') }}</a>
+            {% endif %}
         </nav>
         <div class="site-nav__footer">
+            {% if current_user %}
+                {% set name_parts = current_user.name|split(' ') %}
+                {% set first_initial = name_parts[0]|default('?')|slice(0, 1) %}
+                {% set last_initial = name_parts|length > 1 ? name_parts|last|slice(0, 1) : '' %}
+                <div class="site-nav__account">
+                    <div class="site-nav__account-profile">
+                        <p class="site-nav__account-name" title="{{ current_user.name }}">{{ current_user.name }}</p>
+                        <div class="site-nav__account-avatar" aria-hidden="true">{{ (first_initial ~ last_initial)|upper }}</div>
+                    </div>
+                    <form method="post" action="/logout" class="site-nav__logout">
+                        <input type="hidden" name="_token" value="{{ csrf_token }}">
+                        <button
+                            type="submit"
+                            class="site-nav__logout-btn"
+                            aria-label="{{ trans('auth.sign_out') }}"
+                            title="{{ trans('auth.sign_out') }}"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5zM4 5h8V3H4a1.99 1.99 0 0 0-1 1v16a1.99 1.99 0 0 0 1 1h8v-2H4V5z"/></svg>
+                        </button>
+                    </form>
+                </div>
+            {% endif %}
             <button
                 type="button"
                 class="theme-toggle"
@@ -203,7 +227,8 @@
     </div>
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=33"></script>
+    <script>window.__CSRF__ = {{ csrf_token|default('')|json_encode|raw }};</script>
+    <script type="module" src="/assets/js/app.js?v=34"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

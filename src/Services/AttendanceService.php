@@ -8,14 +8,14 @@ use DateTimeImmutable;
 use Timer\Models\AttendanceDay;
 use Timer\Repositories\AttendanceDayRepository;
 use Timer\Repositories\AttendanceHolidayRepository;
-use Timer\Repositories\SettingsRepository;
+use Timer\Repositories\UserSettingsRepository;
 use Timer\Support\AttendanceHours;
 use Timer\Support\GermanHolidays;
 
 final class AttendanceService
 {
     public function __construct(
-        private readonly SettingsRepository $settings,
+        private readonly UserSettingsRepository $settings,
         private readonly AttendanceDayRepository $days,
         private readonly AttendanceHolidayRepository $holidays,
     ) {

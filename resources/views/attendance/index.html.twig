@@ -25,6 +25,7 @@
         <div class="attendance-accordion__body attendance-settings">
             <p class="muted attendance-settings__hint">{{ trans('attendance.settings_hint', {hours: daily_hours, break: break_minutes}) }}</p>
             <form method="post" action="/attendance/settings" class="attendance-settings__form">
+                <input type="hidden" name="_token" value="{{ csrf_token }}">
                 <input type="hidden" name="month" value="{{ month }}">
                 <div class="attendance-settings__row">
                     <div class="form-group">

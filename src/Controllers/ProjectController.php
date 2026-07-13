@@ -13,12 +13,8 @@ final class ProjectController extends BaseController
 {
     public function index(Request $request): Response
     {
-        $projects = new ProjectRepository($this->app->db())->allWithStats();
-        $timeEntries = new \Timer\Repositories\TimeEntryRepository($this->app->db());
-        $timerService = new \Timer\Services\TimerService(
-            $timeEntries,
-            new TaskRepository($this->app->db()),
-        );
+        $projects = $this->projects()->allWithStats();
+        $timerService = $this->timerService();
 
         $timerStatus = $timerService->getStatus();
         $runningProjectIds = array_map(
@@ -54,7 +50,7 @@ final class ProjectController extends BaseController
             ]);
         }
 
-        $repo = new ProjectRepository($this->app->db());
+        $repo = $this->projects();
         $id = $repo->create(
             $name,
             $this->nullableString($request->input('description')),
@@ -66,14 +62,14 @@ final class ProjectController extends BaseController
 
     public function show(Request $request, int $id): Response
     {
-        $repo = new ProjectRepository($this->app->db());
+        $repo = $this->projects();
         $project = $repo->find($id);
 
         if ($project === null) {
             return Response::html('Project not found', 404);
         }
 
-        $tasks = new TaskRepository($this->app->db())->forProject($id);
+        $tasks = $this->tasks()->forProject($id);
 
         return $this->view('projects/show.html.twig', [
             'project' => $project,
@@ -83,13 +79,13 @@ final class ProjectController extends BaseController
 
     public function tasksApi(Request $request, int $id): Response
     {
-        $project = new ProjectRepository($this->app->db())->find($id);
+        $project = $this->projects()->find($id);
 
         if ($project === null) {
             return $this->json(['error' => 'Project not found.'], 404);
         }
 
-        $tasks = new TaskRepository($this->app->db())->forProject($id);
+        $tasks = $this->tasks()->forProject($id);
 
         return $this->json([
             'tasks' => array_map(static fn ($task) => [
@@ -106,7 +102,7 @@ final class ProjectController extends BaseController
 
     public function edit(Request $request, int $id): Response
     {
-        $project = new ProjectRepository($this->app->db())->find($id);
+        $project = $this->projects()->find($id);
 
         if ($project === null) {
             return Response::html('Project not found', 404);
@@ -121,7 +117,7 @@ final class ProjectController extends BaseController
 
     public function update(Request $request, int $id): Response
     {
-        $repo = new ProjectRepository($this->app->db());
+        $repo = $this->projects();
         $project = $repo->find($id);
 
         if ($project === null) {
@@ -151,7 +147,7 @@ final class ProjectController extends BaseController
 
     public function destroy(Request $request, int $id): Response
     {
-        $repo = new ProjectRepository($this->app->db());
+        $repo = $this->projects();
 
         if ($repo->find($id) === null) {
             return Response::html('Project not found', 404);

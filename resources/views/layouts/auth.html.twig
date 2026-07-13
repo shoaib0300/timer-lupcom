@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="{{ locale }}" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ trans('app.name') }}{% endblock %} | {{ trans('app.title_suffix') }}</title>
+    <script>
+    (function () {
+        var theme = localStorage.getItem('timer-theme');
+        if (theme === 'light' || theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+    })();
+    </script>
+    <link rel="stylesheet" href="/assets/css/main.css?v=41">
+</head>
+<body class="auth-page">
+    <main class="auth-page__container">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
