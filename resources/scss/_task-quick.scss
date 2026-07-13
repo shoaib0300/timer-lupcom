@@ -31,10 +31,42 @@
 
     &__header {
         display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+        margin-bottom: 0.15rem;
+    }
+
+    &__header-row {
+        display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 0.5rem;
-        margin-bottom: 0.15rem;
+    }
+
+    &__header .site-nav__account {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    &__header .site-nav__account-profile {
+        flex-direction: row;
+        align-items: center;
+        flex: 1;
+        min-width: 0;
+        gap: 0.5rem;
+    }
+
+    &__header .site-nav__account-name {
+        order: 2;
+        max-width: none;
+        font-size: 0.82rem;
+        text-align: left;
+    }
+
+    &__header .user-avatar--nav {
+        order: 1;
+        flex-shrink: 0;
     }
 
     &__header-title {

@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=48">
+    <link rel="stylesheet" href="/assets/css/main.css?v=49">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -45,29 +45,6 @@
             {% endif %}
         </nav>
         <div class="site-nav__footer">
-            {% if current_user %}
-                <div class="site-nav__account">
-                    <a href="/settings/profile" class="site-nav__account-profile" title="{{ trans('profile.title') }}">
-                        <p class="site-nav__account-name">{{ current_user.name }}</p>
-                        {% include 'partials/user-avatar.html.twig' with {
-                            name: current_user.name,
-                            avatar_url: profile_avatar_url|default(null),
-                            class: 'user-avatar--nav',
-                        } %}
-                    </a>
-                    <form method="post" action="/logout" class="site-nav__logout">
-                        <input type="hidden" name="_token" value="{{ csrf_token }}">
-                        <button
-                            type="submit"
-                            class="site-nav__logout-btn"
-                            aria-label="{{ trans('auth.sign_out') }}"
-                            title="{{ trans('auth.sign_out') }}"
-                        >
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a1 1 0 0 0-1 1v7a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1zm6.36 3.64a8 8 0 1 1-12.73 0 1 1 0 0 0-1.62 1.18 10 10 0 1 0 15.97 0 1 1 0 1 0-1.62-1.18z"/></svg>
-                        </button>
-                    </form>
-                </div>
-            {% endif %}
             <button
                 type="button"
                 class="theme-toggle"
@@ -176,15 +153,18 @@
 
         <aside class="quick-sidebar" id="quick-sidebar" aria-label="{{ trans('dashboard.quick_start') }}">
             <div class="quick-sidebar__header">
-                <h2 class="quick-sidebar__header-title">{{ trans('dashboard.quick_start') }}</h2>
-                <button
-                    type="button"
-                    class="quick-sidebar__close"
-                    id="quick-drawer-close"
-                    aria-label="{{ trans('dashboard.close_quick_start') }}"
-                >
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-                </button>
+                {% include 'partials/nav-account.html.twig' %}
+                <div class="quick-sidebar__header-row">
+                    <h2 class="quick-sidebar__header-title">{{ trans('dashboard.quick_start') }}</h2>
+                    <button
+                        type="button"
+                        class="quick-sidebar__close"
+                        id="quick-drawer-close"
+                        aria-label="{{ trans('dashboard.close_quick_start') }}"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8.59 16.59 13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+                    </button>
+                </div>
             </div>
             <section class="quick-sidebar__section task-quick-search">
                 <p class="muted quick-sidebar__intro">{{ trans('dashboard.quick_start_intro') }}</p>

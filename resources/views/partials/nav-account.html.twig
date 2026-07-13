@@ -1,0 +1,23 @@
+{% if current_user %}
+    <div class="site-nav__account">
+        <a href="/settings/profile" class="site-nav__account-profile" title="{{ trans('profile.title') }}">
+            <p class="site-nav__account-name">{{ current_user.name }}</p>
+            {% include 'partials/user-avatar.html.twig' with {
+                name: current_user.name,
+                avatar_url: profile_avatar_url|default(null),
+                class: 'user-avatar--nav',
+            } %}
+        </a>
+        <form method="post" action="/logout" class="site-nav__logout">
+            <input type="hidden" name="_token" value="{{ csrf_token }}">
+            <button
+                type="submit"
+                class="site-nav__logout-btn"
+                aria-label="{{ trans('auth.sign_out') }}"
+                title="{{ trans('auth.sign_out') }}"
+            >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a1 1 0 0 0-1 1v7a1 1 0 1 0 2 0V3a1 1 0 0 0-1-1zm6.36 3.64a8 8 0 1 1-12.73 0 1 1 0 0 0-1.62 1.18 10 10 0 1 0 15.97 0 1 1 0 1 0-1.62-1.18z"/></svg>
+            </button>
+        </form>
+    </div>
+{% endif %}
