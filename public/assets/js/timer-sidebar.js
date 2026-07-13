@@ -1,4 +1,4 @@
-import { escapeHtml, formatClock, ICONS, t } from './utils.js';
+import { escapeHtml, formatLiveClock, ICONS, t } from './utils.js';
 import { postTimerAction } from './timer-api.js';
 import { updateDashboardAfterStop } from './dashboard.js';
 import { refreshTrackedLive } from './dashboard-stats.js';
@@ -27,7 +27,7 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
                 <div class="timer-item__content">
                     <div class="timer-item__row">
                         <span class="timer-item__project">${escapeHtml(timer.project_name || t('project_fallback'))}</span>
-                        <time class="timer-item__clock" data-clock-for="${timer.id}">${formatClock(timer.elapsed_seconds || 0)}</time>
+                        <time class="timer-item__clock" data-clock-for="${timer.id}">${formatLiveClock(timer.elapsed_seconds || 0)}</time>
                     </div>
                     <div class="timer-item__row">
                         <span class="timer-item__task">${escapeHtml(timer.task_name || t('no_work'))}</span>
@@ -83,7 +83,7 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
                     }
                     const clock = listEl.querySelector(`[data-clock-for="${timer.id}"]`);
                     if (clock) {
-                        clock.textContent = formatClock(timer.elapsed_seconds);
+                        clock.textContent = formatLiveClock(timer.elapsed_seconds);
                     }
                 });
 

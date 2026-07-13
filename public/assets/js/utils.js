@@ -12,6 +12,14 @@ export function formatClock(seconds) {
     return [h, m].map((v) => String(v).padStart(2, '0')).join(':');
 }
 
+export function formatLiveClock(seconds) {
+    const safe = Math.max(0, Number(seconds) || 0);
+    const h = Math.floor(safe / 3600);
+    const m = Math.floor((safe % 3600) / 60);
+    const s = safe % 60;
+    return [h, m, s].map((v) => String(v).padStart(2, '0')).join(':');
+}
+
 const MONTH_ABBR = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
 export function formatCompactDateTime(value) {

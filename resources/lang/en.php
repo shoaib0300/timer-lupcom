@@ -462,5 +462,6 @@ return [
     'js.reports.weekday.sun' => 'Sun',
     'js.office.paused_label' => 'Paused',
     'js.office.in_office' => 'In office',
+    'js.office.clock_in_prompt' => 'Not checked in yet.',
     'js.office.gap_logged' => ':time logged as no project work.',
 ];

@@ -31,6 +31,7 @@ final class View
 
         $this->twig->addFunction(new TwigFunction('format_time', [TimeFormatter::class, 'secondsToHuman']));
         $this->twig->addFunction(new TwigFunction('format_clock', [TimeFormatter::class, 'secondsToClock']));
+        $this->twig->addFunction(new TwigFunction('format_live_clock', [TimeFormatter::class, 'secondsToLiveClock']));
         $this->twig->addFunction(new TwigFunction('format_compact_date', [DateHelper::class, 'formatCompactDate']));
         $this->twig->addFunction(new TwigFunction('format_compact_datetime', [DateHelper::class, 'formatCompactDateTime']));
         $this->twig->addFunction(new TwigFunction('format_rich_text', [TextFormatter::class, 'formatRichText'], ['is_safe' => ['html']]));

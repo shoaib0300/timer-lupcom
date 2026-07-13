@@ -41,9 +41,9 @@
         </div>
         <p class="dash-card__hint muted">{{ trans('office.dashboard_hint') }}</p>
 
-        <div class="office-clock__live{% if office.session and office.session.is_paused %} is-paused{% endif %}" id="office-timer-display"{% if not office.active %} hidden{% endif %}>
-            <time class="office-clock__time" id="office-elapsed" data-session-id="{{ office.session.id ?? '' }}">{{ office.session ? format_clock(office.session.elapsed_seconds) : '00:00' }}</time>
-            <span class="office-clock__status muted" id="office-status-label">{% if office.session and office.session.is_paused %}{{ trans('office.paused_label') }}{% else %}{{ trans('office.in_office') }}{% endif %}</span>
+        <div class="office-clock__live{% if office.session and office.session.is_paused %} is-paused{% endif %}{% if not office.active %} is-idle{% endif %}" id="office-timer-display">
+            <time class="office-clock__time" id="office-elapsed" data-session-id="{{ office.session.id ?? '' }}">{{ office.session ? format_live_clock(office.session.elapsed_seconds) : '00:00:00' }}</time>
+            <span class="office-clock__status muted" id="office-status-label">{% if office.active %}{% if office.session and office.session.is_paused %}{{ trans('office.paused_label') }}{% else %}{{ trans('office.in_office') }}{% endif %}{% else %}{{ trans('office.clock_in_prompt') }}{% endif %}</span>
         </div>
 
         <dl class="dash-card__stats">
@@ -260,5 +260,5 @@
     window.__OFFICE_INITIAL__ = {{ office|json_encode|raw }};
 </script>
 <script type="module" src="/assets/js/manual-entry.js"></script>
-<script type="module" src="/assets/js/office-clock.js"></script>
+<script type="module" src="/assets/js/office-clock.js?v=2"></script>
 {% endblock %}

@@ -1,10 +1,17 @@
-import { formatClock, t } from './utils.js';
+import { formatLiveClock, t } from './utils.js';
 import { fetchOfficeStatus, postOfficeAction, startOffice } from './office-api.js';
 import { prependSessionRow } from './manual-entry.js';
 import {
     applyOfficeStatus,
     setOfficeToday,
 } from './dashboard-stats.js';
+
+function localDateString() {
+    const date = new Date();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${date.getFullYear()}-${month}-${day}`;
+}
 
 export function initOfficeClock() {
     const root = document.getElementById('office-clock');
@@ -24,6 +31,8 @@ export function initOfficeClock() {
     let session = null;
     let officeTodayBase = 0;
     let tickInterval = null;
+    let workDate = localDateString();
+    let elapsedAnchor = { base: 0, since: null };
 
     function showFeedback(message, isError = false) {
         if (!feedbackEl) {
@@ -41,6 +50,46 @@ export function initOfficeClock() {
         if (stopBtn) stopBtn.hidden = !active;
     }
 
+    function currentElapsed() {
+        if (!session) {
+            return 0;
+        }
+
+        if (session.is_paused || elapsedAnchor.since === null) {
+            return session.elapsed_seconds || 0;
+        }
+
+        return elapsedAnchor.base + Math.floor((Date.now() - elapsedAnchor.since) / 1000);
+    }
+
+    function syncElapsedAnchor() {
+        if (!session || session.is_paused) {
+            elapsedAnchor = {
+                base: session?.elapsed_seconds || 0,
+                since: null,
+            };
+            return;
+        }
+
+        elapsedAnchor = {
+            base: session.elapsed_seconds || 0,
+            since: Date.now(),
+        };
+    }
+
+    function renderElapsed() {
+        const elapsed = currentElapsed();
+
+        if (elapsedEl) {
+            elapsedEl.textContent = formatLiveClock(elapsed);
+            elapsedEl.dataset.sessionId = session?.id ? String(session.id) : '';
+        }
+
+        if (session && !session.is_paused) {
+            setOfficeToday(officeTodayBase + elapsed, { live: true });
+        }
+    }
+
     function stopTick() {
         if (tickInterval) {
             clearInterval(tickInterval);
@@ -48,21 +97,45 @@ export function initOfficeClock() {
         }
     }
 
+    function checkDayRollover() {
+        const today = localDateString();
+        if (today === workDate) {
+            return;
+        }
+
+        workDate = today;
+        stopTick();
+        session = null;
+        officeTodayBase = 0;
+        elapsedAnchor = { base: 0, since: null };
+
+        if (elapsedEl) {
+            elapsedEl.textContent = formatLiveClock(0);
+            elapsedEl.dataset.sessionId = '';
+        }
+
+        fetchOfficeStatus().then(applyStatus).catch(() => {});
+    }
+
     function startTick() {
         stopTick();
         if (!session || session.is_paused) {
             return;
         }
-        tickInterval = setInterval(() => {
+
+        const tick = () => {
+            checkDayRollover();
             if (!session || session.is_paused) {
                 return;
             }
-            session = { ...session, elapsed_seconds: (session.elapsed_seconds || 0) + 1 };
-            if (elapsedEl) {
-                elapsedEl.textContent = formatClock(session.elapsed_seconds);
-            }
-            setOfficeToday(officeTodayBase + session.elapsed_seconds);
-        }, 1000);
+
+            const elapsed = currentElapsed();
+            session = { ...session, elapsed_seconds: elapsed };
+            renderElapsed();
+        };
+
+        tick();
+        tickInterval = setInterval(tick, 1000);
     }
 
     function applyStatus(status) {
@@ -72,19 +145,18 @@ export function initOfficeClock() {
         root.dataset.active = active ? '1' : '0';
 
         if (timerDisplay) {
-            timerDisplay.hidden = !active;
             timerDisplay.classList.toggle('is-paused', Boolean(session?.is_paused));
-        }
-
-        if (elapsedEl && session) {
-            elapsedEl.textContent = formatClock(session.elapsed_seconds || 0);
-            elapsedEl.dataset.sessionId = String(session.id);
+            timerDisplay.classList.toggle('is-idle', !active);
         }
 
         if (statusLabel) {
-            statusLabel.textContent = session?.is_paused
-                ? t('office.paused_label')
-                : t('office.in_office');
+            if (!active) {
+                statusLabel.textContent = t('office.clock_in_prompt');
+            } else if (session?.is_paused) {
+                statusLabel.textContent = t('office.paused_label');
+            } else {
+                statusLabel.textContent = t('office.in_office');
+            }
         }
 
         setButtons(active, Boolean(session?.is_paused));
@@ -96,6 +168,9 @@ export function initOfficeClock() {
 
             applyOfficeStatus(status);
         }
+
+        syncElapsedAnchor();
+        renderElapsed();
 
         if (active && !session?.is_paused) {
             startTick();

@@ -11,13 +11,13 @@
             opacity: 0.65;
         }
 
-        &[hidden] {
-            display: none !important;
+        &.is-idle .office-clock__time {
+            opacity: 0.5;
         }
     }
 
     &__time {
-        font-size: 1.25rem;
+        font-size: 1.75rem;
         font-weight: 700;
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.02em;

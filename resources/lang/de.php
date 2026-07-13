@@ -462,5 +462,6 @@ return [
     'js.reports.weekday.sun' => 'So',
     'js.office.paused_label' => 'Pausiert',
     'js.office.in_office' => 'Im Büro',
+    'js.office.clock_in_prompt' => 'Noch nicht eingecheckt.',
     'js.office.gap_logged' => ':time als keine Projektarbeit erfasst.',
 ];

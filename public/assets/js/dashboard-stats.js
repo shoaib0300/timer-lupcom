@@ -8,6 +8,20 @@ export function formatHuman(seconds) {
     return `${m}m`;
 }
 
+export function formatHumanLive(seconds) {
+    const safe = Math.max(0, Number(seconds) || 0);
+    const h = Math.floor(safe / 3600);
+    const m = Math.floor((safe % 3600) / 60);
+    const s = safe % 60;
+    if (h > 0) {
+        return `${h}h ${m}m ${s}s`;
+    }
+    if (m > 0) {
+        return `${m}m ${s}s`;
+    }
+    return `${s}s`;
+}
+
 function setStat(selector, seconds, { human } = {}) {
     const label = human ?? formatHuman(seconds);
     document.querySelectorAll(selector).forEach((el) => {
@@ -36,12 +50,14 @@ export function refreshTrackedLive(runningTimers = []) {
         0,
     );
     const total = trackedCompletedBase + runningSeconds;
-    setStat('.js-total-today', total);
-    setStat('.js-tracked-today', total);
+    const label = runningSeconds > 0 ? formatHumanLive(total) : undefined;
+    setStat('.js-total-today', total, { human: label });
+    setStat('.js-tracked-today', total, { human: label });
 }
 
-export function setOfficeToday(seconds) {
-    setStat('.js-office-today', seconds);
+export function setOfficeToday(seconds, { live = false } = {}) {
+    const label = live ? formatHumanLive(seconds) : undefined;
+    setStat('.js-office-today', seconds, { human: label });
 }
 
 export function setUnassignedToday(seconds) {
