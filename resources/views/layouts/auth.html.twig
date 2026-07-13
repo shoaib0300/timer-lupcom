@@ -12,10 +12,13 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=47">
+    <link rel="stylesheet" href="/assets/css/main.css?v=49">
 </head>
 <body class="auth-page">
     <main class="auth-page__container">
+        <div class="auth-page__brand">
+            {% include 'partials/brand-logo.html.twig' %}
+        </div>
         {% block content %}{% endblock %}
     </main>
 </body>
