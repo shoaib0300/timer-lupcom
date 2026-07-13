@@ -9,10 +9,6 @@
 <h1 class="page-title">{{ trans('office.title') }}</h1>
 <p class="muted office-page__intro">{{ trans('office.page_intro') }}</p>
 
-{% if planio_configured %}
-    <p class="alert alert--info is-hidden office-page__planio-feedback" id="office-planio-sync-feedback" role="status"></p>
-{% endif %}
-
 <div class="card office-page__today">
     <div class="muted">{{ trans('office.in_office_today') }}</div>
     <div class="stat">{{ format_time(work_today_seconds) }}</div>
@@ -38,12 +34,6 @@
             {{ trans('office.period_summary', {total: period_total}) }}
         </p>
         <div class="office-filter__tools">
-            {% if planio_configured %}
-                {% include 'partials/planio-sync-time-btn.html.twig' with {
-                    reload: '1',
-                    feedback_id: 'office-planio-sync-feedback',
-                } %}
-            {% endif %}
             <a href="/office/export?format=csv&amp;{{ export_query }}" class="btn btn--ghost btn--sm">{{ trans('reports.export_csv') }}</a>
             <a href="/office/export?format=pdf&amp;{{ export_query }}" class="btn btn--ghost btn--sm">{{ trans('reports.export_pdf') }}</a>
         </div>
@@ -74,10 +64,4 @@
     {% endif %}
 </section>
 </div>
-{% endblock %}
-
-{% block scripts %}
-{% if planio_configured %}
-<script type="module" src="/assets/js/planio-time-sync.js?v=2"></script>
-{% endif %}
 {% endblock %}

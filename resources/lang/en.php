@@ -349,6 +349,7 @@ return [
     'planio.import_time_intro' => 'Pull your logged Planio hours into this app. Time appears on the dashboard (today) and in reports by project and date. Only projects you imported here are included.',
     'planio.last_time_import' => 'Last time import',
     'planio.sync_time' => 'Update from Planio',
+    'planio.sync_time_short' => 'Planio',
     'planio.time_import_summary' => 'Planio time: :imported new, :updated updated, :skipped skipped (project not imported).',
     'planio.import_projects' => 'Import projects',
     'planio.load_projects' => 'Load projects',

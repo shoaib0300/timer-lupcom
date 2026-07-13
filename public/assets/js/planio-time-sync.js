@@ -10,8 +10,8 @@ function bindButton(button) {
     const defaultLabel = button.textContent;
 
     button.addEventListener('click', async () => {
-        const feedbackId = button.dataset.feedbackId;
-        const feedbackEl = feedbackId ? document.getElementById(feedbackId) : null;
+        const feedbackId = button.dataset.feedbackId || 'planio-sync-feedback';
+        const feedbackEl = document.getElementById(feedbackId);
         const month = button.dataset.month || '';
         const reloadOnSuccess = button.dataset.reload === '1';
 

@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=47">
+    <link rel="stylesheet" href="/assets/css/main.css?v=48">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -128,25 +128,36 @@
             <header class="site-header">
                 <div class="site-header__inner">
                     {% include 'partials/brand-logo.html.twig' %}
-                    <button
-                        type="button"
-                        class="nav-toggle"
-                        id="nav-toggle"
-                        aria-expanded="false"
-                        aria-controls="site-nav"
-                        aria-label="{{ trans('nav.open_menu') }}"
-                        data-label-open="{{ trans('nav.open_menu') }}"
-                        data-label-close="{{ trans('nav.close_menu') }}"
-                    >
-                        <span class="nav-toggle__bar" aria-hidden="true"></span>
-                        <span class="nav-toggle__bar" aria-hidden="true"></span>
-                        <span class="nav-toggle__bar" aria-hidden="true"></span>
-                    </button>
-                    <div class="site-nav-slot" id="site-nav-slot" aria-hidden="true"></div>
+                    <div class="site-header__actions">
+                        {% if planio_configured %}
+                            {% include 'partials/planio-sync-time-btn.html.twig' with {
+                                compact: true,
+                                reload: '1',
+                            } %}
+                        {% endif %}
+                        <button
+                            type="button"
+                            class="nav-toggle"
+                            id="nav-toggle"
+                            aria-expanded="false"
+                            aria-controls="site-nav"
+                            aria-label="{{ trans('nav.open_menu') }}"
+                            data-label-open="{{ trans('nav.open_menu') }}"
+                            data-label-close="{{ trans('nav.close_menu') }}"
+                        >
+                            <span class="nav-toggle__bar" aria-hidden="true"></span>
+                            <span class="nav-toggle__bar" aria-hidden="true"></span>
+                            <span class="nav-toggle__bar" aria-hidden="true"></span>
+                        </button>
+                        <div class="site-nav-slot" id="site-nav-slot" aria-hidden="true"></div>
+                    </div>
                 </div>
             </header>
 
             <main class="container">
+                {% if planio_configured %}
+                    <p class="alert alert--info is-hidden planio-sync-feedback" id="planio-sync-feedback" role="status"></p>
+                {% endif %}
                 {% if not hide_page_back|default(false) %}
                 <button
                     type="button"
@@ -229,7 +240,7 @@
 
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
     <script>window.__CSRF__ = {{ csrf_token|default('')|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=34"></script>
+    <script type="module" src="/assets/js/app.js?v=35"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

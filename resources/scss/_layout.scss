@@ -103,6 +103,13 @@
         gap: 1rem;
         position: relative;
     }
+
+    &__actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
 }
 
 .brand {
@@ -131,6 +138,32 @@ html[data-theme='dark'] .brand {
     &__logo--dark {
         display: block;
     }
+}
+
+.planio-sync-btn--compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    padding: 0.35rem 0.6rem;
+    white-space: nowrap;
+
+    .planio-sync-btn__icon {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 520px) {
+        .planio-sync-btn__label {
+            display: none;
+        }
+    }
+}
+
+.planio-sync-feedback {
+    margin-top: 0;
+    margin-bottom: 1rem;
 }
 
 .nav-toggle {

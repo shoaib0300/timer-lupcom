@@ -9,6 +9,7 @@ import { initThemeToggle } from './theme.js';
 import { initNavMenu } from './nav-menu.js';
 import { initQuickDrawer } from './quick-drawer.js';
 import { initTimerDrawer } from './timer-drawer.js';
+import './planio-time-sync.js';
 
 initPageBack();
 initThemeToggle();
