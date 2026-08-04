@@ -233,6 +233,7 @@ final class TimerController extends BaseController
 
         $created = $this->planioSync()->clientFromSettings()->createTimeEntry(
             $planioIssueId,
+            null,
             $hours,
             $comment,
             $activityId,

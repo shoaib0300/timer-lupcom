@@ -20,6 +20,7 @@ final readonly class TimeEntry
         public ?string $notes,
         public string $createdAt,
         public string $updatedAt,
+        public ?int $planioTimeEntryId = null,
         public ?string $projectName = null,
         public ?string $taskName = null,
         public ?string $projectColor = null,
@@ -98,6 +99,9 @@ final readonly class TimeEntry
             $row['notes'] ?? null,
             $row['created_at'],
             $row['updated_at'],
+            isset($row['planio_time_entry_id']) && $row['planio_time_entry_id'] !== null
+                ? (int) $row['planio_time_entry_id']
+                : null,
             $row['project_name'] ?? null,
             $row['task_name'] ?? null,
             $row['project_color'] ?? null,

@@ -114,11 +114,12 @@
                         <th>{{ trans('reports.subject') }}</th>
                         <th>{{ trans('common.started') }}</th>
                         <th>{{ trans('common.duration') }}</th>
+                        <th>{{ trans('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for entry in day_entries %}
-                        <tr>
+                        <tr data-entry-id="{{ entry.id }}" data-entry-project-id="{{ entry.projectId }}" data-planio-time-entry-id="{{ entry.planioTimeEntryId ?? '' }}">
                             <td>
                                 {% if entry.isGeneral %}
                                     <span class="project-dot" style="background: #64748b;"></span>
@@ -144,6 +145,14 @@
                             </td>
                             <td class="muted reports-date-cell">{{ format_compact_datetime(entry.startedAt) }}</td>
                             <td>{{ format_time(entry.durationSeconds) }}</td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn--ghost btn--sm js-report-entry-delete"
+                                    data-entry-id="{{ entry.id }}"
+                                    data-planio-time-entry-id="{{ entry.planioTimeEntryId ?? '' }}"
+                                >{{ trans('common.delete') }}</button>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -158,5 +167,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script type="module" src="/assets/js/reports.js"></script>
+<script type="module" src="/assets/js/reports.js?v=2"></script>
 {% endblock %}

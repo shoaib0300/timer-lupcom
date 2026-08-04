@@ -1,6 +1,6 @@
 import { formatLiveClock, t } from './utils.js';
 import { fetchOfficeStatus, postOfficeAction, startOffice } from './office-api.js';
-import { prependSessionRow } from './manual-entry.js';
+import { prependSessionRow } from './manual-entry.js?v=4';
 import {
     applyOfficeStatus,
     setOfficeToday,

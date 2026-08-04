@@ -485,6 +485,22 @@ final class TimeEntryRepository
         $stmt->execute([$planioTimeEntryId, $entryId, ...$userParams]);
     }
 
+    public function deleteById(int $entryId): bool
+    {
+        if ($entryId <= 0) {
+            return false;
+        }
+
+        [$userSql, $userParams] = $this->tableUserScope();
+        $stmt = $this->pdo->prepare(
+            'DELETE FROM time_entries
+             WHERE id = ?' . $userSql,
+        );
+        $stmt->execute([$entryId, ...$userParams]);
+
+        return $stmt->rowCount() > 0;
+    }
+
     /**
      * @return 'imported'|'updated'
      */

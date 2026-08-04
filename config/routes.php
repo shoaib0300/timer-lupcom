@@ -93,4 +93,5 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->get('/api/timer/status', [TimerController::class, 'status']);
 
     $r->post('/api/time-entries/manual', [TimeEntryController::class, 'storeManual']);
+    $r->post('/api/time-entries/{id:\d+}/delete', [TimeEntryController::class, 'delete']);
 };

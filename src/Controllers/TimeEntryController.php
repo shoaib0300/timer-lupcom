@@ -24,6 +24,7 @@ final class TimeEntryController extends BaseController
         $workDateInput = trim((string) $request->input('work_date', ''));
         $projectId = $this->optionalPositiveInt($request->input('project_id'));
         $taskId = $this->optionalPositiveInt($request->input('task_id'));
+        $activityId = $this->optionalPositiveInt($request->input('activity_id'));
 
         $durationSeconds = ($hours * 3600) + ($minutes * 60);
 
@@ -40,6 +41,8 @@ final class TimeEntryController extends BaseController
             return $this->json(['error' => 'Date cannot be in the future.'], 422);
         }
 
+        $project = null;
+        $task = null;
         if ($projectId === null) {
             if ($notes === '') {
                 return $this->json(['error' => 'Reason is required when no project is selected.'], 422);
@@ -51,13 +54,11 @@ final class TimeEntryController extends BaseController
                 return $this->json(['error' => 'Project not found.'], 404);
             }
 
-            if ($taskId === null) {
-                return $this->json(['error' => 'Select a task for this project.'], 422);
-            }
-
-            $task = $this->tasks()->find($taskId);
-            if ($task === null || $task->projectId !== $projectId) {
-                return $this->json(['error' => 'Task not found for this project.'], 422);
+            if ($taskId !== null) {
+                $task = $this->tasks()->find($taskId);
+                if ($task === null || $task->projectId !== $projectId) {
+                    return $this->json(['error' => 'Task not found for this project.'], 422);
+                }
             }
         }
 
@@ -83,7 +84,41 @@ final class TimeEntryController extends BaseController
 
         $totalToday = $repo->totalSecondsToday();
         $isToday = $workDate->format('Y-m-d') === DateHelper::todayString();
-        $project = $projectId !== null ? $this->projects()->find($projectId) : null;
+
+        $planioPushed = false;
+        $planioError = null;
+        $planioTimeEntryId = null;
+
+        if ($project !== null && $project->planioId !== null && $this->userSettings()->isPlanioConfigured()) {
+            if ($activityId === null) {
+                $planioError = $this->trans('planio.manual_activity_required');
+            } else {
+                try {
+                    $planioIssueId = $task?->planioIssueId;
+                    $hoursFloat = TimeFormatter::secondsToPlanioHours($durationSeconds);
+                    $comment = $notes !== '' ? $notes : 'Manual log';
+
+                    $created = $this->planioSync()->clientFromSettings()->createTimeEntry(
+                        $planioIssueId,
+                        $planioIssueId !== null ? null : $project->planioId,
+                        $hoursFloat,
+                        $comment,
+                        $activityId,
+                        $workDate->format('Y-m-d'),
+                    );
+
+                    $planioTimeEntryId = (int) ($created['id'] ?? 0);
+                    if ($planioTimeEntryId > 0) {
+                        $repo->setPlanioTimeEntryId($entry->id, $planioTimeEntryId);
+                        $planioPushed = true;
+                    } else {
+                        $planioError = $this->trans('planio.manual_push_failed');
+                    }
+                } catch (\Throwable $exception) {
+                    $planioError = $exception->getMessage();
+                }
+            }
+        }
 
         return $this->json([
             'message' => $isToday
@@ -97,6 +132,55 @@ final class TimeEntryController extends BaseController
             'is_today' => $isToday,
             'project_total_seconds' => $project?->totalSeconds ?? 0,
             'project_total_human' => TimeFormatter::secondsToHuman($project?->totalSeconds ?? 0),
+            'planio_pushed' => $planioPushed,
+            'planio_error' => $planioError,
+            'planio_time_entry_id' => $planioTimeEntryId,
+        ]);
+    }
+
+    public function delete(Request $request, int $id): Response
+    {
+        if ($response = $this->validateCsrf($request)) {
+            return $response;
+        }
+
+        $repo = $this->timeEntries();
+        $entry = $repo->findById($id);
+        if ($entry === null || $entry->isRunning()) {
+            return $this->json(['error' => 'Time entry not found.'], 404);
+        }
+
+        $projectId = $entry->projectId;
+        $planioId = $entry->planioTimeEntryId;
+        $deleted = $repo->deleteById($entry->id);
+        if (!$deleted) {
+            return $this->json(['error' => 'Could not delete time entry.'], 500);
+        }
+
+        $planioDeleted = false;
+        $planioError = null;
+        if ($planioId !== null && $planioId > 0 && $this->userSettings()->isPlanioConfigured()) {
+            try {
+                $this->planioSync()->clientFromSettings()->deleteTimeEntry($planioId);
+                $planioDeleted = true;
+            } catch (\Throwable $exception) {
+                $planioError = $exception->getMessage();
+            }
+        }
+
+        $totalToday = $repo->totalSecondsToday();
+        $project = $projectId !== null ? $this->projects()->find($projectId) : null;
+
+        return $this->json([
+            'deleted' => true,
+            'entry_id' => $entry->id,
+            'planio_deleted' => $planioDeleted,
+            'planio_error' => $planioError,
+            'total_today_seconds' => $totalToday,
+            'total_today_human' => TimeFormatter::secondsToHuman($totalToday),
+            'project_total_seconds' => $project?->totalSeconds ?? 0,
+            'project_total_human' => TimeFormatter::secondsToHuman($project?->totalSeconds ?? 0),
+            'project_id' => $projectId,
         ]);
     }
 
@@ -127,6 +211,7 @@ final class TimeEntryController extends BaseController
             'started_at' => $entry->startedAt,
             'ended_at' => $entry->endedAt,
             'is_general' => $entry->isGeneral(),
+            'planio_time_entry_id' => $entry->planioTimeEntryId,
         ];
     }
 }

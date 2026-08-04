@@ -175,6 +175,12 @@
                 </select>
             </div>
             <div class="form-group">
+                <label for="manual-activity">{{ trans('timer.activity') }}</label>
+                <select id="manual-activity" name="activity_id">
+                    <option value="">{{ trans('dashboard.manual_activity_none') }}</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="manual-reason" id="manual-reason-label">{{ trans('dashboard.reason') }}</label>
                 <input type="text" id="manual-reason" name="reason" placeholder="{{ trans('dashboard.reason_placeholder') }}">
             </div>
@@ -202,6 +208,7 @@
                     <th>{{ trans('reports.subject') }}</th>
                     <th>{{ trans('common.duration') }}</th>
                     <th>{{ trans('common.ended') }}</th>
+                    <th>{{ trans('common.actions') }}</th>
                 </tr>
             </thead>
             <tbody id="recent-sessions-body"></tbody>
@@ -215,11 +222,12 @@
                     <th>{{ trans('reports.subject') }}</th>
                     <th>{{ trans('common.duration') }}</th>
                     <th>{{ trans('common.ended') }}</th>
+                    <th>{{ trans('common.actions') }}</th>
                 </tr>
             </thead>
             <tbody id="recent-sessions-body">
                 {% for entry in recent_entries %}
-                    <tr>
+                    <tr data-entry-id="{{ entry.id }}" data-entry-project-id="{{ entry.projectId }}" data-planio-time-entry-id="{{ entry.planioTimeEntryId ?? '' }}">
                         <td>
                             {% if entry.isGeneral %}
                                 <span class="project-dot" style="background: #64748b;"></span>
@@ -245,6 +253,15 @@
                         </td>
                         <td>{{ format_time(entry.durationSeconds) }}</td>
                         <td class="muted">{{ format_compact_datetime(entry.endedAt) }}</td>
+                        <td>
+                            <button
+                                type="button"
+                                class="btn btn--ghost btn--sm js-entry-delete"
+                                data-entry-id="{{ entry.id }}"
+                                data-entry-project-id="{{ entry.projectId }}"
+                                data-planio-time-entry-id="{{ entry.planioTimeEntryId ?? '' }}"
+                            >{{ trans('common.delete') }}</button>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -259,6 +276,5 @@
     window.__TIMER_INITIAL__ = {{ timer|json_encode|raw }};
     window.__OFFICE_INITIAL__ = {{ office|json_encode|raw }};
 </script>
-<script type="module" src="/assets/js/manual-entry.js"></script>
-<script type="module" src="/assets/js/office-clock.js?v=2"></script>
+<script type="module" src="/assets/js/office-clock.js?v=3"></script>
 {% endblock %}

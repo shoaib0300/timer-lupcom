@@ -135,3 +135,23 @@ export async function fetchPlanioActivities() {
     const data = await response.json();
     return data.activities || [];
 }
+
+export async function deleteTimeEntry(entryId) {
+    const formData = new FormData();
+    if (typeof window.__CSRF__ === 'string' && window.__CSRF__ !== '') {
+        formData.set('_token', window.__CSRF__);
+    }
+
+    const response = await fetch(`/api/time-entries/${entryId}/delete`, {
+        method: 'POST',
+        body: formData,
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+        alert(data.error || 'Could not delete time entry.');
+        return null;
+    }
+
+    return data;
+}

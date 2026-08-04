@@ -174,14 +174,21 @@ final class PlanioClient
 
     /** @return array{id:int, hours:float, comments:string, spent_on:string} */
     public function createTimeEntry(
-        int $issueId,
+        ?int $issueId,
+        ?int $projectId,
         float $hours,
         string $comments,
         int $activityId,
         string $spentOn,
     ): array {
-        if ($issueId <= 0) {
-            throw new RuntimeException('Cannot push time entry without a Planio issue id.');
+        $issueId = $issueId !== null && $issueId > 0 ? $issueId : null;
+        $projectId = $projectId !== null && $projectId > 0 ? $projectId : null;
+
+        if ($issueId === null && $projectId === null) {
+            throw new RuntimeException('Cannot push time entry without a Planio issue or project id.');
+        }
+        if ($issueId !== null && $projectId !== null) {
+            throw new RuntimeException('Planio time entry target must be either issue or project, not both.');
         }
         if ($hours <= 0) {
             throw new RuntimeException('Cannot push time entry with zero hours.');
@@ -195,7 +202,7 @@ final class PlanioClient
 
         $payload = [
             'time_entry' => [
-                'issue_id' => $issueId,
+                ...($issueId !== null ? ['issue_id' => $issueId] : ['project_id' => $projectId]),
                 'hours' => round($hours, 2),
                 'comments' => trim($comments),
                 'activity_id' => $activityId,
@@ -215,6 +222,15 @@ final class PlanioClient
             'comments' => (string) ($entry['comments'] ?? ''),
             'spent_on' => (string) ($entry['spent_on'] ?? ''),
         ];
+    }
+
+    public function deleteTimeEntry(int $planioTimeEntryId): void
+    {
+        if ($planioTimeEntryId <= 0) {
+            throw new RuntimeException('Cannot delete Planio time entry without a valid id.');
+        }
+
+        $this->request('DELETE', $this->baseUrl . '/time_entries/' . $planioTimeEntryId . '.json');
     }
 
     /** @param array<string, scalar> $query */
@@ -238,7 +254,7 @@ final class PlanioClient
     }
 
     /**
-     * @param 'GET'|'POST' $method
+     * @param 'GET'|'POST'|'DELETE' $method
      * @param array<string, mixed>|null $payload
      * @return array<string, mixed>
      */
@@ -283,6 +299,10 @@ final class PlanioClient
 
         if ($status >= 400) {
             throw new RuntimeException('Planio returned HTTP ' . $status . '.');
+        }
+
+        if ($method === 'DELETE' && trim($body) === '') {
+            return [];
         }
 
         $decoded = json_decode($body, true);
