@@ -139,6 +139,14 @@ final class TaskRepository
         $stmt->execute([$name, $description, $status, $planioAssignee, $id]);
     }
 
+    public function updatePlanioState(int $id, string $status, ?string $planioAssignee): void
+    {
+        $stmt = $this->pdo->prepare(
+            'UPDATE tasks SET status = ?, planio_assignee = ? WHERE id = ?',
+        );
+        $stmt->execute([$status, $planioAssignee, $id]);
+    }
+
     /**
      * @param list<string> $assigneeLabels
      * @return list<Task>

@@ -8,31 +8,61 @@
 <p class="muted">{{ trans('tasks.project_label', {name: project.name}) }}</p>
 
 <div class="card" style="max-width: 100%;">
+    {% if flash_success %}
+        <div class="alert alert--success">{{ flash_success }}</div>
+    {% endif %}
+    {% if flash_error %}
+        <div class="alert alert--error">{{ flash_error }}</div>
+    {% endif %}
     {% if error is defined %}
         <div class="alert alert--error">{{ error }}</div>
+    {% endif %}
+    {% if planio_state.warning %}
+        <div class="alert alert--info">{{ planio_state.warning }}</div>
     {% endif %}
 
     <form method="post" action="{{ action }}">
         {% include 'partials/csrf-field.html.twig' %}
         <div class="form-group">
             <label for="name">{{ trans('common.name') }}</label>
-            <input type="text" id="name" name="name" value="{{ task.name ?? '' }}" required>
+            <input type="text" id="name" name="name" value="{{ form_name ?? task.name ?? '' }}" required>
         </div>
 
         <div class="form-group">
             <label for="description">{{ trans('projects.form.description') }}</label>
-            <textarea id="description" name="description">{{ task.description ?? '' }}</textarea>
+            <textarea id="description" name="description">{{ form_description ?? task.description ?? '' }}</textarea>
         </div>
 
-        <div class="form-group">
-            <label for="status">{{ trans('common.status') }}</label>
-            <select id="status" name="status">
-                {% set current = task.status ?? 'open' %}
-                <option value="open" {% if current == 'open' %}selected{% endif %}>{{ trans('tasks.status.open') }}</option>
-                <option value="in_progress" {% if current == 'in_progress' %}selected{% endif %}>{{ trans('tasks.status.in_progress') }}</option>
-                <option value="done" {% if current == 'done' %}selected{% endif %}>{{ trans('tasks.status.done') }}</option>
-            </select>
-        </div>
+        {% if planio_state.is_linked and planio_state.available %}
+            <input type="hidden" name="planio_lock_version" value="{{ planio_state.lock_version }}">
+            <div class="form-group">
+                <label for="planio-status">{{ trans('tasks.planio_status') }}</label>
+                <select id="planio-status" name="planio_status_id" required>
+                    {% for item in planio_state.status_options %}
+                        <option value="{{ item.id }}"{% if planio_state.current_status_id == item.id %} selected{% endif %}>{{ item.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="planio-assignee">{{ trans('tasks.planio_assignee') }}</label>
+                <select id="planio-assignee" name="planio_assigned_to_id">
+                    <option value="">{{ trans('tasks.planio_unassigned') }}</option>
+                    {% for user in planio_state.assignee_options %}
+                        <option value="{{ user.id }}"{% if planio_state.current_assigned_to_id == user.id %} selected{% endif %}>{{ user.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        {% else %}
+            <div class="form-group">
+                <label for="status">{{ trans('common.status') }}</label>
+                <select id="status" name="status">
+                    {% set current = task.status ?? 'open' %}
+                    <option value="open" {% if current == 'open' %}selected{% endif %}>{{ trans('tasks.status.open') }}</option>
+                    <option value="in_progress" {% if current == 'in_progress' %}selected{% endif %}>{{ trans('tasks.status.in_progress') }}</option>
+                    <option value="done" {% if current == 'done' %}selected{% endif %}>{{ trans('tasks.status.done') }}</option>
+                </select>
+            </div>
+        {% endif %}
 
         <div class="actions">
             <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>

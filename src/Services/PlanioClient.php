@@ -233,6 +233,101 @@ final class PlanioClient
         $this->request('DELETE', $this->baseUrl . '/time_entries/' . $planioTimeEntryId . '.json');
     }
 
+    /** @return array<string, mixed> */
+    public function issue(
+        int $issueId,
+        bool $includeAllowedStatuses = true,
+        bool $includeAssignableUsers = true,
+    ): array {
+        if ($issueId <= 0) {
+            throw new RuntimeException('Invalid Planio issue id.');
+        }
+
+        $include = [];
+        if ($includeAllowedStatuses) {
+            $include[] = 'allowed_statuses';
+        }
+        if ($includeAssignableUsers) {
+            $include[] = 'assignable_users';
+        }
+
+        $query = [];
+        if ($include !== []) {
+            $query['include'] = implode(',', $include);
+        }
+
+        $data = $this->get('/issues/' . $issueId . '.json', $query);
+
+        return $data['issue'] ?? throw new RuntimeException('Issue not found on Planio.');
+    }
+
+    /** @return list<array{id:int,name:string}> */
+    public function projectMemberships(int $projectId): array
+    {
+        if ($projectId <= 0) {
+            return [];
+        }
+
+        $memberships = [];
+        $offset = 0;
+
+        do {
+            $data = $this->get('/projects/' . $projectId . '/memberships.json', [
+                'limit' => 100,
+                'offset' => $offset,
+            ]);
+            $batch = $data['memberships'] ?? [];
+            if (!is_array($batch)) {
+                break;
+            }
+
+            $memberships = array_merge($memberships, $batch);
+            $offset += count($batch);
+            $total = (int) ($data['total_count'] ?? count($memberships));
+        } while ($offset < $total && $batch !== []);
+
+        $users = [];
+        foreach ($memberships as $membership) {
+            if (!is_array($membership) || !is_array($membership['user'] ?? null)) {
+                continue;
+            }
+            $id = (int) ($membership['user']['id'] ?? 0);
+            $name = trim((string) ($membership['user']['name'] ?? ''));
+            if ($id <= 0 || $name === '') {
+                continue;
+            }
+            $users[$id] = ['id' => $id, 'name' => $name];
+        }
+
+        usort($users, static fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+
+        return array_values($users);
+    }
+
+    public function updateIssue(int $issueId, int $statusId, ?int $assignedToId, int $lockVersion): void
+    {
+        if ($issueId <= 0) {
+            throw new RuntimeException('Invalid Planio issue id.');
+        }
+        if ($statusId <= 0) {
+            throw new RuntimeException('Invalid Planio status id.');
+        }
+        if ($lockVersion < 0) {
+            throw new RuntimeException('Invalid Planio lock version.');
+        }
+
+        $payload = [
+            'issue' => [
+                'status_id' => $statusId,
+            ],
+        ];
+        if ($assignedToId !== null && $assignedToId > 0) {
+            $payload['issue']['assigned_to_id'] = $assignedToId;
+        }
+
+        $this->put('/issues/' . $issueId . '.json', $payload);
+    }
+
     /** @param array<string, scalar> $query */
     /** @return array<string, mixed> */
     private function get(string $path, array $query = []): array
@@ -253,8 +348,17 @@ final class PlanioClient
         return $this->request('POST', $url, $payload);
     }
 
+    /** @param array<string, mixed> $payload */
+    /** @return array<string, mixed> */
+    private function put(string $path, array $payload): array
+    {
+        $url = $this->baseUrl . $path;
+
+        return $this->request('PUT', $url, $payload);
+    }
+
     /**
-     * @param 'GET'|'POST'|'DELETE' $method
+     * @param 'GET'|'POST'|'PUT'|'DELETE' $method
      * @param array<string, mixed>|null $payload
      * @return array<string, mixed>
      */
@@ -276,7 +380,7 @@ final class PlanioClient
             CURLOPT_CUSTOMREQUEST => $method,
         ];
 
-        if ($method === 'POST') {
+        if ($method === 'POST' || $method === 'PUT') {
             $headers[] = 'Content-Type: application/json';
             $options[CURLOPT_HTTPHEADER] = $headers;
             $options[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_UNESCAPED_UNICODE);
@@ -298,10 +402,19 @@ final class PlanioClient
         }
 
         if ($status >= 400) {
-            throw new RuntimeException('Planio returned HTTP ' . $status . '.');
+            $detail = '';
+            $decodedError = json_decode($body, true);
+            if (is_array($decodedError)) {
+                $errors = $decodedError['errors'] ?? null;
+                if (is_array($errors) && $errors !== []) {
+                    $detail = ' ' . implode(' ', array_map(static fn (mixed $item): string => (string) $item, $errors));
+                }
+            }
+
+            throw new RuntimeException('Planio returned HTTP ' . $status . '.' . $detail);
         }
 
-        if ($method === 'DELETE' && trim($body) === '') {
+        if (($method === 'DELETE' || $method === 'PUT') && trim($body) === '') {
             return [];
         }
 

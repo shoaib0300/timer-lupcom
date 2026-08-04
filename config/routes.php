@@ -78,6 +78,7 @@ return static function (FastRoute\RouteCollector $r): void {
 
     $r->get('/projects/{projectId:\d+}/tasks/create', [TaskController::class, 'create']);
     $r->post('/projects/{projectId:\d+}/tasks', [TaskController::class, 'store']);
+    $r->get('/tasks/{id:\d+}', [TaskController::class, 'show']);
     $r->get('/tasks/{id:\d+}/edit', [TaskController::class, 'edit']);
     $r->post('/tasks/{id:\d+}', [TaskController::class, 'update']);
     $r->post('/tasks/{id:\d+}/delete', [TaskController::class, 'destroy']);
