@@ -70,9 +70,9 @@ final class TimerService
         return $this->timeEntries->findRunningByTaskId($taskId) !== null;
     }
 
-    public function stop(int $entryId): ?TimeEntry
+    public function stop(int $entryId, ?string $notes = null): ?TimeEntry
     {
-        return $this->timeEntries->stop($entryId);
+        return $this->timeEntries->stop($entryId, $notes);
     }
 
     public function pause(int $entryId): ?TimeEntry

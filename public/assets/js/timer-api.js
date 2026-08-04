@@ -1,3 +1,4 @@
+
 import { withCsrf } from './csrf.js';
 
 export async function createManualEntry(formData) {
@@ -34,12 +35,24 @@ export async function fetchTimerStatus() {
     return response.json();
 }
 
-export async function postTimerAction(url, entryId) {
-    const body = withCsrf(new URLSearchParams({ entry_id: entryId }));
+export async function postTimerAction(url, entryId, extraFields = {}) {
+    const formData = new FormData();
+    formData.set('entry_id', String(entryId));
+
+    Object.entries(extraFields).forEach(([key, value]) => {
+        if (value === undefined || value === null) {
+            return;
+        }
+        formData.set(key, String(value));
+    });
+
+    if (typeof window.__CSRF__ === 'string' && window.__CSRF__ !== '') {
+        formData.set('_token', window.__CSRF__);
+    }
+
     const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body,
+        body: formData,
     });
     const data = await response.json();
 
@@ -111,4 +124,14 @@ export async function fetchFrequentTasks() {
 
     const data = await response.json();
     return data.tasks || [];
+}
+
+export async function fetchPlanioActivities() {
+    const response = await fetch('/api/planio/activities');
+    if (!response.ok) {
+        return [];
+    }
+
+    const data = await response.json();
+    return data.activities || [];
 }

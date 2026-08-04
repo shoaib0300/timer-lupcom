@@ -7,7 +7,8 @@ namespace Timer\Services;
 use RuntimeException;
 
 /**
- * Read-only Planio API client. Only GET requests — nothing is created or updated on Planio.
+ * Planio API client.
+ * Read operations are used across the app; time entries can also be posted on timer stop.
  */
 final class PlanioClient
 {
@@ -150,6 +151,72 @@ final class PlanioClient
         return $entries;
     }
 
+    /** @return list<array{id:int,name:string}> */
+    public function timeEntryActivities(): array
+    {
+        $data = $this->get('/enumerations/time_entry_activities.json');
+        $items = $data['time_entry_activities'] ?? [];
+
+        if (!is_array($items)) {
+            return [];
+        }
+
+        return array_values(array_map(
+            static function (array $item): array {
+                return [
+                    'id' => (int) ($item['id'] ?? 0),
+                    'name' => trim((string) ($item['name'] ?? '')),
+                ];
+            },
+            array_filter($items, static fn (mixed $item): bool => is_array($item)),
+        ));
+    }
+
+    /** @return array{id:int, hours:float, comments:string, spent_on:string} */
+    public function createTimeEntry(
+        int $issueId,
+        float $hours,
+        string $comments,
+        int $activityId,
+        string $spentOn,
+    ): array {
+        if ($issueId <= 0) {
+            throw new RuntimeException('Cannot push time entry without a Planio issue id.');
+        }
+        if ($hours <= 0) {
+            throw new RuntimeException('Cannot push time entry with zero hours.');
+        }
+        if ($activityId <= 0) {
+            throw new RuntimeException('Cannot push time entry without a Planio activity.');
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $spentOn)) {
+            throw new RuntimeException('Invalid spent_on date format.');
+        }
+
+        $payload = [
+            'time_entry' => [
+                'issue_id' => $issueId,
+                'hours' => round($hours, 2),
+                'comments' => trim($comments),
+                'activity_id' => $activityId,
+                'spent_on' => $spentOn,
+            ],
+        ];
+
+        $data = $this->post('/time_entries.json', $payload);
+        $entry = $data['time_entry'] ?? null;
+        if (!is_array($entry)) {
+            throw new RuntimeException('Planio did not return a created time entry.');
+        }
+
+        return [
+            'id' => (int) ($entry['id'] ?? 0),
+            'hours' => (float) ($entry['hours'] ?? 0.0),
+            'comments' => (string) ($entry['comments'] ?? ''),
+            'spent_on' => (string) ($entry['spent_on'] ?? ''),
+        ];
+    }
+
     /** @param array<string, scalar> $query */
     /** @return array<string, mixed> */
     private function get(string $path, array $query = []): array
@@ -158,20 +225,48 @@ final class PlanioClient
         if ($query !== []) {
             $url .= '?' . http_build_query($query);
         }
+        return $this->request('GET', $url);
+    }
 
+    /** @param array<string, mixed> $payload */
+    /** @return array<string, mixed> */
+    private function post(string $path, array $payload): array
+    {
+        $url = $this->baseUrl . $path;
+
+        return $this->request('POST', $url, $payload);
+    }
+
+    /**
+     * @param 'GET'|'POST' $method
+     * @param array<string, mixed>|null $payload
+     * @return array<string, mixed>
+     */
+    private function request(string $method, string $url, ?array $payload = null): array
+    {
         $ch = curl_init($url);
         if ($ch === false) {
             throw new RuntimeException('Could not initialize HTTP client.');
         }
 
-        curl_setopt_array($ch, [
+        $headers = [
+            'X-Redmine-API-Key: ' . $this->apiKey,
+            'Accept: application/json',
+        ];
+        $options = [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTPHEADER => [
-                'X-Redmine-API-Key: ' . $this->apiKey,
-                'Accept: application/json',
-            ],
-        ]);
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_CUSTOMREQUEST => $method,
+        ];
+
+        if ($method === 'POST') {
+            $headers[] = 'Content-Type: application/json';
+            $options[CURLOPT_HTTPHEADER] = $headers;
+            $options[CURLOPT_POSTFIELDS] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        }
+
+        curl_setopt_array($ch, $options);
 
         $body = curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);

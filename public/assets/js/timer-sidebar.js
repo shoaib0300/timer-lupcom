@@ -1,10 +1,10 @@
-import { escapeHtml, formatLiveClock, ICONS, t } from './utils.js';
-import { postTimerAction } from './timer-api.js';
+import { escapeHtml, formatLiveClock, ICONS, t } from './utils.js?v=56';
+import { postTimerAction } from './timer-api.js?v=56';
 import { updateDashboardAfterStop } from './dashboard.js';
 import { refreshTrackedLive } from './dashboard-stats.js';
 import { syncProjectCards } from './project-cards.js';
 
-export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
+export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange, stopModal = null) {
     let timers = [];
     let tickInterval = null;
 
@@ -95,8 +95,40 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
     }
 
     function applyStatus(status) {
-        timers = (status && status.timers) ? status.timers.map((t) => ({ ...t })) : [];
+        timers = (status && status.timers) ? status.timers.map((item) => ({ ...item })) : [];
         render();
+    }
+
+    async function collectStopData(timer) {
+        if (stopModal?.open) {
+            try {
+                const result = await stopModal.open(timer);
+                if (result?.comment?.trim()) {
+                    return {
+                        comment: result.comment.trim(),
+                        activity_id: result.activity_id || '',
+                        activity_name: result.activity_name || '',
+                    };
+                }
+                // User cancelled modal — do not stop.
+                if (result === null) {
+                    return null;
+                }
+            } catch {
+                // Fall through to prompt.
+            }
+        }
+
+        const fallbackComment = (window.prompt(t('stop_note_prompt'), '') || '').trim();
+        if (!fallbackComment) {
+            return null;
+        }
+
+        return {
+            comment: fallbackComment,
+            activity_id: '',
+            activity_name: '',
+        };
     }
 
     listEl.addEventListener('click', async (event) => {
@@ -109,16 +141,42 @@ export function createTimerSidebar(listEl, emptyEl, countEl, onStatusChange) {
             if (data) {
                 applyStatus(data.status);
             }
-        } else if (resumeBtn) {
+            return;
+        }
+
+        if (resumeBtn) {
             const data = await postTimerAction('/api/timer/resume', resumeBtn.dataset.entryId);
             if (data) {
                 applyStatus(data.status);
             }
-        } else if (stopBtn) {
-            const data = await postTimerAction('/api/timer/stop', stopBtn.dataset.entryId);
-            if (data) {
-                applyStatus(data.status);
-                updateDashboardAfterStop(data);
+            return;
+        }
+
+        if (!stopBtn) {
+            return;
+        }
+
+        const timer = timers.find((item) => String(item.id) === String(stopBtn.dataset.entryId));
+        const stopData = await collectStopData(timer);
+
+        if (!stopData?.comment) {
+            return;
+        }
+
+        const data = await postTimerAction('/api/timer/stop', stopBtn.dataset.entryId, {
+            notes: stopData.comment,
+            comment: stopData.comment,
+            activity_id: stopData.activity_id || '',
+            activity_name: stopData.activity_name || '',
+        });
+
+        if (data) {
+            applyStatus(data.status);
+            updateDashboardAfterStop(data);
+            if (data.planio_pushed) {
+                alert(t('planio_push_success'));
+            } else if (data.planio_error) {
+                alert(data.planio_error || t('planio_push_failed'));
             }
         }
     });

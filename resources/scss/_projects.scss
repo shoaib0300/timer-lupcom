@@ -266,6 +266,12 @@
 }
 
 .projects-page {
+    &__header-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
     &__filters {
         display: flex;
         flex-wrap: wrap;

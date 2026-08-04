@@ -13,8 +13,8 @@ final class TimeEntryRepository
 {
     private const string ENTRY_SELECT = 'SELECT te.*, p.name AS project_name, p.color AS project_color, t.name AS task_name
             FROM time_entries te
-            LEFT JOIN projects p ON p.id = te.project_id
-            LEFT JOIN tasks t ON t.id = te.task_id';
+            LEFT JOIN tasks t ON t.id = te.task_id
+            LEFT JOIN projects p ON p.id = COALESCE(te.project_id, t.project_id)';
 
     public function __construct(
         private readonly PDO $pdo,
@@ -130,7 +130,7 @@ final class TimeEntryRepository
         return (int) $this->pdo->lastInsertId();
     }
 
-    public function stop(int $entryId): ?TimeEntry
+    public function stop(int $entryId, ?string $notes = null): ?TimeEntry
     {
         $entry = $this->findById($entryId);
 
@@ -141,10 +141,18 @@ final class TimeEntryRepository
         $endedAt = new DateTimeImmutable();
         $duration = TimeFormatter::roundToNearestMinute($entry->elapsedSeconds());
 
+        $noteText = trim((string) $notes);
+        if ($noteText === '') {
+            $noteText = (string) ($entry->notes ?? '');
+        }
+
         $stmt = $this->pdo->prepare(
-            'UPDATE time_entries SET ended_at = ?, duration_seconds = ?, paused_at = NULL WHERE id = ?',
+            'UPDATE time_entries
+            SET ended_at = ?, duration_seconds = ?, paused_at = NULL, notes = ?,
+                project_id = CASE WHEN task_id IS NOT NULL THEN NULL ELSE project_id END
+            WHERE id = ?',
         );
-        $stmt->execute([$endedAt->format('Y-m-d H:i:s'), $duration, $entryId]);
+        $stmt->execute([$endedAt->format('Y-m-d H:i:s'), $duration, $noteText !== '' ? $noteText : null, $entryId]);
 
         return $this->findById($entryId);
     }
@@ -373,6 +381,30 @@ final class TimeEntryRepository
         );
     }
 
+    /** @return list<TimeEntry> */
+    public function forTask(int $taskId, int $limit = 200): array
+    {
+        if ($taskId <= 0) {
+            return [];
+        }
+
+        $limit = max(1, min($limit, 1000));
+        [$userSql, $userParams] = $this->userScope();
+        $stmt = $this->pdo->prepare(
+            self::ENTRY_SELECT . '
+            WHERE te.task_id = ?
+              AND te.ended_at IS NOT NULL' . $userSql . '
+            ORDER BY te.started_at DESC
+            LIMIT ?',
+        );
+        $stmt->execute([$taskId, ...$userParams, $limit]);
+
+        return array_map(
+            TimeEntry::fromRow(...),
+            $stmt->fetchAll(),
+        );
+    }
+
     public function createManual(
         int $durationSeconds,
         DateTimeImmutable $workDate,
@@ -436,6 +468,21 @@ final class TimeEntryRepository
         $row = $stmt->fetch();
 
         return $row ? TimeEntry::fromRow($row) : null;
+    }
+
+    public function setPlanioTimeEntryId(int $entryId, int $planioTimeEntryId): void
+    {
+        if ($entryId <= 0 || $planioTimeEntryId <= 0) {
+            throw new \InvalidArgumentException('Entry id and Planio time entry id are required.');
+        }
+
+        [$userSql, $userParams] = $this->tableUserScope();
+        $stmt = $this->pdo->prepare(
+            'UPDATE time_entries
+             SET planio_time_entry_id = ?
+             WHERE id = ?' . $userSql,
+        );
+        $stmt->execute([$planioTimeEntryId, $entryId, ...$userParams]);
     }
 
     /**

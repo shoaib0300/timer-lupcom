@@ -62,11 +62,13 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->post('/settings/users/activate', [UserController::class, 'activate']);
     $r->post('/api/planio/test', [PlanioController::class, 'testApi']);
     $r->get('/api/planio/projects', [PlanioController::class, 'projectsApi']);
+    $r->get('/api/planio/activities', [PlanioController::class, 'activitiesApi']);
     $r->post('/api/planio/sync', [PlanioController::class, 'sync']);
     $r->post('/api/planio/sync-item', [PlanioController::class, 'syncItem']);
     $r->post('/api/planio/sync-time', [PlanioController::class, 'syncTime']);
 
     $r->get('/projects', [ProjectController::class, 'index']);
+    $r->get('/projects/my-tasks', [ProjectController::class, 'myTasks']);
     $r->get('/projects/create', [ProjectController::class, 'create']);
     $r->post('/projects', [ProjectController::class, 'store']);
     $r->get('/projects/{id:\d+}', [ProjectController::class, 'show']);

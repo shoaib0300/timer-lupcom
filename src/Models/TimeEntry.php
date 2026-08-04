@@ -56,7 +56,9 @@ final readonly class TimeEntry
 
     public function isGeneral(): bool
     {
-        return $this->projectId === null;
+        // Treat as general only when both project and task are missing.
+        // Task-only entries (project_id NULL, task_id set) are still task work.
+        return $this->projectId === null && $this->taskId === null;
     }
 
     public function displayLabel(): string

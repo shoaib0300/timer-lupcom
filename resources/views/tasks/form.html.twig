@@ -7,7 +7,7 @@
 <h1 class="page-title">{{ title }}</h1>
 <p class="muted">{{ trans('tasks.project_label', {name: project.name}) }}</p>
 
-<div class="card" style="max-width: 560px;">
+<div class="card" style="max-width: 100%;">
     {% if error is defined %}
         <div class="alert alert--error">{{ error }}</div>
     {% endif %}
@@ -26,19 +26,12 @@
 
         <div class="form-group">
             <label for="status">{{ trans('common.status') }}</label>
-            {% if task is defined and task and task.planioIssueId %}
-                <p class="task-form__planio-status">
-                    <span class="badge badge--planio">{{ task.status }}</span>
-                </p>
-                <p class="muted task-form__planio-status-note">{{ trans('tasks.planio_status_note') }}</p>
-            {% else %}
-                <select id="status" name="status">
-                    {% set current = task.status ?? 'open' %}
-                    <option value="open" {% if current == 'open' %}selected{% endif %}>{{ trans('tasks.status.open') }}</option>
-                    <option value="in_progress" {% if current == 'in_progress' %}selected{% endif %}>{{ trans('tasks.status.in_progress') }}</option>
-                    <option value="done" {% if current == 'done' %}selected{% endif %}>{{ trans('tasks.status.done') }}</option>
-                </select>
-            {% endif %}
+            <select id="status" name="status">
+                {% set current = task.status ?? 'open' %}
+                <option value="open" {% if current == 'open' %}selected{% endif %}>{{ trans('tasks.status.open') }}</option>
+                <option value="in_progress" {% if current == 'in_progress' %}selected{% endif %}>{{ trans('tasks.status.in_progress') }}</option>
+                <option value="done" {% if current == 'done' %}selected{% endif %}>{{ trans('tasks.status.done') }}</option>
+            </select>
         </div>
 
         <div class="actions">
@@ -47,4 +40,40 @@
         </div>
     </form>
 </div>
+
+{% if task is defined and task %}
+<div class="card" style="max-width: 100%; margin-top: 1rem;">
+    <h2 style="margin-top:0;">{{ trans('tasks.time_bookings') }}</h2>
+    <p class="muted">{{ trans('tasks.time_bookings_hint') }}</p>
+
+    {% if task_entries is empty %}
+        <p class="muted">{{ trans('tasks.time_bookings_empty') }}</p>
+    {% else %}
+        <div class="project-show__table-wrap">
+            <table class="table project-show__table">
+                <thead>
+                    <tr>
+                        <th>{{ trans('common.project') }}</th>
+                        <th>{{ trans('timer.activity') }}</th>
+                        <th>{{ trans('timer.comment') }}</th>
+                        <th>{{ trans('common.duration') }}</th>
+                        <th>{{ trans('common.ended') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in task_entries %}
+                        <tr>
+                            <td>{{ entry.project_name ?: trans('common.none') }}</td>
+                            <td>{{ entry.activity ?: trans('timer.stop_activity_none') }}</td>
+                            <td>{{ entry.comment ?: trans('common.none') }}</td>
+                            <td>{{ entry.duration_human }}</td>
+                            <td>{{ entry.ended_at ? entry.ended_at|date('d-M-y H:i') : trans('common.none') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

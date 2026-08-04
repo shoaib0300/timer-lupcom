@@ -68,10 +68,34 @@ final class TaskController extends BaseController
         }
 
         $project = $this->projects()->find($task->projectId);
+        $rawEntries = $this->timeEntries()->forTask($task->id);
+        $entries = array_map(function (\Timer\Models\TimeEntry $entry): array {
+            $notes = trim((string) ($entry->notes ?? ''));
+            $activity = '';
+            $comment = $notes;
+
+            if (preg_match('/^\[([^\]]+)\]\s*(.*)$/', $notes, $matches) === 1) {
+                $activity = trim((string) ($matches[1] ?? ''));
+                $comment = trim((string) ($matches[2] ?? ''));
+            }
+
+            return [
+                'id' => $entry->id,
+                'project_name' => $entry->projectName,
+                'duration_seconds' => (int) ($entry->durationSeconds ?? 0),
+                'duration_human' => \Timer\Support\TimeFormatter::secondsToHuman((int) ($entry->durationSeconds ?? 0)),
+                'started_at' => $entry->startedAt,
+                'ended_at' => $entry->endedAt,
+                'activity' => $activity,
+                'comment' => $comment,
+                'raw_notes' => $notes,
+            ];
+        }, $rawEntries);
 
         return $this->view('tasks/form.html.twig', [
             'task' => $task,
             'project' => $project,
+            'task_entries' => $entries,
             'action' => '/tasks/' . $id,
             'title' => $this->trans('tasks.title_edit'),
         ]);
@@ -100,9 +124,7 @@ final class TaskController extends BaseController
             ]);
         }
 
-        $status = $task->planioIssueId !== null
-            ? $task->status
-            : $this->sanitizeStatus((string) $request->input('status', $task->status));
+        $status = $this->sanitizeStatus((string) $request->input('status', $task->status));
 
         $repo->update(
             $id,
@@ -111,7 +133,7 @@ final class TaskController extends BaseController
             $status,
         );
 
-        return $this->redirect('/projects/' . $task->projectId);
+        return $this->redirect('/tasks/' . $id . '/edit');
     }
 
     public function destroy(Request $request, int $id): Response

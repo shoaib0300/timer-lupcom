@@ -78,17 +78,51 @@ final class TimerController extends BaseController
             return $this->json(['error' => 'Timer entry is required.'], 422);
         }
 
+        $comment = $this->requestText($request, ['notes', 'comment']);
+        $activityName = $this->requestText($request, ['activity_name']);
+        $activityId = (int) $this->requestText($request, ['activity_id']);
+
+        if ($comment === '') {
+            $comment = 'Timer stopped';
+        }
+
+        $notes = $activityName !== ''
+            ? '[' . $activityName . '] ' . $comment
+            : $comment;
+
         $service = $this->timerService();
-        $entry = $service->stop($entryId);
+        $entry = $service->stop($entryId, $notes);
 
         if ($entry === null) {
             return $this->json(['error' => 'Timer not found or already stopped.'], 422);
         }
 
-        return $this->json(array_merge(
-            ['message' => 'Timer stopped.', 'status' => $service->getStatus()],
-            $this->stoppedEntryPayload($entry),
-        ));
+        $response = [
+            'message' => 'Timer stopped.',
+            'status' => $service->getStatus(),
+            'planio_pushed' => false,
+            'planio_error' => null,
+            'planio_time_entry_id' => null,
+        ];
+
+        $task = $entry->taskId !== null ? $this->tasks()->find((int) $entry->taskId) : null;
+        $settings = $this->userSettings();
+
+        if ($task?->planioIssueId && $settings->isPlanioConfigured()) {
+            if ($activityId <= 0) {
+                $response['planio_error'] = 'Choose an activity to push this booking to Planio.';
+            } else {
+                try {
+                    $pushed = $this->pushStoppedEntryToPlanio($entry, (int) $task->planioIssueId, $comment, $activityId);
+                    $response['planio_pushed'] = true;
+                    $response['planio_time_entry_id'] = $pushed;
+                } catch (\Throwable $exception) {
+                    $response['planio_error'] = $exception->getMessage();
+                }
+            }
+        }
+
+        return $this->json(array_merge($response, $this->stoppedEntryPayload($entry)));
     }
 
     public function pause(Request $request): Response
@@ -181,5 +215,67 @@ final class TimerController extends BaseController
         }
 
         return null;
+    }
+
+    private function pushStoppedEntryToPlanio(
+        \Timer\Models\TimeEntry $entry,
+        int $planioIssueId,
+        string $comment,
+        int $activityId,
+    ): int {
+        $endedAt = $entry->endedAt ?? $entry->startedAt;
+        $spentOn = (new \DateTimeImmutable($endedAt))->format('Y-m-d');
+        $durationSeconds = (int) ($entry->durationSeconds ?? 0);
+        $hours = TimeFormatter::secondsToPlanioHours($durationSeconds);
+        if ($hours <= 0) {
+            throw new \RuntimeException('Duration is too small to push to Planio.');
+        }
+
+        $created = $this->planioSync()->clientFromSettings()->createTimeEntry(
+            $planioIssueId,
+            $hours,
+            $comment,
+            $activityId,
+            $spentOn,
+        );
+
+        $planioTimeEntryId = (int) ($created['id'] ?? 0);
+        if ($planioTimeEntryId <= 0) {
+            throw new \RuntimeException('Planio did not return a valid time entry id.');
+        }
+
+        $this->timeEntries()->setPlanioTimeEntryId($entry->id, $planioTimeEntryId);
+
+        return $planioTimeEntryId;
+    }
+
+    /** @param list<string> $keys */
+    private function requestText(Request $request, array $keys): string
+    {
+        foreach ($keys as $key) {
+            $value = trim((string) $request->input($key, ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        $rawBody = file_get_contents('php://input');
+        if (!is_string($rawBody) || $rawBody === '') {
+            return '';
+        }
+
+        parse_str($rawBody, $rawParsed);
+        if (!is_array($rawParsed)) {
+            return '';
+        }
+
+        foreach ($keys as $key) {
+            $value = trim((string) ($rawParsed[$key] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 }

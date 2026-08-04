@@ -153,6 +153,23 @@ final class PlanioController extends BaseController
         }
     }
 
+    public function activitiesApi(Request $request): Response
+    {
+        $settings = $this->userSettings();
+
+        if (!$settings->isPlanioConfigured()) {
+            return $this->json(['activities' => []]);
+        }
+
+        try {
+            $activities = $this->planioSync()->clientFromSettings()->timeEntryActivities();
+
+            return $this->json(['activities' => $activities]);
+        } catch (\Throwable $exception) {
+            return $this->json(['activities' => []]);
+        }
+    }
+
     public function sync(Request $request): Response
     {
         $settings = $this->userSettings();

@@ -12,7 +12,7 @@
         }
     })();
     </script>
-    <link rel="stylesheet" href="/assets/css/main.css?v=49">
+    <link rel="stylesheet" href="/assets/css/main.css?v=55">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -218,9 +218,36 @@
         </div>
     </div>
 
+    <div id="timer-stop-modal" class="modal is-hidden" aria-hidden="true">
+        <div class="modal__backdrop" data-stop-modal-close></div>
+        <div class="modal__dialog" role="dialog" aria-labelledby="timer-stop-title">
+            <h3 id="timer-stop-title" class="modal__title">{{ trans('timer.stop_log_time') }}</h3>
+            <form id="timer-stop-form">
+                <div class="form-group">
+                    <label for="timer-stop-spent-time">{{ trans('timer.spent_time') }}</label>
+                    <input type="text" id="timer-stop-spent-time" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="timer-stop-activity">{{ trans('timer.activity') }}</label>
+                    <select id="timer-stop-activity">
+                        <option value="">{{ trans('timer.stop_activity_none') }}</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="timer-stop-comment">{{ trans('timer.comment') }}</label>
+                    <textarea id="timer-stop-comment" rows="4" required placeholder="{{ trans('timer.stop_comment_placeholder') }}"></textarea>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn--success">{{ trans('common.save') }}</button>
+                    <button type="button" class="btn btn--ghost" data-stop-modal-close>{{ trans('common.cancel') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>window.__I18N__ = {{ js_translations|json_encode|raw }};</script>
     <script>window.__CSRF__ = {{ csrf_token|default('')|json_encode|raw }};</script>
-    <script type="module" src="/assets/js/app.js?v=35"></script>
+    <script type="module" src="/assets/js/app.js?v=58"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

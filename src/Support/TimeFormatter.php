@@ -61,4 +61,16 @@ final class TimeFormatter
 
         return max(60, (int) round($seconds / 60) * 60);
     }
+
+    /** Convert rounded local seconds to Planio hours (2 decimals). */
+    public static function secondsToPlanioHours(int $seconds): float
+    {
+        if ($seconds <= 0) {
+            return 0.0;
+        }
+
+        $minutes = max(1, (int) round($seconds / 60));
+
+        return round($minutes / 60, 2);
+    }
 }
