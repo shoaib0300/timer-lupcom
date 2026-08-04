@@ -26,8 +26,12 @@
         </div>
         <p class="muted projects-section__search-empty is-hidden" id="project-search-empty">{{ trans('projects.no_task_match') }}</p>
 
-        {% if not has_assignee_labels %}
-            <p class="muted">{{ trans('projects.my_tasks_no_profile') }}</p>
+        {% if error %}
+            <div class="alert alert--error">{{ error }}</div>
+        {% endif %}
+
+        {% if not planio_configured %}
+            <p class="muted">{{ trans('projects.my_tasks_no_planio') }}</p>
         {% elseif my_tasks is empty %}
             <p class="muted">{{ trans('projects.my_tasks_empty') }}</p>
         {% else %}

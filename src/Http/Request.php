@@ -58,11 +58,57 @@ final class Request
             return null;
         }
 
+        // Multi-upload shape: name is an array.
+        if (isset($file['name']) && is_array($file['name'])) {
+            return null;
+        }
+
         $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($error !== UPLOAD_ERR_OK) {
             return null;
         }
 
-        return $file;
+        return [
+            'name' => (string) ($file['name'] ?? ''),
+            'type' => (string) ($file['type'] ?? ''),
+            'tmp_name' => (string) ($file['tmp_name'] ?? ''),
+            'error' => $error,
+            'size' => (int) ($file['size'] ?? 0),
+        ];
+    }
+
+    /**
+     * @return list<array{name: string, type: string, tmp_name: string, error: int, size: int}>
+     */
+    public function files(string $key): array
+    {
+        $file = $_FILES[$key] ?? null;
+        if (!is_array($file)) {
+            return [];
+        }
+
+        if (!isset($file['name']) || !is_array($file['name'])) {
+            $single = $this->file($key);
+
+            return $single !== null ? [$single] : [];
+        }
+
+        $out = [];
+        foreach ($file['name'] as $index => $name) {
+            $error = (int) ($file['error'][$index] ?? UPLOAD_ERR_NO_FILE);
+            if ($error !== UPLOAD_ERR_OK) {
+                continue;
+            }
+
+            $out[] = [
+                'name' => (string) $name,
+                'type' => (string) ($file['type'][$index] ?? ''),
+                'tmp_name' => (string) ($file['tmp_name'][$index] ?? ''),
+                'error' => $error,
+                'size' => (int) ($file['size'][$index] ?? 0),
+            ];
+        }
+
+        return $out;
     }
 }

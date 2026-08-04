@@ -23,36 +23,86 @@
 
     <form method="post" action="{{ action }}">
         {% include 'partials/csrf-field.html.twig' %}
-        <div class="form-group">
-            <label for="name">{{ trans('common.name') }}</label>
-            <input type="text" id="name" name="name" value="{{ form_name ?? task.name ?? '' }}" required>
-        </div>
 
-        <div class="form-group">
-            <label for="description">{{ trans('projects.form.description') }}</label>
-            <textarea id="description" name="description">{{ form_description ?? task.description ?? '' }}</textarea>
-        </div>
+        {% if planio_state.is_linked %}
+            {% set display_subject = planio_state.subject ?: task.name %}
+            {% set display_description = planio_state.description ?: task.description %}
 
-        {% if planio_state.is_linked and planio_state.available %}
-            <input type="hidden" name="planio_lock_version" value="{{ planio_state.lock_version }}">
             <div class="form-group">
-                <label for="planio-status">{{ trans('tasks.planio_status') }}</label>
-                <select id="planio-status" name="planio_status_id" required>
-                    {% for item in planio_state.status_options %}
-                        <option value="{{ item.id }}"{% if planio_state.current_status_id == item.id %} selected{% endif %}>{{ item.name }}</option>
-                    {% endfor %}
-                </select>
+                <label>{{ trans('common.name') }}</label>
+                <p class="task-form__readonly-title">{{ display_subject }}</p>
+                <p class="muted task-form__readonly-hint">{{ trans('tasks.planio_readonly_fields') }}</p>
             </div>
+
             <div class="form-group">
-                <label for="planio-assignee">{{ trans('tasks.planio_assignee') }}</label>
-                <select id="planio-assignee" name="planio_assigned_to_id">
-                    <option value="">{{ trans('tasks.planio_unassigned') }}</option>
-                    {% for user in planio_state.assignee_options %}
-                        <option value="{{ user.id }}"{% if planio_state.current_assigned_to_id == user.id %} selected{% endif %}>{{ user.name }}</option>
-                    {% endfor %}
-                </select>
+                <label>{{ trans('projects.form.description') }}</label>
+                {% if display_description %}
+                    <div class="task-form__description prose">{{ format_rich_text(display_description) }}</div>
+                {% else %}
+                    <p class="muted">{{ trans('common.none') }}</p>
+                {% endif %}
             </div>
+
+            {% if planio_state.available %}
+                <p class="task-form__planio-meta muted">
+                    {% if planio_state.issue_id %}#{{ planio_state.issue_id }}{% endif %}
+                    {% if planio_state.author %}
+                        · {{ trans('tasks.planio_added_by', {name: planio_state.author}) }}
+                        {% if planio_state.created_on %} {{ planio_state.created_on|date('d-M-y H:i') }}{% endif %}
+                    {% endif %}
+                    {% if planio_state.updated_on %}
+                        · {{ trans('tasks.planio_updated') }} {{ planio_state.updated_on|date('d-M-y H:i') }}
+                    {% endif %}
+                </p>
+
+                <input type="hidden" name="planio_lock_version" value="{{ planio_state.lock_version }}">
+                <div class="form-group">
+                    <label for="planio-status">{{ trans('tasks.planio_status') }}</label>
+                    <select id="planio-status" name="planio_status_id" required>
+                        {% for item in planio_state.status_options %}
+                            <option value="{{ item.id }}"{% if planio_state.current_status_id == item.id %} selected{% endif %}>{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="planio-priority">{{ trans('tasks.planio_priority') }}</label>
+                    <select id="planio-priority" name="planio_priority_id">
+                        {% for item in planio_state.priority_options %}
+                            <option value="{{ item.id }}"{% if planio_state.current_priority_id == item.id %} selected{% endif %}>{{ item.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="planio-assignee">{{ trans('tasks.planio_assignee') }}</label>
+                    <select id="planio-assignee" name="planio_assigned_to_id">
+                        <option value="">{{ trans('tasks.planio_unassigned') }}</option>
+                        {% for user in planio_state.assignee_options %}
+                            <option value="{{ user.id }}"{% if planio_state.current_assigned_to_id == user.id %} selected{% endif %}>{{ user.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-row form-row--dates">
+                    <div class="form-group">
+                        <label for="planio-start-date">{{ trans('tasks.planio_start_date') }}</label>
+                        <input type="date" id="planio-start-date" name="planio_start_date" value="{{ planio_state.start_date ?? '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="planio-due-date">{{ trans('tasks.planio_due_date') }}</label>
+                        <input type="date" id="planio-due-date" name="planio_due_date" value="{{ planio_state.due_date ?? '' }}">
+                    </div>
+                </div>
+            {% endif %}
         {% else %}
+            <div class="form-group">
+                <label for="name">{{ trans('common.name') }}</label>
+                <input type="text" id="name" name="name" value="{{ form_name ?? task.name ?? '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">{{ trans('projects.form.description') }}</label>
+                <textarea id="description" name="description">{{ form_description ?? task.description ?? '' }}</textarea>
+            </div>
+
             <div class="form-group">
                 <label for="status">{{ trans('common.status') }}</label>
                 <select id="status" name="status">
@@ -65,11 +115,112 @@
         {% endif %}
 
         <div class="actions">
-            <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+            {% if not planio_state.is_linked or planio_state.available %}
+                <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
+            {% endif %}
             <a href="/projects/{{ project.id }}" class="btn btn--ghost">{{ trans('common.cancel') }}</a>
         </div>
     </form>
 </div>
+
+{% if planio_state.is_linked and planio_state.available %}
+<div class="card task-planio-notes" style="max-width: 100%; margin-top: 1rem;">
+    <h2 class="task-planio-notes__heading">{{ trans('tasks.planio_notes_compose') }}</h2>
+    <p class="muted">{{ trans('tasks.planio_notes_hint') }}</p>
+
+    <form method="post" action="/tasks/{{ task.id }}/planio-notes" enctype="multipart/form-data" class="task-planio-notes__compose">
+        {% include 'partials/csrf-field.html.twig' %}
+        <div class="form-group">
+            <label for="planio-note">{{ trans('tasks.planio_note_label') }}</label>
+            <textarea id="planio-note" name="note" rows="5" placeholder="{{ trans('tasks.planio_note_label') }}"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="planio-attachments">{{ trans('tasks.planio_attachments_label') }}</label>
+            <input type="file" id="planio-attachments" name="attachments[]" multiple>
+        </div>
+        <div class="actions">
+            <button type="submit" class="btn btn--primary">{{ trans('tasks.planio_note_submit') }}</button>
+        </div>
+    </form>
+
+    <div class="task-planio-notes__section">
+        <h3>{{ trans('tasks.planio_activity_title') }}</h3>
+        {% if planio_state.activity is empty %}
+            <p class="muted">{{ trans('tasks.planio_activity_empty') }}</p>
+        {% else %}
+            <ul class="task-planio-notes__list">
+                {% for entry in planio_state.activity %}
+                    <li class="task-planio-notes__item">
+                        <div class="task-planio-notes__meta">
+                            <strong>{{ entry.author ?: trans('common.none') }}</strong>
+                            {% if entry.created_on %}
+                                <span class="muted">{{ entry.created_on|date('d-M-y H:i') }}</span>
+                            {% endif %}
+                            {% if entry.notes and entry.journal_id %}
+                                <form
+                                    class="task-planio-notes__delete-form"
+                                    method="post"
+                                    action="/tasks/{{ task.id }}/planio-journals/{{ entry.journal_id }}/delete-notes"
+                                    onsubmit="return confirm('{{ trans('tasks.planio_note_delete_confirm')|e('js') }}');"
+                                >
+                                    {% include 'partials/csrf-field.html.twig' %}
+                                    <button type="submit" class="btn btn--danger btn--sm">{{ trans('tasks.planio_note_delete') }}</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        {% if entry.notes %}
+                            <div class="task-planio-notes__body prose">{{ format_rich_text(entry.notes) }}</div>
+                        {% endif %}
+                        {% if entry.attachments is not empty %}
+                            <ul class="task-planio-attachments">
+                                {% for attachment in entry.attachments %}
+                                    <li class="task-planio-attachments__item{% if attachment.is_image %} task-planio-attachments__item--image{% endif %}">
+                                        {% if attachment.is_image %}
+                                            <a class="task-planio-attachments__preview" href="{{ attachment.download_url }}" target="_blank" rel="noopener noreferrer" title="{{ attachment.filename }}">
+                                                <img src="{{ attachment.download_url }}" alt="" loading="lazy">
+                                            </a>
+                                        {% else %}
+                                            <span class="task-planio-attachments__file-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 24 24"><path fill="currentColor" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm0 2 4 4h-4zm-1 7v5.17l1.59-1.58L16 16l-4 4-4-4 1.41-1.41L12 16.17V11z"/></svg>
+                                            </span>
+                                        {% endif %}
+                                        <div class="task-planio-attachments__actions">
+                                            <a
+                                                class="card-icon-btn"
+                                                href="{{ attachment.download_url }}?download=1"
+                                                title="{{ trans('tasks.planio_attachment_download') }}: {{ attachment.filename }}"
+                                                aria-label="{{ trans('tasks.planio_attachment_download') }} {{ attachment.filename }}"
+                                            >
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 20h14v-2H5v2zm7-18L5.33 9h3.84v4h5.66V9h3.84L12 2z"/></svg>
+                                            </a>
+                                            <form
+                                                class="task-planio-attachments__delete-form"
+                                                method="post"
+                                                action="/tasks/{{ task.id }}/planio-attachments/{{ attachment.id }}/delete"
+                                                onsubmit="return confirm('{{ trans('tasks.planio_attachment_delete_confirm')|e('js') }}');"
+                                            >
+                                                {% include 'partials/csrf-field.html.twig' %}
+                                                <button
+                                                    type="submit"
+                                                    class="card-icon-btn card-icon-btn--delete"
+                                                    title="{{ trans('tasks.planio_attachment_delete') }}: {{ attachment.filename }}"
+                                                    aria-label="{{ trans('tasks.planio_attachment_delete') }} {{ attachment.filename }}"
+                                                >
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4h6l1 2h4v2H4V6h4l1-2zm1 6h2v9h-2V10zm4 0h2v9h-2V10zM7 10h2v9H7V10z"/></svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
 {% if task is defined and task %}
 <div class="card" style="max-width: 100%; margin-top: 1rem;">
@@ -106,4 +257,22 @@
     {% endif %}
 </div>
 {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    if (!window.history || !window.history.replaceState) {
+        return;
+    }
+    var params = new URLSearchParams(window.location.search);
+    if (!params.has('success') && !params.has('error')) {
+        return;
+    }
+    params.delete('success');
+    params.delete('error');
+    var clean = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+    window.history.replaceState({}, '', clean);
+})();
+</script>
 {% endblock %}

@@ -339,15 +339,8 @@
         margin: 0.75rem 0 0;
         max-width: 65ch;
         line-height: 1.55;
-        white-space: pre-wrap;
         word-break: break-word;
         font-size: 0.9rem;
-
-        a {
-            color: $color-primary;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-        }
     }
 
     &__planio-badge {
@@ -460,15 +453,8 @@
         border-radius: 0 8px 8px 0;
         background: var(--color-surface-alt);
         line-height: 1.55;
-        white-space: pre-wrap;
         word-break: break-word;
         font-size: 0.88rem;
-
-        a {
-            color: $color-primary;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-        }
     }
 
     &__assignee {

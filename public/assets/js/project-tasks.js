@@ -1,16 +1,53 @@
 import { escapeHtml, t } from './utils.js';
 import { initProjectTaskDetails } from './project-task-details.js';
 
+function inlineFormat(text) {
+    return text
+        .replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, '<strong>$1</strong>')
+        .replace(/(?<!_)_([^_\n]+)_(?!_)/g, '<em>$1</em>')
+        .replace(/\b((?:https?):\/\/[^\s<]+)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
 function formatRichText(text) {
     if (!text) {
         return '';
     }
 
-    const escaped = escapeHtml(text);
-    return escaped.replace(
-        /\b((?:https?):\/\/[^\s<]+)/gi,
-        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>',
-    );
+    const escaped = escapeHtml(String(text).replace(/\r\n?/g, '\n').trim());
+    const lines = escaped.split('\n');
+    const html = [];
+    let listOpen = false;
+
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const listMatch = trimmed.match(/^\*\s+(.+)$/);
+
+        if (listMatch) {
+            if (!listOpen) {
+                html.push('<ul>');
+                listOpen = true;
+            }
+            html.push(`<li>${inlineFormat(listMatch[1])}</li>`);
+            continue;
+        }
+
+        if (listOpen) {
+            html.push('</ul>');
+            listOpen = false;
+        }
+
+        if (trimmed === '') {
+            continue;
+        }
+
+        html.push(`<p>${inlineFormat(trimmed)}</p>`);
+    }
+
+    if (listOpen) {
+        html.push('</ul>');
+    }
+
+    return html.join('');
 }
 
 function planioIdCell(planioIssueId) {
@@ -50,7 +87,7 @@ function taskDetailRow(task) {
     return `
         <tr class="project-show__task-detail is-hidden" id="task-desc-${task.id}">
             <td colspan="5">
-                <div class="project-show__task-description muted">${formatRichText(task.description)}</div>
+                <div class="project-show__task-description prose">${formatRichText(task.description)}</div>
             </td>
         </tr>
     `;

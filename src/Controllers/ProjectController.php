@@ -34,23 +34,35 @@ final class ProjectController extends BaseController
     {
         $user = $this->requireUser();
         $settings = $this->userSettings();
-        $assigneeLabels = $this->assigneeLabels($user, $settings);
-        $myTasks = $this->tasks()->assignedToLabels($assigneeLabels, $user->id);
+        $planioConfigured = $settings->isPlanioConfigured();
+        $myTasks = [];
+        $error = null;
+
+        if ($planioConfigured) {
+            try {
+                $issues = $this->planioSync()->clientFromSettings()->issuesAssignedToMe('open');
+                $planioIssueIds = [];
+                foreach ($issues as $issue) {
+                    if (!is_array($issue)) {
+                        continue;
+                    }
+                    $id = (int) ($issue['id'] ?? 0);
+                    if ($id > 0) {
+                        $planioIssueIds[] = $id;
+                    }
+                }
+
+                $myTasks = $this->tasks()->forPlanioIssueIds($planioIssueIds, $user->id);
+            } catch (\Throwable $exception) {
+                $error = $exception->getMessage();
+            }
+        }
 
         return $this->view('projects/my-tasks.html.twig', [
             'my_tasks' => $myTasks,
-            'has_assignee_labels' => $assigneeLabels !== [],
+            'planio_configured' => $planioConfigured,
+            'error' => $error,
         ]);
-    }
-
-    /** @return list<string> */
-    private function assigneeLabels(\Timer\Http\AuthenticatedUser $user, \Timer\Repositories\UserSettingsRepository $settings): array
-    {
-        return array_values(array_unique(array_filter([
-            $user->name,
-            $settings->get('planio.user_name'),
-            $settings->get('planio.user_login'),
-        ], static fn (?string $value): bool => $value !== null && trim($value) !== '')));
     }
 
     public function create(Request $request): Response

@@ -18,7 +18,7 @@
                 <span class="muted js-project-total" data-project-id="{{ project.id }}" data-total-seconds="{{ project.totalSeconds }}">{{ trans('projects.tracked', {time: format_time(project.totalSeconds)}) }}</span>
             </div>
             {% if project.description %}
-                <div class="project-show__description muted">{{ format_rich_text(project.description) }}</div>
+                <div class="project-show__description prose">{{ format_rich_text(project.description) }}</div>
             {% endif %}
         </div>
         <div class="actions project-show__actions">
@@ -115,7 +115,7 @@
                                 {% if task.description %}
                                     <tr class="project-show__task-detail is-hidden" id="task-desc-{{ task.id }}">
                                         <td colspan="5">
-                                            <div class="project-show__task-description muted">{{ format_rich_text(task.description) }}</div>
+                                            <div class="project-show__task-description prose">{{ format_rich_text(task.description) }}</div>
                                         </td>
                                     </tr>
                                 {% endif %}

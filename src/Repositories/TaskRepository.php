@@ -148,6 +148,41 @@ final class TaskRepository
     }
 
     /**
+     * @param list<int> $planioIssueIds
+     * @return list<Task>
+     */
+    public function forPlanioIssueIds(array $planioIssueIds, int $projectUserId): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map(static fn (mixed $id): int => (int) $id, $planioIssueIds),
+            static fn (int $id): bool => $id > 0,
+        )));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+
+        $stmt = $this->pdo->prepare(
+            'SELECT t.*, p.name AS project_name, p.color AS project_color,
+                COALESCE(SUM(te.duration_seconds), 0) AS total_seconds
+            FROM tasks t
+            INNER JOIN projects p ON p.id = t.project_id AND p.user_id = ?
+            ' . $this->timeEntryJoin() . '
+            WHERE t.planio_issue_id IN (' . $placeholders . ')
+            GROUP BY t.id
+            ORDER BY p.name ASC, t.name ASC',
+        );
+        $stmt->execute([$projectUserId, ...$ids]);
+
+        return array_map(
+            Task::fromRow(...),
+            $stmt->fetchAll(),
+        );
+    }
+
+    /**
      * @param list<string> $assigneeLabels
      * @return list<Task>
      */

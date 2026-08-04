@@ -128,6 +128,36 @@ final class PlanioClient
         return $this->importableIssuesForProject($planioProjectId);
     }
 
+    /**
+     * Issues assigned to the API key user (Planio "me").
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function issuesAssignedToMe(string $statusId = 'open'): array
+    {
+        $issues = [];
+        $offset = 0;
+
+        do {
+            $data = $this->get('/issues.json', [
+                'assigned_to_id' => 'me',
+                'status_id' => $statusId,
+                'limit' => 100,
+                'offset' => $offset,
+            ]);
+            $batch = $data['issues'] ?? [];
+            if (!is_array($batch)) {
+                break;
+            }
+
+            $issues = array_merge($issues, $batch);
+            $offset += count($batch);
+            $total = (int) ($data['total_count'] ?? count($issues));
+        } while ($offset < $total && $batch !== []);
+
+        return $issues;
+    }
+
     /** @return list<array<string, mixed>> */
     public function timeEntriesForUser(int $userId, string $from, string $to): array
     {
@@ -170,6 +200,32 @@ final class PlanioClient
             },
             array_filter($items, static fn (mixed $item): bool => is_array($item)),
         ));
+    }
+
+    /** @return list<array{id:int,name:string}> */
+    public function issuePriorities(): array
+    {
+        $data = $this->get('/enumerations/issue_priorities.json');
+        $items = $data['issue_priorities'] ?? [];
+
+        if (!is_array($items)) {
+            return [];
+        }
+
+        $priorities = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $id = (int) ($item['id'] ?? 0);
+            $name = trim((string) ($item['name'] ?? ''));
+            if ($id <= 0 || $name === '') {
+                continue;
+            }
+            $priorities[] = ['id' => $id, 'name' => $name];
+        }
+
+        return $priorities;
     }
 
     /** @return array{id:int, hours:float, comments:string, spent_on:string} */
@@ -233,27 +289,40 @@ final class PlanioClient
         $this->request('DELETE', $this->baseUrl . '/time_entries/' . $planioTimeEntryId . '.json');
     }
 
-    /** @return array<string, mixed> */
+    public function baseUrl(): string
+    {
+        return $this->baseUrl;
+    }
+
+    /**
+     * @param list<string> $extraIncludes Valid: journals, attachments, relations, changesets, children, watchers, allowed_statuses
+     * @return array<string, mixed>
+     */
     public function issue(
         int $issueId,
         bool $includeAllowedStatuses = true,
-        bool $includeAssignableUsers = true,
+        array $extraIncludes = [],
     ): array {
         if ($issueId <= 0) {
             throw new RuntimeException('Invalid Planio issue id.');
         }
 
-        $include = [];
+        // Redmine/Planio issue includes do NOT support assignable_users.
+        $includes = [];
         if ($includeAllowedStatuses) {
-            $include[] = 'allowed_statuses';
+            $includes[] = 'allowed_statuses';
         }
-        if ($includeAssignableUsers) {
-            $include[] = 'assignable_users';
+        foreach ($extraIncludes as $include) {
+            $include = trim((string) $include);
+            if ($include === '' || in_array($include, $includes, true)) {
+                continue;
+            }
+            $includes[] = $include;
         }
 
         $query = [];
-        if ($include !== []) {
-            $query['include'] = implode(',', $include);
+        if ($includes !== []) {
+            $query['include'] = implode(',', $includes);
         }
 
         $data = $this->get('/issues/' . $issueId . '.json', $query);
@@ -261,13 +330,381 @@ final class PlanioClient
         return $data['issue'] ?? throw new RuntimeException('Issue not found on Planio.');
     }
 
-    /** @return list<array{id:int,name:string}> */
-    public function projectMemberships(int $projectId): array
+    /**
+     * Load issue + project assignee options with fewer round-trips.
+     * When the Planio project id is known, issue and memberships are fetched in parallel.
+     *
+     * @return array{issue: array<string, mixed>, assignees: list<array{id:int,name:string}>}
+     */
+    public function issueEditBundle(int $issueId, ?int $knownPlanioProjectId = null): array
+    {
+        $knownProjectId = $knownPlanioProjectId !== null && $knownPlanioProjectId > 0
+            ? $knownPlanioProjectId
+            : null;
+
+        if ($knownProjectId !== null) {
+            $responses = $this->getMany([
+                '/issues/' . $issueId . '.json?' . http_build_query([
+                    'include' => 'allowed_statuses,journals,attachments',
+                ]),
+                '/projects/' . $knownProjectId . '/memberships.json?' . http_build_query([
+                    'limit' => 100,
+                    'offset' => 0,
+                ]),
+            ]);
+
+            $issuePayload = $responses[0] ?? [];
+            $issue = is_array($issuePayload['issue'] ?? null)
+                ? $issuePayload['issue']
+                : throw new RuntimeException('Issue not found on Planio.');
+
+            $membershipPayload = $responses[1] ?? [];
+            $memberships = is_array($membershipPayload['memberships'] ?? null)
+                ? $membershipPayload['memberships']
+                : [];
+            $total = (int) ($membershipPayload['total_count'] ?? count($memberships));
+            $offset = count($memberships);
+            while ($offset < $total && $memberships !== []) {
+                $page = $this->get('/projects/' . $knownProjectId . '/memberships.json', [
+                    'limit' => 100,
+                    'offset' => $offset,
+                ]);
+                $batch = $page['memberships'] ?? [];
+                if (!is_array($batch) || $batch === []) {
+                    break;
+                }
+                $memberships = array_merge($memberships, $batch);
+                $offset += count($batch);
+            }
+
+            return [
+                'issue' => $issue,
+                'assignees' => $this->principalsFromMemberships($memberships),
+            ];
+        }
+
+        $issue = $this->issue($issueId, true, ['journals', 'attachments']);
+        $projectId = (int) ($issue['project']['id'] ?? 0);
+
+        return [
+            'issue' => $issue,
+            'assignees' => $this->assignablePrincipalsForProject($projectId),
+        ];
+    }
+
+    /**
+     * Upload a file to Planio and return the upload token for attaching to an issue.
+     *
+     * @return array{token: string, filename: string, content_type: string}
+     */
+    public function uploadFile(string $filename, string $tmpPath, ?string $contentType = null): array
+    {
+        $filename = $this->sanitizeUploadFilename($filename);
+        if ($filename === '') {
+            throw new RuntimeException('Invalid upload filename.');
+        }
+        if (!is_readable($tmpPath) || filesize($tmpPath) === 0) {
+            throw new RuntimeException('Upload file is empty or unreadable.');
+        }
+
+        $contents = file_get_contents($tmpPath);
+        if ($contents === false) {
+            throw new RuntimeException('Could not read upload file.');
+        }
+
+        $contentType = trim((string) $contentType);
+        if ($contentType === '') {
+            $contentType = mime_content_type($tmpPath) ?: 'application/octet-stream';
+        }
+
+        $url = $this->baseUrl . '/uploads.json?' . http_build_query(['filename' => $filename]);
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('Could not initialize HTTP client.');
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_HTTPHEADER => [
+                'X-Redmine-API-Key: ' . $this->apiKey,
+                'Accept: application/json',
+                'Content-Type: application/octet-stream',
+            ],
+            CURLOPT_POSTFIELDS => $contents,
+        ]);
+
+        $body = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($body === false) {
+            throw new RuntimeException('Planio upload failed: ' . $error);
+        }
+        if ($status === 401 || $status === 403) {
+            throw new RuntimeException('Planio rejected the API key. Check your credentials.');
+        }
+        if ($status >= 400) {
+            throw new RuntimeException('Planio upload returned HTTP ' . $status . '.');
+        }
+
+        $decoded = json_decode($body, true);
+        $token = is_array($decoded) ? trim((string) ($decoded['upload']['token'] ?? '')) : '';
+        if ($token === '') {
+            throw new RuntimeException('Planio upload did not return a token.');
+        }
+
+        return [
+            'token' => $token,
+            'filename' => $filename,
+            'content_type' => $contentType,
+        ];
+    }
+
+    /**
+     * Add a note and/or previously uploaded files to a Planio issue.
+     *
+     * @param list<array{token: string, filename: string, content_type?: string}> $uploads
+     */
+    public function addIssueNote(int $issueId, string $notes, array $uploads = []): void
+    {
+        if ($issueId <= 0) {
+            throw new RuntimeException('Invalid Planio issue id.');
+        }
+
+        $notes = trim($notes);
+        $normalizedUploads = [];
+        foreach ($uploads as $upload) {
+            if (!is_array($upload)) {
+                continue;
+            }
+            $token = trim((string) ($upload['token'] ?? ''));
+            $filename = $this->sanitizeUploadFilename((string) ($upload['filename'] ?? ''));
+            if ($token === '' || $filename === '') {
+                continue;
+            }
+            $entry = [
+                'token' => $token,
+                'filename' => $filename,
+            ];
+            $contentType = trim((string) ($upload['content_type'] ?? ''));
+            if ($contentType !== '') {
+                $entry['content_type'] = $contentType;
+            }
+            $normalizedUploads[] = $entry;
+        }
+
+        if ($notes === '' && $normalizedUploads === []) {
+            throw new RuntimeException('A note or at least one attachment is required.');
+        }
+
+        $issuePayload = [
+            'notes' => $notes,
+        ];
+        if ($normalizedUploads !== []) {
+            $issuePayload['uploads'] = $normalizedUploads;
+        }
+
+        $this->put('/issues/' . $issueId . '.json', ['issue' => $issuePayload]);
+    }
+
+    public function deleteAttachment(int $attachmentId): void
+    {
+        if ($attachmentId <= 0) {
+            throw new RuntimeException('Invalid Planio attachment id.');
+        }
+
+        $this->request('DELETE', $this->baseUrl . '/attachments/' . $attachmentId . '.json');
+    }
+
+    public function clearJournalNotes(int $journalId): void
+    {
+        if ($journalId <= 0) {
+            throw new RuntimeException('Invalid Planio journal id.');
+        }
+
+        try {
+            $this->put('/journals/' . $journalId . '.json', [
+                'journal' => [
+                    'notes' => '',
+                ],
+            ]);
+        } catch (RuntimeException $exception) {
+            $message = $exception->getMessage();
+            if (str_contains($message, 'denied permission') || str_contains($message, 'HTTP 403')) {
+                $who = $this->currentUserLabel();
+                throw new RuntimeException(
+                    'Planio does not allow this API user to edit or delete issue notes.'
+                    . ($who !== '' ? ' Planio user: ' . $who . '.' : '')
+                    . ' Enable “Edit notes” and “Edit own notes” for that user’s role under Administration → Roles and permissions → Issue tracking.',
+                    0,
+                    $exception,
+                );
+            }
+            if (str_contains($message, 'HTTP 404')) {
+                throw new RuntimeException(
+                    'Planio could not find this note, or journal editing is not available via API on this Planio version.',
+                    0,
+                    $exception,
+                );
+            }
+
+            throw $exception;
+        }
+    }
+
+    private function currentUserLabel(): string
+    {
+        try {
+            $user = $this->currentUser();
+            $name = trim((string) ($user['firstname'] ?? '') . ' ' . (string) ($user['lastname'] ?? ''));
+            $login = trim((string) ($user['login'] ?? ''));
+            if ($name !== '' && $login !== '') {
+                return $name . ' (' . $login . ')';
+            }
+
+            return $name !== '' ? $name : $login;
+        } catch (\Throwable) {
+            return '';
+        }
+    }
+
+    /**
+     * Download an attachment body via Planio API key.
+     *
+     * @return array{body: string, content_type: string, filename: string}
+     */
+    public function downloadAttachment(int $attachmentId, ?string $preferredFilename = null): array
+    {
+        if ($attachmentId <= 0) {
+            throw new RuntimeException('Invalid Planio attachment id.');
+        }
+
+        $meta = $this->get('/attachments/' . $attachmentId . '.json');
+        $attachment = is_array($meta['attachment'] ?? null) ? $meta['attachment'] : [];
+        $filename = trim((string) ($preferredFilename ?: ($attachment['filename'] ?? '')));
+        if ($filename === '') {
+            $filename = 'attachment-' . $attachmentId;
+        }
+        $contentType = trim((string) ($attachment['content_type'] ?? 'application/octet-stream'));
+        if ($contentType === '') {
+            $contentType = 'application/octet-stream';
+        }
+
+        $contentUrl = trim((string) ($attachment['content_url'] ?? ''));
+        if ($contentUrl === '') {
+            $contentUrl = $this->baseUrl . '/attachments/download/' . $attachmentId . '/' . rawurlencode($filename);
+        } elseif (!str_starts_with($contentUrl, 'http://') && !str_starts_with($contentUrl, 'https://')) {
+            $contentUrl = $this->baseUrl . '/' . ltrim($contentUrl, '/');
+        }
+
+        $ch = curl_init($contentUrl);
+        if ($ch === false) {
+            throw new RuntimeException('Could not initialize HTTP client.');
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 60,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => [
+                'X-Redmine-API-Key: ' . $this->apiKey,
+                'Accept: */*',
+            ],
+        ]);
+
+        $body = curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        $responseType = (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+        curl_close($ch);
+
+        if ($body === false) {
+            throw new RuntimeException('Planio attachment download failed: ' . $error);
+        }
+        if ($status === 401 || $status === 403) {
+            throw new RuntimeException('Planio rejected the API key. Check your credentials.');
+        }
+        if ($status >= 400) {
+            throw new RuntimeException('Planio attachment download returned HTTP ' . $status . '.');
+        }
+
+        if ($responseType !== '' && !str_contains(strtolower($responseType), 'text/html')) {
+            $contentType = explode(';', $responseType)[0];
+        }
+
+        return [
+            'body' => $body,
+            'content_type' => $contentType,
+            'filename' => $filename,
+        ];
+    }
+
+    private function sanitizeUploadFilename(string $filename): string
+    {
+        $filename = basename(str_replace(["\0", '/', '\\'], '', trim($filename)));
+        $filename = preg_replace('/[^\w.\- ()\[\]]+/u', '_', $filename) ?? '';
+
+        return trim($filename, '._ ') !== '' ? $filename : '';
+    }
+
+    /**
+     * Direct members of a Planio project (users + groups) for assignee selection.
+     * Inherited memberships are excluded.
+     *
+     * @return list<array{id:int,name:string}>
+     */
+    public function assignablePrincipalsForProject(int $projectId): array
     {
         if ($projectId <= 0) {
             return [];
         }
 
+        return $this->principalsFromMemberships($this->projectMembershipsRaw($projectId));
+    }
+
+    /**
+     * @param list<array<string, mixed>> $memberships
+     * @return list<array{id:int,name:string}>
+     */
+    private function principalsFromMemberships(array $memberships): array
+    {
+        $principals = [];
+
+        foreach ($memberships as $membership) {
+            if (!is_array($membership) || $this->membershipIsInheritedOnly($membership)) {
+                continue;
+            }
+
+            $isGroup = is_array($membership['group'] ?? null);
+            $principal = $isGroup
+                ? $membership['group']
+                : (is_array($membership['user'] ?? null) ? $membership['user'] : null);
+
+            if (!is_array($principal)) {
+                continue;
+            }
+
+            $id = (int) ($principal['id'] ?? 0);
+            $name = trim((string) ($principal['name'] ?? ''));
+            if ($id <= 0 || $name === '') {
+                continue;
+            }
+
+            $principals[$id] = ['id' => $id, 'name' => $name];
+        }
+
+        $list = array_values($principals);
+        usort($list, static fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
+
+        return $list;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function projectMembershipsRaw(int $projectId): array
+    {
         $memberships = [];
         $offset = 0;
 
@@ -286,26 +723,142 @@ final class PlanioClient
             $total = (int) ($data['total_count'] ?? count($memberships));
         } while ($offset < $total && $batch !== []);
 
-        $users = [];
-        foreach ($memberships as $membership) {
-            if (!is_array($membership) || !is_array($membership['user'] ?? null)) {
-                continue;
-            }
-            $id = (int) ($membership['user']['id'] ?? 0);
-            $name = trim((string) ($membership['user']['name'] ?? ''));
-            if ($id <= 0 || $name === '') {
-                continue;
-            }
-            $users[$id] = ['id' => $id, 'name' => $name];
-        }
-
-        usort($users, static fn (array $a, array $b): int => strcasecmp($a['name'], $b['name']));
-
-        return array_values($users);
+        return $memberships;
     }
 
-    public function updateIssue(int $issueId, int $statusId, ?int $assignedToId, int $lockVersion): void
+    /**
+     * @param array<string, mixed> $membership
+     */
+    private function membershipIsInheritedOnly(array $membership): bool
     {
+        $roles = $membership['roles'] ?? [];
+        if (!is_array($roles) || $roles === []) {
+            return false;
+        }
+
+        foreach ($roles as $role) {
+            if (!is_array($role)) {
+                continue;
+            }
+            if (!($role['inherited'] ?? false)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Parallel GET helper for independent Planio JSON endpoints.
+     *
+     * @param list<string> $paths Paths beginning with /, optionally including query string
+     * @return list<array<string, mixed>>
+     */
+    private function getMany(array $paths): array
+    {
+        if ($paths === []) {
+            return [];
+        }
+
+        if (count($paths) === 1) {
+            $path = $paths[0];
+            $queryPos = strpos($path, '?');
+            if ($queryPos === false) {
+                return [$this->get($path)];
+            }
+
+            parse_str(substr($path, $queryPos + 1), $query);
+
+            return [$this->get(substr($path, 0, $queryPos), $query)];
+        }
+
+        $multi = curl_multi_init();
+        if ($multi === false) {
+            $out = [];
+            foreach ($paths as $path) {
+                $queryPos = strpos($path, '?');
+                if ($queryPos === false) {
+                    $out[] = $this->get($path);
+                } else {
+                    parse_str(substr($path, $queryPos + 1), $query);
+                    $out[] = $this->get(substr($path, 0, $queryPos), $query);
+                }
+            }
+
+            return $out;
+        }
+
+        $handles = [];
+        foreach ($paths as $index => $path) {
+            $url = $this->baseUrl . $path;
+            $ch = curl_init($url);
+            if ($ch === false) {
+                continue;
+            }
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_HTTPHEADER => [
+                    'X-Redmine-API-Key: ' . $this->apiKey,
+                    'Accept: application/json',
+                ],
+            ]);
+            curl_multi_add_handle($multi, $ch);
+            $handles[$index] = $ch;
+        }
+
+        $running = null;
+        do {
+            $status = curl_multi_exec($multi, $running);
+            if ($running > 0) {
+                curl_multi_select($multi, 1.0);
+            }
+        } while ($running > 0 && $status === CURLM_OK);
+
+        $results = [];
+        foreach ($handles as $index => $ch) {
+            $body = curl_multi_getcontent($ch);
+            $httpStatus = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_multi_remove_handle($multi, $ch);
+            curl_close($ch);
+
+            if ($body === false || $body === '') {
+                throw new RuntimeException('Planio request failed: ' . ($error !== '' ? $error : 'empty response'));
+            }
+            if ($httpStatus === 401 || $httpStatus === 403) {
+                throw new RuntimeException('Planio rejected the API key. Check your credentials.');
+            }
+            if ($httpStatus >= 400) {
+                throw new RuntimeException('Planio returned HTTP ' . $httpStatus . '.');
+            }
+
+            $decoded = json_decode($body, true);
+            if (!is_array($decoded)) {
+                throw new RuntimeException('Planio returned an invalid response.');
+            }
+            $results[$index] = $decoded;
+        }
+
+        curl_multi_close($multi);
+        ksort($results);
+
+        return array_values($results);
+    }
+
+    /**
+     * @param ?string $startDate Y-m-d or empty string to clear
+     * @param ?string $dueDate Y-m-d or empty string to clear
+     */
+    public function updateIssue(
+        int $issueId,
+        int $statusId,
+        ?int $assignedToId,
+        int $lockVersion,
+        ?int $priorityId = null,
+        ?string $startDate = null,
+        ?string $dueDate = null,
+    ): void {
         if ($issueId <= 0) {
             throw new RuntimeException('Invalid Planio issue id.');
         }
@@ -323,6 +876,15 @@ final class PlanioClient
         ];
         if ($assignedToId !== null && $assignedToId > 0) {
             $payload['issue']['assigned_to_id'] = $assignedToId;
+        }
+        if ($priorityId !== null && $priorityId > 0) {
+            $payload['issue']['priority_id'] = $priorityId;
+        }
+        if ($startDate !== null) {
+            $payload['issue']['start_date'] = $startDate;
+        }
+        if ($dueDate !== null) {
+            $payload['issue']['due_date'] = $dueDate;
         }
 
         $this->put('/issues/' . $issueId . '.json', $payload);
@@ -397,32 +959,47 @@ final class PlanioClient
             throw new RuntimeException('Planio request failed: ' . $error);
         }
 
-        if ($status === 401 || $status === 403) {
+        if ($status === 401) {
             throw new RuntimeException('Planio rejected the API key. Check your credentials.');
         }
 
-        if ($status >= 400) {
-            $detail = '';
-            $decodedError = json_decode($body, true);
-            if (is_array($decodedError)) {
-                $errors = $decodedError['errors'] ?? null;
-                if (is_array($errors) && $errors !== []) {
-                    $detail = ' ' . implode(' ', array_map(static fn (mixed $item): string => (string) $item, $errors));
-                }
-            }
+        if ($status === 403) {
+            $detail = $this->formatPlanioErrorDetail($body);
+            throw new RuntimeException(
+                'Planio denied permission for this action.' . $detail,
+            );
+        }
 
+        if ($status >= 400) {
+            $detail = $this->formatPlanioErrorDetail($body);
             throw new RuntimeException('Planio returned HTTP ' . $status . '.' . $detail);
         }
 
-        if (($method === 'DELETE' || $method === 'PUT') && trim($body) === '') {
+        // 204 No Content (and some empty 200 PUT/DELETE responses)
+        if (($method === 'DELETE' || $method === 'PUT') && trim((string) $body) === '') {
             return [];
         }
 
-        $decoded = json_decode($body, true);
+        $decoded = json_decode((string) $body, true);
         if (!is_array($decoded)) {
             throw new RuntimeException('Planio returned an invalid response.');
         }
 
         return $decoded;
+    }
+
+    private function formatPlanioErrorDetail(string $body): string
+    {
+        $decodedError = json_decode($body, true);
+        if (!is_array($decodedError)) {
+            return '';
+        }
+
+        $errors = $decodedError['errors'] ?? null;
+        if (!is_array($errors) || $errors === []) {
+            return '';
+        }
+
+        return ' ' . implode(' ', array_map(static fn (mixed $item): string => (string) $item, $errors));
     }
 }

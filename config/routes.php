@@ -81,6 +81,10 @@ return static function (FastRoute\RouteCollector $r): void {
     $r->get('/tasks/{id:\d+}', [TaskController::class, 'show']);
     $r->get('/tasks/{id:\d+}/edit', [TaskController::class, 'edit']);
     $r->post('/tasks/{id:\d+}', [TaskController::class, 'update']);
+    $r->post('/tasks/{id:\d+}/planio-notes', [TaskController::class, 'addPlanioNote']);
+    $r->get('/tasks/{id:\d+}/planio-attachments/{attachmentId:\d+}/content', [TaskController::class, 'planioAttachmentContent']);
+    $r->post('/tasks/{id:\d+}/planio-attachments/{attachmentId:\d+}/delete', [TaskController::class, 'deletePlanioAttachment']);
+    $r->post('/tasks/{id:\d+}/planio-journals/{journalId:\d+}/delete-notes', [TaskController::class, 'deletePlanioJournalNotes']);
     $r->post('/tasks/{id:\d+}/delete', [TaskController::class, 'destroy']);
 
     $r->get('/api/projects/{id:\d+}/tasks', [ProjectController::class, 'tasksApi']);

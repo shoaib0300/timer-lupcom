@@ -47,6 +47,24 @@ final class Response
         ]);
     }
 
+    public static function binary(
+        string $body,
+        string $contentType,
+        string $filename,
+        bool $inline = true,
+        int $status = 200,
+    ): self {
+        $safeName = str_replace(['"', "\r", "\n"], '', $filename);
+        $disposition = ($inline ? 'inline' : 'attachment') . '; filename="' . $safeName . '"';
+
+        return new self($body, $status, [
+            'Content-Type' => $contentType,
+            'Content-Disposition' => $disposition,
+            'Content-Length' => (string) strlen($body),
+            'Cache-Control' => 'private, max-age=300',
+        ]);
+    }
+
     public function send(): void
     {
         http_response_code($this->status);

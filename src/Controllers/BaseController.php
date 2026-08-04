@@ -60,6 +60,35 @@ abstract class BaseController
         return Response::redirect($path);
     }
 
+    protected function flash(string $type, string $message): void
+    {
+        if (!isset($_SESSION['_flash']) || !is_array($_SESSION['_flash'])) {
+            $_SESSION['_flash'] = [];
+        }
+        $_SESSION['_flash'][$type] = $message;
+    }
+
+    protected function pullFlash(string $type): ?string
+    {
+        $message = $_SESSION['_flash'][$type] ?? null;
+        unset($_SESSION['_flash'][$type]);
+
+        if (!is_string($message)) {
+            return null;
+        }
+
+        $message = trim($message);
+
+        return $message !== '' ? $message : null;
+    }
+
+    protected function redirectWithFlash(string $path, string $type, string $message): Response
+    {
+        $this->flash($type, $message);
+
+        return $this->redirect($path);
+    }
+
     protected function json(array $data, int $status = 200): Response
     {
         return Response::json($data, $status);
