@@ -17,7 +17,8 @@
     },
     "scripts": {
         "migrate": "php bin/console migrate",
-        "migrate:rollback": "php bin/console migrate:rollback"
+        "migrate:rollback": "php bin/console migrate:rollback",
+        "test": "php tests/soll_working_time_test.php"
     },
     "config": {
         "sort-packages": true,

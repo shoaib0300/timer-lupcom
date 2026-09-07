@@ -25,9 +25,27 @@ function isoDate(year, month, day) {
     return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-function isWeekend(iso) {
+function workingWeekdays() {
+    const raw = document.getElementById('attendance-page')?.dataset.workingWeekdays || '[1,2,3,4,5]';
+    try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed.map((d) => Number(d));
+        }
+    } catch (e) {
+        // fall through
+    }
+    return [1, 2, 3, 4, 5];
+}
+
+/** ISO weekday: 1=Mon … 7=Sun */
+function isoWeekday(iso) {
     const day = new Date(`${iso}T12:00:00`).getDay();
-    return day === 0 || day === 6;
+    return day === 0 ? 7 : day;
+}
+
+function isNonWorkingDay(iso) {
+    return !workingWeekdays().includes(isoWeekday(iso));
 }
 
 function countWeekdays(from, to) {
@@ -35,8 +53,8 @@ function countWeekdays(from, to) {
     const start = new Date(`${from}T12:00:00`);
     const end = new Date(`${to}T12:00:00`);
     for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
-        const day = cursor.getDay();
-        if (day !== 0 && day !== 6) {
+        const iso = isoDate(cursor.getFullYear(), cursor.getMonth() + 1, cursor.getDate());
+        if (!isNonWorkingDay(iso)) {
             count += 1;
         }
     }
@@ -190,7 +208,7 @@ export function initAttendanceBulkEntry({ onSaved, openModal, closeModal }) {
 
         for (let day = 1; day <= daysInMonth; day += 1) {
             const iso = isoDate(viewYear, viewMonth, day);
-            const weekend = isWeekend(iso);
+            const weekend = isNonWorkingDay(iso);
             const selected = isSelected(iso);
             const classes = [
                 'attendance-bulk-calendar__day',

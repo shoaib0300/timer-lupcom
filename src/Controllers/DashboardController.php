@@ -27,6 +27,23 @@ final class DashboardController extends BaseController
 
         $totalTodaySeconds = $timeEntries->totalSecondsToday();
         $officeStatus = $this->officeService()->getStatusWithStats();
+        $attendance = $this->attendanceService();
+        $workingHours = $attendance->config();
+        $month = (new \DateTimeImmutable('today'))->format('Y-m');
+        $monthSummary = $attendance->monthSummary($month);
+        $weekdayLabels = [
+            1 => $this->trans('attendance.weekday.mon'),
+            2 => $this->trans('attendance.weekday.tue'),
+            3 => $this->trans('attendance.weekday.wed'),
+            4 => $this->trans('attendance.weekday.thu'),
+            5 => $this->trans('attendance.weekday.fri'),
+            6 => $this->trans('attendance.weekday.sat'),
+            7 => $this->trans('attendance.weekday.sun'),
+        ];
+        $workingDayLabels = array_map(
+            static fn (int $d): string => $weekdayLabels[$d] ?? (string) $d,
+            $workingHours['working_weekdays'],
+        );
 
         return $this->view('dashboard/index.html.twig', [
             'projects' => $projects,
@@ -42,6 +59,17 @@ final class DashboardController extends BaseController
             'office' => $officeStatus,
             'today_date' => DateHelper::todayString(),
             'timer' => $timerStatus,
+            'working_time' => [
+                'weekly_label' => $workingHours['weekly_label'],
+                'daily_label' => $workingHours['daily_label'],
+                'working_days_label' => $workingDayLabels !== []
+                    ? implode(' – ', [reset($workingDayLabels), end($workingDayLabels)])
+                    : '—',
+                'soll_month_label' => $monthSummary['soll_label'],
+                'ist_month_label' => $monthSummary['ist_label'],
+                'diff_month_label' => $monthSummary['diff_label'],
+                'diff_month_minutes' => $monthSummary['diff_minutes'],
+            ],
         ]);
     }
 }

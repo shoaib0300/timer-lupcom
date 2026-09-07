@@ -12,6 +12,7 @@ use Timer\Repositories\AttendanceHolidayRepository;
 use Timer\Services\AttendanceImportService;
 use Timer\Services\LupcomTimetableParser;
 use Timer\Services\LupcomXlsxTimetableReader;
+use Timer\Services\SollWorkingTimeService;
 use Timer\Support\GermanHolidays;
 use Timer\Support\Locale;
 
@@ -37,13 +38,30 @@ final class AttendanceController extends BaseController
             'config' => $config,
             'states' => GermanHolidays::STATES,
             'countries' => ['DE' => 'Deutschland'],
-            'daily_hours' => $config['daily_hours'],
+            'daily_hours' => $config['daily_label'],
             'break_minutes' => $config['break_minutes'],
+            'working_hours' => $config,
+            'weekday_options' => $this->weekdayOptions(),
             'year' => (int) substr($month, 0, 4),
             'holidays' => $service->holidayList((int) substr($month, 0, 4)),
             'flash_success' => $request->query('success'),
             'flash_error' => $request->query('error'),
+            'today' => (new DateTimeImmutable('today'))->format('Y-m-d'),
         ]);
+    }
+
+    /** @return array<int, string> */
+    private function weekdayOptions(): array
+    {
+        return [
+            1 => $this->trans('attendance.weekday.mon'),
+            2 => $this->trans('attendance.weekday.tue'),
+            3 => $this->trans('attendance.weekday.wed'),
+            4 => $this->trans('attendance.weekday.thu'),
+            5 => $this->trans('attendance.weekday.fri'),
+            6 => $this->trans('attendance.weekday.sat'),
+            7 => $this->trans('attendance.weekday.sun'),
+        ];
     }
 
     public function saveSettings(Request $request): Response
@@ -64,7 +82,39 @@ final class AttendanceController extends BaseController
             return $this->redirect('/attendance?month=' . $month . '&error=state');
         }
 
-        $this->attendanceService()->saveConfig($country, $state);
+        $service = $this->attendanceService();
+        $service->saveConfig($country, $state);
+
+        $weeklyRaw = trim((string) $request->input('weekly_hours', ''));
+        $weekdaysRaw = $request->input('working_weekdays', []);
+        if (!is_array($weekdaysRaw)) {
+            $weekdaysRaw = [];
+        }
+
+        if ($weeklyRaw !== '' || $weekdaysRaw !== []) {
+            $weeklyMinutes = SollWorkingTimeService::parseWeeklyHoursInput(
+                $weeklyRaw !== '' ? $weeklyRaw : '0:00',
+            );
+            if ($weeklyMinutes === null) {
+                return $this->redirect('/attendance?month=' . $month . '&error=weekly_hours');
+            }
+
+            $weekdays = array_values(array_unique(array_map('intval', $weekdaysRaw)));
+            if ($weeklyMinutes > 0 && $weekdays === []) {
+                return $this->redirect('/attendance?month=' . $month . '&error=working_days');
+            }
+
+            $effectiveFrom = trim((string) $request->input('effective_from', ''));
+            if ($effectiveFrom === '' || preg_match('/^\d{4}-\d{2}-\d{2}$/', $effectiveFrom) !== 1) {
+                $effectiveFrom = (new DateTimeImmutable('today'))->format('Y-m-d');
+            }
+
+            try {
+                $service->saveWorkingHours($weeklyMinutes, $weekdays, $effectiveFrom);
+            } catch (\InvalidArgumentException) {
+                return $this->redirect('/attendance?month=' . $month . '&error=working_hours');
+            }
+        }
 
         return $this->redirect('/attendance?month=' . $month . '&success=settings');
     }
@@ -158,15 +208,17 @@ final class AttendanceController extends BaseController
         }
 
         $repo = $this->attendanceDays();
+        $soll = $this->sollWorkingTime();
         $saved = 0;
 
         for ($cursor = $start; $cursor <= $end; $cursor = $cursor->modify('+1 day')) {
-            if ((int) $cursor->format('N') >= 6) {
+            $dateStr = $cursor->format('Y-m-d');
+            if (!$soll->isConfiguredWorkingWeekday($dateStr)) {
                 continue;
             }
 
             $repo->save(
-                $cursor->format('Y-m-d'),
+                $dateStr,
                 $dayType,
                 null,
                 null,
@@ -205,7 +257,7 @@ final class AttendanceController extends BaseController
         }
 
         $config = $this->attendanceService()->config();
-        new AttendanceHolidayRepository($this->app->db())->addManual(
+        (new AttendanceHolidayRepository($this->app->db()))->addManual(
             $date,
             $config['country'],
             $config['state'],

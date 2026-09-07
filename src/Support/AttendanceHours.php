@@ -64,4 +64,15 @@ final class AttendanceHours
     {
         return self::formatDecimalGerman(self::minutesToDecimal((float) $minutes));
     }
+
+    /** Format minutes as H:MM (e.g. 456 → 7:36). */
+    public static function formatMinutesClock(int $minutes): string
+    {
+        $sign = $minutes < 0 ? '-' : '';
+        $abs = abs($minutes);
+        $hours = intdiv($abs, 60);
+        $mins = $abs % 60;
+
+        return sprintf('%s%d:%02d', $sign, $hours, $mins);
+    }
 }

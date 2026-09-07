@@ -18,17 +18,55 @@ final class AttendanceService
         private readonly UserSettingsRepository $settings,
         private readonly AttendanceDayRepository $days,
         private readonly AttendanceHolidayRepository $holidays,
+        private readonly SollWorkingTimeService $soll,
     ) {
     }
 
-    /** @return array{country: string, state: string, daily_hours: int, break_minutes: int} */
+    public function soll(): SollWorkingTimeService
+    {
+        return $this->soll;
+    }
+
+    /**
+     * @return array{
+     *     country: string,
+     *     state: string,
+     *     daily_hours: float,
+     *     break_minutes: int,
+     *     weekly_minutes: int,
+     *     weekly_label: string,
+     *     daily_minutes: int,
+     *     daily_label: string,
+     *     working_weekdays: list<int>
+     * }
+     */
     public function config(): array
     {
+        $profile = $this->soll->ensureDefault(
+            (int) ($this->settings->get('attendance.daily_hours', '8') ?? '8'),
+        );
+        $display = $this->soll->displayConfig() ?? [
+            'weekly_minutes' => $profile->weeklyMinutes,
+            'weekly_label' => AttendanceHours::formatMinutesClock($profile->weeklyMinutes),
+            'daily_minutes' => $profile->dailyMinutes(),
+            'daily_label' => AttendanceHours::formatMinutesClock($profile->dailyMinutes()),
+            'daily_hours_approx' => round($profile->dailyMinutes() / 60, 2),
+            'working_weekdays' => $profile->workingWeekdays,
+            'working_days_count' => $profile->workingDayCount(),
+            'effective_from' => $profile->effectiveFrom,
+            'effective_until' => $profile->effectiveUntil,
+        ];
+
         return [
             'country' => $this->settings->get('attendance.country', 'DE') ?? 'DE',
             'state' => $this->settings->get('attendance.state', 'MV') ?? 'MV',
-            'daily_hours' => (int) ($this->settings->get('attendance.daily_hours', '8') ?? '8'),
+            'daily_hours' => $display['daily_hours_approx'],
             'break_minutes' => (int) ($this->settings->get('attendance.break_minutes', '30') ?? '30'),
+            'weekly_minutes' => $display['weekly_minutes'],
+            'weekly_label' => $display['weekly_label'],
+            'daily_minutes' => $display['daily_minutes'],
+            'daily_label' => $display['daily_label'],
+            'working_weekdays' => $display['working_weekdays'],
         ];
     }
 
@@ -36,6 +74,19 @@ final class AttendanceService
     {
         $this->settings->set('attendance.country', strtoupper($country));
         $this->settings->set('attendance.state', strtoupper($state));
+    }
+
+    /**
+     * @param list<int|string> $workingWeekdays
+     */
+    public function saveWorkingHours(
+        int $weeklyMinutes,
+        array $workingWeekdays,
+        string $effectiveFrom,
+    ): void {
+        $profile = $this->soll->saveContract($weeklyMinutes, $workingWeekdays, $effectiveFrom);
+        $dailyHours = (string) max(1, (int) round($profile->dailyMinutes() / 60));
+        $this->settings->set('attendance.daily_hours', $dailyHours);
     }
 
     /**
@@ -90,8 +141,7 @@ final class AttendanceService
      */
     public function weeksForMonth(string $month): array
     {
-        $config = $this->config();
-        $targetMinutes = AttendanceHours::dailyTargetMinutes($config['daily_hours']);
+        $this->soll->ensureDefault((int) ($this->settings->get('attendance.daily_hours', '8') ?? '8'));
         $year = (int) substr($month, 0, 4);
         $holidayMap = $this->resolvedHolidays($year);
 
@@ -119,19 +169,21 @@ final class AttendanceService
                 $dateStr = $date->format('Y-m-d');
                 $inMonth = $date->format('Y-m') === $month;
                 $dow = (int) $date->format('N');
-                $isWeekend = $dow >= 6;
+                $isWorkingDay = $this->soll->isConfiguredWorkingWeekday($dateStr);
+                $isNonWorking = !$isWorkingDay;
                 $stored = $storedDays[$dateStr] ?? null;
                 $holidayName = $holidayMap[$dateStr] ?? null;
+                $targetMinutes = $this->soll->getDailySollMinutes($dateStr);
 
                 $resolved = $this->resolveDay(
                     $dateStr,
                     $stored,
                     $holidayName,
-                    $isWeekend,
+                    $isNonWorking,
                     $targetMinutes,
                 );
 
-                if ($inMonth && !$isWeekend) {
+                if ($inMonth && $isWorkingDay) {
                     $weekMinutes += $resolved['worked_minutes'];
                 }
 
@@ -140,7 +192,9 @@ final class AttendanceService
                     'day' => (int) $date->format('j'),
                     'weekday' => $dow,
                     'in_month' => $inMonth,
-                    'is_weekend' => $isWeekend,
+                    'is_weekend' => $isNonWorking,
+                    'is_working_day' => $isWorkingDay,
+                    'soll_minutes' => $targetMinutes,
                     'holiday_name' => $holidayName,
                 ]);
             }
@@ -178,65 +232,43 @@ final class AttendanceService
      *     ist_label: string,
      *     diff_label: string,
      *     yearly_diff_minutes: int,
-     *     yearly_diff_label: string
+     *     yearly_diff_label: string,
+     *     yearly_soll_minutes: int,
+     *     yearly_soll_label: string
      * }
      */
     public function monthSummary(string $month): array
     {
-        $config = $this->config();
-        $targetMinutes = AttendanceHours::dailyTargetMinutes($config['daily_hours']);
+        $this->soll->ensureDefault((int) ($this->settings->get('attendance.daily_hours', '8') ?? '8'));
         $year = (int) substr($month, 0, 4);
-        $holidayMap = $this->resolvedHolidays($year);
-
         $first = new DateTimeImmutable($month . '-01');
         $last = $first->modify('last day of this month');
-        $storedDays = $this->days->forRange($first->format('Y-m-d'), $last->format('Y-m-d'));
 
-        $soll = 0;
-        $ist = 0;
-        $cursor = $first;
-
-        while ($cursor <= $last) {
-            $dateStr = $cursor->format('Y-m-d');
-            $dow = (int) $cursor->format('N');
-
-            if ($dow < 6) {
-                $soll += $targetMinutes;
-                $resolved = $this->resolveDay(
-                    $dateStr,
-                    $storedDays[$dateStr] ?? null,
-                    $holidayMap[$dateStr] ?? null,
-                    false,
-                    $targetMinutes,
-                );
-                $ist += $resolved['worked_minutes'];
-            }
-
-            $cursor = $cursor->modify('+1 day');
-        }
-
+        $monthRange = $this->rangeSummary($first, $last);
         $yearStart = new DateTimeImmutable(sprintf('%d-01-01', $year));
-        $yearSummary = $this->rangeSummary($yearStart, $last, $targetMinutes);
+        $yearSummary = $this->rangeSummary($yearStart, $last);
 
-        $diff = $ist - $soll;
+        $diff = $monthRange['diff_minutes'];
 
         return [
-            'soll_minutes' => $soll,
-            'ist_minutes' => $ist,
+            'soll_minutes' => $monthRange['soll_minutes'],
+            'ist_minutes' => $monthRange['ist_minutes'],
             'diff_minutes' => $diff,
-            'soll_label' => AttendanceHours::formatMinutesGerman($soll),
-            'ist_label' => AttendanceHours::formatMinutesGerman($ist),
+            'soll_label' => AttendanceHours::formatMinutesGerman($monthRange['soll_minutes']),
+            'ist_label' => AttendanceHours::formatMinutesGerman($monthRange['ist_minutes']),
             'diff_label' => ($diff >= 0 ? '+' : '') . AttendanceHours::formatMinutesGerman($diff),
             'yearly_diff_minutes' => $yearSummary['diff_minutes'],
             'yearly_diff_label' => ($yearSummary['diff_minutes'] >= 0 ? '+' : '')
                 . AttendanceHours::formatMinutesGerman($yearSummary['diff_minutes']),
+            'yearly_soll_minutes' => $yearSummary['soll_minutes'],
+            'yearly_soll_label' => AttendanceHours::formatMinutesGerman($yearSummary['soll_minutes']),
         ];
     }
 
     /**
      * @return array{soll_minutes: int, ist_minutes: int, diff_minutes: int}
      */
-    private function rangeSummary(DateTimeImmutable $from, DateTimeImmutable $to, int $targetMinutes): array
+    public function rangeSummary(DateTimeImmutable $from, DateTimeImmutable $to): array
     {
         $year = (int) $from->format('Y');
         $holidayMap = $this->resolvedHolidays($year);
@@ -254,9 +286,10 @@ final class AttendanceService
 
         while ($cursor <= $to) {
             $dateStr = $cursor->format('Y-m-d');
-            $dow = (int) $cursor->format('N');
+            $isWorkingDay = $this->soll->isConfiguredWorkingWeekday($dateStr);
+            $targetMinutes = $this->soll->getDailySollMinutes($dateStr);
 
-            if ($dow < 6) {
+            if ($isWorkingDay) {
                 $soll += $targetMinutes;
                 $resolved = $this->resolveDay(
                     $dateStr,
@@ -294,10 +327,10 @@ final class AttendanceService
         string $date,
         ?AttendanceDay $stored,
         ?string $holidayName,
-        bool $isWeekend,
+        bool $isNonWorking,
         int $targetMinutes,
     ): array {
-        if ($isWeekend) {
+        if ($isNonWorking) {
             return $this->dayPayload('weekend', 0, null, AttendanceDay::TYPE_WORK);
         }
 

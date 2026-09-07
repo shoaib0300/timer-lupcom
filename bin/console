@@ -34,6 +34,7 @@ match ($command) {
             $repo = new Timer\Repositories\UserRepository($app->db());
             $userId = $repo->create($email, $password, $name, $role);
             (new Timer\Repositories\UserSettingsRepository($app->db(), $userId))->seedAttendanceDefaults();
+            (new Timer\Repositories\UserWorkingHoursRepository($app->db()))->ensureDefault($userId, 8);
             echo "Created user #{$userId} ({$email}).\n";
         })(),
     'planio:refresh' => (static function () use ($app, $argv): void {

@@ -58,6 +58,7 @@ return static function (FastRoute\RouteCollector $r): void {
 
     $r->get('/settings/users', [UserController::class, 'index']);
     $r->post('/settings/users', [UserController::class, 'store']);
+    $r->post('/settings/users/working-hours', [UserController::class, 'saveWorkingHours']);
     $r->post('/settings/users/deactivate', [UserController::class, 'deactivate']);
     $r->post('/settings/users/activate', [UserController::class, 'activate']);
     $r->post('/api/planio/test', [PlanioController::class, 'testApi']);

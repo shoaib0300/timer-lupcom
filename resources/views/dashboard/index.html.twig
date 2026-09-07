@@ -34,6 +34,39 @@
         </dl>
     </section>
 
+    <section class="card dash-card">
+        <div class="dash-card__title-row">
+            <h2 class="dash-card__title">{{ trans('dashboard.working_time') }}</h2>
+            <a href="/attendance" class="dash-card__link">{{ trans('attendance.title') }}</a>
+        </div>
+        <dl class="dash-card__stats">
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.weekly_target') }}</dt>
+                <dd>{{ working_time.weekly_label }} h</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.working_days') }}</dt>
+                <dd>{{ working_time.working_days_label }}</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.daily_target') }}</dt>
+                <dd>{{ working_time.daily_label }} h</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.soll_month') }}</dt>
+                <dd>{{ working_time.soll_month_label }} h</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.ist_month') }}</dt>
+                <dd>{{ working_time.ist_month_label }} h</dd>
+            </div>
+            <div class="dash-card__row">
+                <dt>{{ trans('dashboard.diff_month') }}</dt>
+                <dd class="{% if working_time.diff_month_minutes < 0 %}is-negative{% elseif working_time.diff_month_minutes > 0 %}is-positive{% endif %}">{{ working_time.diff_month_label }} h</dd>
+            </div>
+        </dl>
+    </section>
+
     <section class="card dash-card office-clock" id="office-clock" data-active="{{ office.active ? '1' : '0' }}">
         <div class="dash-card__title-row">
             <h2 class="dash-card__title">{{ trans('office.title') }}</h2>

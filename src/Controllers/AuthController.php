@@ -207,6 +207,7 @@ final class AuthController extends BaseController
         if ($user !== null) {
             SessionAuth::login($user);
             (new UserSettingsRepository($this->app->db(), $user->id))->seedAttendanceDefaults();
+            (new \Timer\Repositories\UserWorkingHoursRepository($this->app->db()))->ensureDefault($user->id, 8);
         }
 
         return true;

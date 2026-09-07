@@ -4,7 +4,7 @@
 {% set active_nav = 'attendance' %}
 
 {% block content %}
-<div class="attendance-page" id="attendance-page" data-month="{{ month }}" data-year="{{ year }}">
+<div class="attendance-page" id="attendance-page" data-month="{{ month }}" data-year="{{ year }}" data-working-weekdays="{{ working_hours.working_weekdays|json_encode|e('html_attr') }}">
     <h1 class="page-title">{{ trans('attendance.title') }}</h1>
 
     <div class="alert alert--success is-hidden" id="attendance-import-success" role="status" aria-live="polite"></div>
@@ -13,7 +13,11 @@
     {% if flash_success == 'settings' %}
         <div class="alert alert--success">{{ trans('attendance.settings_saved') }}</div>
     {% endif %}
-    {% if flash_error %}
+    {% if flash_error == 'weekly_hours' %}
+        <div class="alert alert--error">{{ trans('attendance.error.weekly_hours') }}</div>
+    {% elseif flash_error == 'working_days' %}
+        <div class="alert alert--error">{{ trans('attendance.error.working_days') }}</div>
+    {% elseif flash_error %}
         <div class="alert alert--error">{{ trans('attendance.settings_error') }}</div>
     {% endif %}
 
@@ -23,7 +27,7 @@
             <svg class="attendance-accordion__chevron" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
         </summary>
         <div class="attendance-accordion__body attendance-settings">
-            <p class="muted attendance-settings__hint">{{ trans('attendance.settings_hint', {hours: daily_hours, break: break_minutes}) }}</p>
+            <p class="muted attendance-settings__hint">{{ trans('attendance.settings_hint', {weekly: working_hours.weekly_label, daily: working_hours.daily_label, break: break_minutes}) }}</p>
             <form method="post" action="/attendance/settings" class="attendance-settings__form">
                 <input type="hidden" name="_token" value="{{ csrf_token }}">
                 <input type="hidden" name="month" value="{{ month }}">
@@ -44,8 +48,40 @@
                             {% endfor %}
                         </select>
                     </div>
+                </div>
+
+                <fieldset class="attendance-contract">
+                    <legend>{{ trans('attendance.contract_title') }}</legend>
+                    <p class="muted">{{ trans('attendance.contract_hint') }}</p>
+                    <div class="attendance-settings__row">
+                        <div class="form-group">
+                            <label for="attendance-weekly-hours">{{ trans('attendance.weekly_hours') }}</label>
+                            <input type="text" id="attendance-weekly-hours" name="weekly_hours" value="{{ working_hours.weekly_label }}" placeholder="35:00" required pattern="\d{1,3}(:[0-5]\d)?" inputmode="numeric">
+                        </div>
+                        <div class="form-group">
+                            <label for="attendance-effective-from">{{ trans('attendance.effective_from') }}</label>
+                            <input type="date" id="attendance-effective-from" name="effective_from" value="{{ today }}">
+                        </div>
+                        <div class="form-group">
+                            <label>{{ trans('attendance.daily_soll') }}</label>
+                            <p class="attendance-contract__daily"><strong>{{ working_hours.daily_label }} h</strong></p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <span class="attendance-contract__days-label">{{ trans('attendance.working_days') }}</span>
+                        <div class="attendance-contract__days">
+                            {% for dow, label in weekday_options %}
+                                <label class="attendance-contract__day">
+                                    <input type="checkbox" name="working_weekdays[]" value="{{ dow }}"{% if dow in working_hours.working_weekdays %} checked{% endif %}>
+                                    <span>{{ label }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="attendance-settings__row">
                     <div class="form-group attendance-settings__actions">
-                        <label>&nbsp;</label>
                         <button type="submit" class="btn btn--primary">{{ trans('common.save') }}</button>
                     </div>
                 </div>
@@ -62,7 +98,7 @@
             <div class="attendance-holidays__toolbar">
                 <button type="button" class="btn btn--ghost btn--sm" id="attendance-add-holiday">{{ trans('attendance.add_holiday') }}</button>
             </div>
-            <p class="muted">{{ trans('attendance.holidays_hint', {hours: daily_hours}) }}</p>
+            <p class="muted">{{ trans('attendance.holidays_hint', {hours: working_hours.daily_label}) }}</p>
             <ul class="attendance-holidays__list" id="attendance-holidays-list">
             {% for holiday in holidays %}
                 <li class="attendance-holidays__item" data-date="{{ holiday.date }}">

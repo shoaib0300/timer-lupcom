@@ -18,8 +18,10 @@ use Timer\Repositories\TaskRepository;
 use Timer\Repositories\TimeEntryRepository;
 use Timer\Repositories\UserRepository;
 use Timer\Repositories\UserSettingsRepository;
+use Timer\Repositories\UserWorkingHoursRepository;
 use Timer\Services\AttendanceService;
 use Timer\Services\OfficeSessionService;
+use Timer\Services\SollWorkingTimeService;
 use Timer\Services\TimerService;
 use Timer\Services\PlanioSyncService;
 use Timer\Services\PlanioTimeImportService;
@@ -199,12 +201,28 @@ abstract class BaseController
         return new OfficeSessionService($this->officeSessions(), $this->timeEntries());
     }
 
-    protected function attendanceService(): AttendanceService
+    protected function workingHours(): UserWorkingHoursRepository
     {
+        return new UserWorkingHoursRepository($this->app->db());
+    }
+
+    protected function sollWorkingTime(?int $userId = null): SollWorkingTimeService
+    {
+        return new SollWorkingTimeService(
+            $this->workingHours(),
+            $userId ?? $this->requireUser()->id,
+        );
+    }
+
+    protected function attendanceService(?int $userId = null): AttendanceService
+    {
+        $uid = $userId ?? $this->requireUser()->id;
+
         return new AttendanceService(
-            $this->userSettings(),
-            $this->attendanceDays(),
+            new UserSettingsRepository($this->app->db(), $uid),
+            new AttendanceDayRepository($this->app->db(), $uid),
             new AttendanceHolidayRepository($this->app->db()),
+            $this->sollWorkingTime($uid),
         );
     }
 }

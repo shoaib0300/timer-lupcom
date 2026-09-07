@@ -79,6 +79,83 @@ $attendance-holiday: #ef4444;
     align-items: end;
 }
 
+.attendance-contract {
+    margin: 1.25rem 0 0;
+    padding: 1rem 0 0;
+    border: 0;
+    border-top: 1px solid var(--color-border);
+
+    legend {
+        padding: 0;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+}
+
+.attendance-contract__days-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.attendance-contract__days {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.85rem;
+}
+
+.attendance-contract__day {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.attendance-contract__daily {
+    margin: 0;
+    padding-top: 0.35rem;
+}
+
+.users-working-hours {
+    margin-bottom: 0.35rem;
+
+    summary {
+        list-style: none;
+        cursor: pointer;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+    }
+}
+
+.users-working-hours__form {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--surface-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 16rem;
+}
+
+.table__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.is-negative {
+    color: #b91c1c;
+}
+
+.is-positive {
+    color: #15803d;
+}
+
 .attendance-import__row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
