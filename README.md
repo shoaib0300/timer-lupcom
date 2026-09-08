@@ -31,6 +31,37 @@ src/
 bin/console       # CLI (migrations)
 ```
 
+## Deploy / CI
+
+On push to `main`, GitHub Actions SSHs into the live server and runs `bin/deploy.sh`, which:
+
+1. `git pull`
+2. `composer install --no-dev`
+3. `npm ci` + `npm run build:css`
+4. `php bin/console migrate`
+5. `php bin/console cache:clear` (Twig cache in `var/cache`)
+
+### One-time GitHub secrets
+
+Repo → **Settings → Secrets and variables → Actions**, add:
+
+| Secret | Example |
+|--------|---------|
+| `DEPLOY_HOST` | `timer.example.com` |
+| `DEPLOY_USER` | `deploy` |
+| `DEPLOY_SSH_KEY` | private SSH key (full PEM) |
+| `DEPLOY_PATH` | `/var/www/html` |
+| `DEPLOY_PORT` | `22` (optional) |
+
+The server user must be able to `git pull`, run `composer` / `npm` / `php`, and write to the app directory.
+
+### Manual deploy on the server
+
+```bash
+cd /var/www/html   # or your app path
+./bin/deploy.sh
+```
+
 ## Setup (DDEV)
 
 ```bash

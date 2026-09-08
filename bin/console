@@ -19,24 +19,48 @@ $migrator = new Migrator($app->db(), dirname(__DIR__) . '/database/migrations');
 match ($command) {
     'migrate' => $migrator->migrate(),
     'migrate:rollback' => $migrator->rollback((int) ($argv[2] ?? 1)),
-        'seed' => (new Seeder($app->db()))->run(),
-        'user:create' => (static function () use ($app, $argv): void {
-            $email = $argv[2] ?? '';
-            $password = $argv[3] ?? '';
-            $name = $argv[4] ?? '';
-            $role = $argv[5] ?? 'user';
+    'cache:clear' => (static function () use ($app): void {
+        $cacheDir = $app->basePath() . '/var/cache';
+        if (!is_dir($cacheDir)) {
+            echo "Cache directory not found (nothing to clear).\n";
+            return;
+        }
 
-            if ($email === '' || $password === '' || $name === '') {
-                fwrite(STDERR, "Usage: php bin/console user:create <email> <password> <name> [admin|user]\n");
-                exit(1);
+        $deleted = 0;
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($cacheDir, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+
+        foreach ($iterator as $item) {
+            if ($item->isDir()) {
+                rmdir($item->getPathname());
+            } else {
+                unlink($item->getPathname());
             }
+            $deleted++;
+        }
 
-            $repo = new Timer\Repositories\UserRepository($app->db());
-            $userId = $repo->create($email, $password, $name, $role);
-            (new Timer\Repositories\UserSettingsRepository($app->db(), $userId))->seedAttendanceDefaults();
-            (new Timer\Repositories\UserWorkingHoursRepository($app->db()))->ensureDefault($userId, 8);
-            echo "Created user #{$userId} ({$email}).\n";
-        })(),
+        echo "Cleared cache ({$deleted} item(s)) in var/cache.\n";
+    })(),
+    'seed' => (new Seeder($app->db()))->run(),
+    'user:create' => (static function () use ($app, $argv): void {
+        $email = $argv[2] ?? '';
+        $password = $argv[3] ?? '';
+        $name = $argv[4] ?? '';
+        $role = $argv[5] ?? 'user';
+
+        if ($email === '' || $password === '' || $name === '') {
+            fwrite(STDERR, "Usage: php bin/console user:create <email> <password> <name> [admin|user]\n");
+            exit(1);
+        }
+
+        $repo = new Timer\Repositories\UserRepository($app->db());
+        $userId = $repo->create($email, $password, $name, $role);
+        (new Timer\Repositories\UserSettingsRepository($app->db(), $userId))->seedAttendanceDefaults();
+        (new Timer\Repositories\UserWorkingHoursRepository($app->db()))->ensureDefault($userId, 8);
+        echo "Created user #{$userId} ({$email}).\n";
+    })(),
     'planio:refresh' => (static function () use ($app, $argv): void {
         $email = $argv[2] ?? '';
         if ($email === '') {

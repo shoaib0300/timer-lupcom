@@ -18,7 +18,9 @@
     "scripts": {
         "migrate": "php bin/console migrate",
         "migrate:rollback": "php bin/console migrate:rollback",
-        "test": "php tests/soll_working_time_test.php"
+        "cache:clear": "php bin/console cache:clear",
+        "test": "php tests/soll_working_time_test.php",
+        "deploy": "bash bin/deploy.sh"
     },
     "config": {
         "sort-packages": true,
